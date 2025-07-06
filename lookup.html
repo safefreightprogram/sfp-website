@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Lookup – Safe Freight Program</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+  <header class="bg-blue-900 text-white p-4">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-bold">Safe Freight Program</h1>
+      <nav class="space-x-4">
+        <a href="index.html" class="hover:underline">Home</a>
+        <a href="about.html" class="hover:underline">About</a>
+        <a href="passport.html" class="hover:underline">Passport</a>
+        <a href="ail.html" class="hover:underline">AIL</a>
+        <a href="contact.html" class="hover:underline">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-xl mx-auto p-6">
+    <h2 class="text-3xl font-bold text-blue-800 mb-6">Scan or Enter Passport ID</h2>
+    <p class="mb-4">
+      Enter the ID from the driver's Safe Freight Passport to verify their active status.
+    </p>
+    <form class="bg-white p-6 rounded shadow space-y-4">
+      <div>
+        <label for="passportId" class="block text-sm font-medium mb-1">Passport ID</label>
+        <input type="text" id="passportId" name="passportId" class="w-full border border-gray-300 rounded px-4 py-2" placeholder="e.g. SFP-001234" required />
+      </div>
+      <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded shadow">
+        Check Status
+      </button>
+    </form>
+    <p class="text-sm text-gray-500 mt-6">QR scans will redirect to this page with the ID prefilled.</p>
+  </main>
+
+  <footer class="bg-gray-100 text-sm text-center text-gray-600 p-4 mt-8">
+    &copy; 2025 Safe Freight Program. All rights reserved.
+  </footer>
+</body>
+</html>
