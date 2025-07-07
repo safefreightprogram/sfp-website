@@ -1,105 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QR Lookup – Safe Freight Program</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon" />
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <script>
-    async function fetchAndSearch(event) {
-      event.preventDefault();
-      const prefix = document.getElementById('searchType').value;
-      let digits = document.getElementById('idSuffix').value.trim();
-      digits = digits.padStart(6, '0');  // Add leading zeros
-      const id = prefix + digits;
-      const resultBox = document.getElementById('result');
-      resultBox.innerHTML = 'Searching…';
-
-      // Determine sheet tab
-      const sheetName = prefix === 'SFPD-' ? 'SFPD' : 'SFPV';
-      const sheetUrl = `https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
-
-      try {
-        const response = await fetch(sheetUrl);
-        const text = await response.text();
-        const rows = text.trim().split('\n').slice(1).map(line => line.split(','));
-
-        const match = rows.find(row => row[0].trim().toUpperCase() === id.toUpperCase());
-
-        if (match) {
-          let details = "";
-          if (sheetName === 'SFPD') {
-            details = `
-              <p><strong>ID:</strong> ${match[0]}</p>
-              <p><strong>Name:</strong> ${match[1]} ${match[2]}</p>
-              <p><strong>Expiry Date:</strong> ${match[3]}</p>
-              <p><strong>Status:</strong> ${match[4]}</p>
-              <p><strong>Licence No.:</strong> ${match[5]}</p>
-            `;
-          } else {
-            details = `
-              <p><strong>ID:</strong> ${match[0]}</p>
-              <p><strong>Rego:</strong> ${match[1]}</p>
-              <p><strong>Expiry Date:</strong> ${match[2]}</p>
-              <p><strong>Status:</strong> ${match[3]}</p>
-              <p><strong>VIN:</strong> ${match[4]}</p>
-            `;
-          }
-
-          resultBox.innerHTML = `
-            <div class="mt-4 border p-4 bg-green-50 rounded">
-              ${details}
-            </div>
-          `;
-        } else {
-          resultBox.innerHTML = '<p class="text-red-600 mt-4">No matching record found.</p>';
-        }
-      } catch (err) {
-        resultBox.innerHTML = '<p class="text-red-600 mt-4">Error fetching data. Please try again later.</p>';
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safe Freight Lookup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 2rem;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #1c3d5a;
+    }
+    .lookup-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    @media (min-width: 768px) {
+      .lookup-container {
+        flex-direction: row;
+        justify-content: center;
       }
     }
-  </script>
+    .lookup-box {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .lookup-box img {
+      height: 80px;
+      margin-bottom: 1rem;
+    }
+    .lookup-box input {
+      width: 80%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .lookup-box input::placeholder {
+      color: #aaa;
+    }
+    .lookup-box button {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background-color: #1c3d5a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .lookup-box button:hover {
+      background-color: #285a7f;
+    }
+    .result {
+      margin-top: 1rem;
+      font-weight: bold;
+      color: #006400;
+    }
+    .prefix-label {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    .input-group {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+    }
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans">
-  <header class="bg-blue-900 text-white p-4">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <h1 class="text-xl font-bold">Safe Freight Program</h1>
-      <nav class="space-x-4">
-        <a href="index.html" class="hover:underline">Home</a>
-        <a href="about.html" class="hover:underline">About</a>
-        <a href="passport.html" class="hover:underline">Passport</a>
-        <a href="ail.html" class="hover:underline">AIL</a>
-        <a href="lookup.html" class="hover:underline font-semibold underline">QR Lookup</a>
-        <a href="contact.html" class="hover:underline">Contact</a>
-      </nav>
-    </div>
-  </header>
-
-  <main class="max-w-xl mx-auto p-6">
-    <h2 class="text-3xl font-bold text-blue-800 mb-6">Check a Passport or Vehicle</h2>
-    <form onsubmit="fetchAndSearch(event)" class="bg-white p-6 rounded shadow space-y-4">
-      <div>
-        <label for="idSuffix" class="block text-sm font-medium mb-1">Enter ID Number</label>
-        <div class="flex">
-          <select id="searchType" name="searchType" class="border border-gray-300 rounded-l px-2 py-2 bg-gray-100 text-sm">
-            <option value="SFPD-">SFPD-</option>
-            <option value="SFPV-">SFPV-</option>
-          </select>
-          <input type="text" id="idSuffix" name="idSuffix"
-                 class="flex-1 border-t border-b border-r border-gray-300 rounded-r px-4 py-2"
-                 placeholder="001234" pattern="\d+" required />
-        </div>
+<body>
+  <h1>Safe Freight Lookup</h1>
+  <div class="lookup-container">
+    <!-- Driver Lookup -->
+    <div class="lookup-box">
+      <img src="/path/to/driver-icon.png" alt="Driver Icon">
+      <h3>Driver Lookup</h3>
+      <div class="input-group">
+        <span class="prefix-label">SFPD-</span>
+        <input type="text" id="driverInput" placeholder="e.g. 0071">
       </div>
-      <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded shadow">
-        Check Status
-      </button>
-    </form>
-    <div id="result" class="mt-6 text-sm"></div>
-  </main>
+      <button onclick="lookupDriver()">Search</button>
+      <div id="driverResult" class="result"></div>
+    </div>
 
-  <footer class="bg-gray-100 text-sm text-center text-gray-600 p-4 mt-8">
-    &copy; 2025 Safe Freight Program. All rights reserved.
-  </footer>
+    <!-- Vehicle Lookup -->
+    <div class="lookup-box">
+      <img src="/path/to/truck-icon.png" alt="Truck Icon">
+      <h3>Vehicle Lookup</h3>
+      <div class="input-group">
+        <span class="prefix-label">SFPV-</span>
+        <input type="text" id="vehicleInput" placeholder="e.g. 0143">
+      </div>
+      <button onclick="lookupVehicle()">Search</button>
+      <div id="vehicleResult" class="result"></div>
+    </div>
+  </div>
+
+  <script>
+    const DRIVER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json';
+    const VEHICLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFCekJjBtJNTP8/gviz/tq?tqx=out:json';
+
+    async function fetchSheetData(url) {
+      const response = await fetch(url);
+      const text = await response.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
+    }
+
+    function padWithZeros(input, length = 4) {
+      return input.padStart(length, '0');
+    }
+
+    async function lookupDriver() {
+      const raw = document.getElementById('driverInput').value.trim();
+      const input = 'SFPD-' + padWithZeros(raw);
+      const data = await fetchSheetData(DRIVER_SHEET_URL);
+      const match = data.find(row => row[0] === input);
+      document.getElementById('driverResult').textContent = match ? `Driver Found: ${match.join(', ')}` : 'Driver not found';
+    }
+
+    async function lookupVehicle() {
+      const raw = document.getElementById('vehicleInput').value.trim();
+      const input = 'SFPV-' + padWithZeros(raw);
+      const data = await fetchSheetData(VEHICLE_SHEET_URL);
+      const match = data.find(row => row[0] === input);
+      document.getElementById('vehicleResult').textContent = match ? `Vehicle Found: ${match.join(', ')}` : 'Vehicle not found';
+    }
+  </script>
 </body>
 </html>
