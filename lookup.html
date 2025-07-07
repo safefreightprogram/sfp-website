@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Safe Freight Lookup</title>
+  <title>Safe Freight Program Lookup</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -63,12 +63,20 @@
     .result {
       margin-top: 1rem;
       text-align: left;
-      background-color: #eef6ee;
       padding: 1rem;
       border-radius: 8px;
       border-left: 5px solid #1c3d5a;
       font-size: 0.95rem;
       color: #1c3d5a;
+    }
+    .result.active {
+      background-color: #e6f7e6;
+    }
+    .result.expired, .result.non-compliant {
+      background-color: #ffe6e6;
+    }
+    .result.warning {
+      background-color: #fff8dc;
     }
     .prefix-label {
       font-weight: bold;
@@ -83,14 +91,14 @@
   </style>
 </head>
 <body>
-  <h1>Safe Freight Lookup</h1>
+  <h1>Safe Freight Program Lookup</h1>
   <div class="lookup-container">
     <!-- Driver Lookup -->
     <div class="lookup-box">
       <h3>Driver Lookup</h3>
       <div class="input-group">
         <span class="prefix-label">SFPD-</span>
-        <input type="text" id="driverInput" placeholder="e.g. 0071">
+        <input type="text" id="driverInput" placeholder="e.g. 0071" onkeydown="if(event.key==='Enter'){lookupDriver()}">
       </div>
       <button onclick="lookupDriver()">Search</button>
       <div id="driverResult" class="result"></div>
@@ -101,7 +109,7 @@
       <h3>Vehicle Lookup</h3>
       <div class="input-group">
         <span class="prefix-label">SFPV-</span>
-        <input type="text" id="vehicleInput" placeholder="e.g. 0143">
+        <input type="text" id="vehicleInput" placeholder="e.g. 0143" onkeydown="if(event.key==='Enter'){lookupVehicle()}">
       </div>
       <button onclick="lookupVehicle()">Search</button>
       <div id="vehicleResult" class="result"></div>
@@ -119,8 +127,49 @@
       return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
     }
 
-    function padWithZeros(input, length = 4) {
+    function padWithZeros(input, length = 6) {
       return input.padStart(length, '0');
+    }
+
+    function formatDate(d) {
+      if (!d) return '';
+      if (Object.prototype.toString.call(d) === '[object Date]' && !isNaN(d)) {
+        return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+
+      let day, month, year;
+      if (typeof d === 'string') {
+        if (d.includes('/')) {
+          [day, month, year] = d.split('/').map(n => parseInt(n, 10));
+        } else if (d.includes('-')) {
+          [year, month, day] = d.split('-').map(n => parseInt(n, 10));
+        } else {
+          return 'Invalid Date';
+        }
+        const parsed = new Date(year, month - 1, day);
+        if (isNaN(parsed.getTime())) return 'Invalid Date';
+        return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+
+      const date = new Date(d);
+      return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function getStatusClass(status, expiryRaw) {
+      const statusLC = status.toLowerCase();
+      if (statusLC === 'expired' || statusLC === 'non-compliant') return 'non-compliant';
+      const today = new Date();
+      let day, month, year;
+      if (expiryRaw.includes('/')) {
+        [day, month, year] = expiryRaw.split('/').map(n => parseInt(n, 10));
+      } else {
+        [year, month, day] = expiryRaw.split('-').map(n => parseInt(n, 10));
+      }
+      const expiryDate = new Date(year, month - 1, day);
+      const diffTime = expiryDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays <= 30 && diffDays >= 0) return 'warning';
+      return 'active';
     }
 
     async function lookupDriver() {
@@ -130,14 +179,17 @@
       const match = data.find(row => row[0] === input);
       const resultEl = document.getElementById('driverResult');
       if (match) {
+        const statusClass = getStatusClass(match[3], match[4]);
+        resultEl.className = 'result ' + statusClass;
+        const warningNote = statusClass === 'warning' ? '<br><em>Note: Expiry within 30 days</em>' : '';
         resultEl.innerHTML = `
-          <strong>ID:</strong> ${match[0]}<br>
           <strong>Name:</strong> ${match[1]} ${match[2]}<br>
-          <strong>Expiry Date:</strong> ${match[3]}<br>
-          <strong>Status:</strong> ${match[4]}<br>
-          <strong>Licence:</strong> ${match[5]}
+          <strong>SFP ID:</strong> ${match[0]}<br>
+          <strong>Status:</strong> ${match[3]}<br>
+          <strong>Expiry Date:</strong> ${formatDate(match[4])}${warningNote}
         `;
       } else {
+        resultEl.className = 'result';
         resultEl.textContent = 'Driver not found';
       }
     }
@@ -149,14 +201,18 @@
       const match = data.find(row => row[0] === input);
       const resultEl = document.getElementById('vehicleResult');
       if (match) {
+        const statusClass = getStatusClass(match[4], match[5]);
+        resultEl.className = 'result ' + statusClass;
+        const warningNote = statusClass === 'warning' ? '<br><em>Note: Expiry within 30 days</em>' : '';
         resultEl.innerHTML = `
-          <strong>ID:</strong> ${match[0]}<br>
-          <strong>Plate:</strong> ${match[1]}<br>
-          <strong>Expiry Date:</strong> ${match[2]}<br>
-          <strong>Status:</strong> ${match[3]}<br>
-          <strong>VIN:</strong> ${match[4]}
+          <strong>Type:</strong> ${match[1]}<br>
+          <strong>Plate:</strong> ${match[2]}<br>
+          <strong>VIN:</strong> ${match[3]}<br>
+          <strong>Status:</strong> ${match[4]}<br>
+          <strong>Expiry Date:</strong> ${formatDate(match[5])}${warningNote}
         `;
       } else {
+        resultEl.className = 'result';
         resultEl.textContent = 'Vehicle not found';
       }
     }
