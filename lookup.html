@@ -36,10 +36,6 @@
       max-width: 400px;
       text-align: center;
     }
-    .lookup-box img {
-      height: 80px;
-      margin-bottom: 1rem;
-    }
     .lookup-box input {
       width: 80%;
       padding: 0.75rem;
@@ -66,8 +62,13 @@
     }
     .result {
       margin-top: 1rem;
-      font-weight: bold;
-      color: #006400;
+      text-align: left;
+      background-color: #eef6ee;
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 5px solid #1c3d5a;
+      font-size: 0.95rem;
+      color: #1c3d5a;
     }
     .prefix-label {
       font-weight: bold;
@@ -86,7 +87,6 @@
   <div class="lookup-container">
     <!-- Driver Lookup -->
     <div class="lookup-box">
-      <img src="/path/to/driver-icon.png" alt="Driver Icon">
       <h3>Driver Lookup</h3>
       <div class="input-group">
         <span class="prefix-label">SFPD-</span>
@@ -98,7 +98,6 @@
 
     <!-- Vehicle Lookup -->
     <div class="lookup-box">
-      <img src="/path/to/truck-icon.png" alt="Truck Icon">
       <h3>Vehicle Lookup</h3>
       <div class="input-group">
         <span class="prefix-label">SFPV-</span>
@@ -129,7 +128,18 @@
       const input = 'SFPD-' + padWithZeros(raw);
       const data = await fetchSheetData(DRIVER_SHEET_URL);
       const match = data.find(row => row[0] === input);
-      document.getElementById('driverResult').textContent = match ? `Driver Found: ${match.join(', ')}` : 'Driver not found';
+      const resultEl = document.getElementById('driverResult');
+      if (match) {
+        resultEl.innerHTML = `
+          <strong>ID:</strong> ${match[0]}<br>
+          <strong>Name:</strong> ${match[1]} ${match[2]}<br>
+          <strong>Expiry Date:</strong> ${match[3]}<br>
+          <strong>Status:</strong> ${match[4]}<br>
+          <strong>Licence:</strong> ${match[5]}
+        `;
+      } else {
+        resultEl.textContent = 'Driver not found';
+      }
     }
 
     async function lookupVehicle() {
@@ -137,7 +147,18 @@
       const input = 'SFPV-' + padWithZeros(raw);
       const data = await fetchSheetData(VEHICLE_SHEET_URL);
       const match = data.find(row => row[0] === input);
-      document.getElementById('vehicleResult').textContent = match ? `Vehicle Found: ${match.join(', ')}` : 'Vehicle not found';
+      const resultEl = document.getElementById('vehicleResult');
+      if (match) {
+        resultEl.innerHTML = `
+          <strong>ID:</strong> ${match[0]}<br>
+          <strong>Plate:</strong> ${match[1]}<br>
+          <strong>Expiry Date:</strong> ${match[2]}<br>
+          <strong>Status:</strong> ${match[3]}<br>
+          <strong>VIN:</strong> ${match[4]}
+        `;
+      } else {
+        resultEl.textContent = 'Vehicle not found';
+      }
     }
   </script>
 </body>
