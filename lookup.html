@@ -43,9 +43,16 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       text-align: center;
+      transition: border-color 0.3s ease;
+    }
+    .lookup-box input:focus {
+      outline: none;
+      border-color: #1c3d5a;
+      box-shadow: 0 0 0 3px rgba(28, 61, 90, 0.1);
     }
     .lookup-box input::placeholder {
-      color: #aaa;
+      color: #888;
+      font-size: 0.9rem;
     }
     .lookup-box button {
       margin-top: 1rem;
@@ -56,9 +63,14 @@
       border-radius: 8px;
       font-size: 1rem;
       cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease;
     }
     .lookup-box button:hover {
       background-color: #285a7f;
+      transform: translateY(-1px);
+    }
+    .lookup-box button:active {
+      transform: translateY(0);
     }
     .result {
       margin-top: 1rem;
@@ -71,35 +83,51 @@
       position: relative;
     }
     .result.active {
-      background-color: #e6f7e6;
+      background-color: #e8f5e8;
+      border-left-color: #28a745;
     }
     .result.expired, .result.non-compliant {
-      background-color: #ffe6e6;
+      background-color: #fdeaea;
+      border-left-color: #dc3545;
     }
     .result.warning {
-      background-color: #fff8dc;
+      background-color: #fff3cd;
+      border-left-color: #ffc107;
     }
     .result span.copyable {
       cursor: pointer;
-      text-decoration: underline dotted;
+      color: #1c3d5a;
+      font-weight: 500;
+    }
+    .result span.copyable:hover {
+      background-color: #f0f8ff;
+      padding: 2px 4px;
+      border-radius: 3px;
     }
     .copied-msg {
       position: absolute;
       top: 5px;
       right: 10px;
       font-size: 0.85rem;
-      color: green;
+      color: #28a745;
+      background-color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       display: none;
-    }
-    .prefix-label {
-      font-weight: bold;
-      margin-right: 5px;
     }
     .input-group {
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 4px;
+      gap: 8px;
+      margin-bottom: 0.5rem;
+    }
+    .prefix-label {
+      font-weight: bold;
+      margin-right: 5px;
+      color: #1c3d5a;
+      font-size: 1rem;
     }
   </style>
 </head>
@@ -111,7 +139,7 @@
       <h3>Driver Lookup</h3>
       <div class="input-group">
         <span class="prefix-label">SFPD-</span>
-        <input type="text" id="driverInput" placeholder="e.g. 0071" onkeydown="if(event.key==='Enter'){lookupDriver()}" />
+        <input type="text" id="driverInput" placeholder="e.g. 001234 (Safe Freight Passport Number)" onkeydown="if(event.key==='Enter'){lookupDriver()}" />
       </div>
       <button onclick="lookupDriver()">Search</button>
       <div id="driverResult" class="result"><span class="copied-msg" id="copiedDriver"></span></div>
@@ -122,12 +150,13 @@
       <h3>Vehicle Lookup</h3>
       <div class="input-group">
         <span class="prefix-label">SFPV-</span>
-        <input type="text" id="vehicleInput" placeholder="e.g. 0143" onkeydown="if(event.key==='Enter'){lookupVehicle()}" />
+        <input type="text" id="vehicleInput" placeholder="e.g. 123456 (Safe Freight Program Vehicle ID)" onkeydown="if(event.key==='Enter'){performVehicleSearch()}" />
       </div>
-      <button onclick="lookupVehicle()">Search</button>
-      <h4 style="margin-top:2rem;">...or search by Rego</h4>
-      <input type="text" id="regoInput" placeholder="e.g. LMN435" onkeydown="if(event.key==='Enter'){lookupVehicleByRego()}" />
-      <button onclick="lookupVehicleByRego()">Search by Rego</button>
+      <div class="input-group" style="margin-top: 1rem;">
+        <span class="prefix-label">Rego:</span>
+        <input type="text" id="regoInput" placeholder="e.g. ABC123" onkeydown="if(event.key==='Enter'){performVehicleSearch()}" />
+      </div>
+      <button onclick="performVehicleSearch()">Search Vehicle</button>
       <div id="vehicleResult" class="result"><span class="copied-msg" id="copiedVehicle"></span></div>
     </div>
   </div>
@@ -284,6 +313,22 @@
         msg.textContent = 'Copied!';
         msg.style.display = 'inline';
         setTimeout(() => msg.style.display = 'none', 1200);
+      }
+    }
+
+    // New unified vehicle search function
+    function performVehicleSearch() {
+      const sfpvInput = document.getElementById('vehicleInput').value.trim();
+      const regoInput = document.getElementById('regoInput').value.trim();
+      
+      if (sfpvInput) {
+        lookupVehicle();
+      } else if (regoInput) {
+        lookupVehicleByRego();
+      } else {
+        const resultEl = document.getElementById('vehicleResult');
+        resultEl.className = 'result';
+        resultEl.textContent = 'Please enter either an SFPV number or a registration number';
       }
     }
 
