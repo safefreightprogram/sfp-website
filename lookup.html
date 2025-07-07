@@ -149,26 +149,106 @@
 
     function formatDate(d) {
       if (!d) return '';
-      if (Object.prototype.toString.call(d) === '[object Date]' && !isNaN(d)) {
-        return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
-      }
+      
+      let parsedDate;
+      
+      // Handle different date formats that Google Sheets might return
       if (typeof d === 'string') {
-        const [year, month, day] = d.split('-').map(n => parseInt(n, 10));
-        const parsed = new Date(year, month - 1, day);
-        if (isNaN(parsed.getTime())) return 'Invalid Date';
-        return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+        // Try different date formats
+        if (d.includes('/')) {
+          // Handle formats like "12/31/2024" or "31/12/2024"
+          const parts = d.split('/');
+          if (parts.length === 3) {
+            // Try MM/DD/YYYY format first
+            parsedDate = new Date(parts[2], parts[0] - 1, parts[1]);
+            if (isNaN(parsedDate.getTime())) {
+              // Try DD/MM/YYYY format
+              parsedDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+          }
+        } else if (d.includes('-')) {
+          // Handle formats like "2024-12-31" or "31-12-2024"
+          const parts = d.split('-');
+          if (parts.length === 3) {
+            if (parts[0].length === 4) {
+              // YYYY-MM-DD format
+              parsedDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            } else {
+              // DD-MM-YYYY format
+              parsedDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+          }
+        } else {
+          // Try to parse as is
+          parsedDate = new Date(d);
+        }
+      } else if (typeof d === 'number') {
+        // Google Sheets sometimes returns dates as numbers (Excel serial dates)
+        // Excel epoch starts on January 1, 1900, but JavaScript Date starts on January 1, 1970
+        // Excel serial date 1 = January 1, 1900
+        // Convert Excel serial date to JavaScript date
+        parsedDate = new Date((d - 25569) * 86400 * 1000);
+      } else if (Object.prototype.toString.call(d) === '[object Date]') {
+        parsedDate = d;
+      } else {
+        return 'Invalid Date';
       }
-      return 'Invalid Date';
+      
+      // Check if the parsed date is valid
+      if (isNaN(parsedDate.getTime())) {
+        console.log('Failed to parse date:', d);
+        return 'Invalid Date';
+      }
+      
+      return parsedDate.toLocaleDateString('en-AU', { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      });
     }
 
     function getStatusClass(status, expiryRaw) {
       const statusLC = status.toLowerCase();
       if (statusLC === 'expired' || statusLC === 'non-compliant') return 'non-compliant';
+      
       const today = new Date();
-      const [year, month, day] = expiryRaw.split('-').map(n => parseInt(n, 10));
-      const expiryDate = new Date(year, month - 1, day);
+      let expiryDate;
+      
+      // Parse the expiry date using the same logic as formatDate
+      if (typeof expiryRaw === 'string') {
+        if (expiryRaw.includes('/')) {
+          const parts = expiryRaw.split('/');
+          if (parts.length === 3) {
+            expiryDate = new Date(parts[2], parts[0] - 1, parts[1]);
+            if (isNaN(expiryDate.getTime())) {
+              expiryDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+          }
+        } else if (expiryRaw.includes('-')) {
+          const parts = expiryRaw.split('-');
+          if (parts.length === 3) {
+            if (parts[0].length === 4) {
+              expiryDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            } else {
+              expiryDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+          }
+        } else {
+          expiryDate = new Date(expiryRaw);
+        }
+      } else if (typeof expiryRaw === 'number') {
+        expiryDate = new Date((expiryRaw - 25569) * 86400 * 1000);
+      } else {
+        return 'active';
+      }
+      
+      if (isNaN(expiryDate.getTime())) {
+        return 'active';
+      }
+      
       const diffTime = expiryDate - today;
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
       if (diffDays <= 30 && diffDays >= 0) return 'warning';
       return 'active';
     }
