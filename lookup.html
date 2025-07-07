@@ -10,26 +10,46 @@
     async function fetchAndSearch(event) {
       event.preventDefault();
       const prefix = document.getElementById('searchType').value;
-      const digits = document.getElementById('idSuffix').value.trim();
+      let digits = document.getElementById('idSuffix').value.trim();
+      digits = digits.padStart(6, '0');  // Add leading zeros
       const id = prefix + digits;
       const resultBox = document.getElementById('result');
       resultBox.innerHTML = 'Searching…';
 
+      // Determine sheet tab
+      const sheetName = prefix === 'SFPD-' ? 'SFPD' : 'SFPV';
+      const sheetUrl = `https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
+
       try {
-        const response = await fetch('https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:csv');
+        const response = await fetch(sheetUrl);
         const text = await response.text();
         const rows = text.trim().split('\n').slice(1).map(line => line.split(','));
 
         const match = rows.find(row => row[0].trim().toUpperCase() === id.toUpperCase());
 
         if (match) {
-          resultBox.innerHTML = `
-            <div class="mt-4 border p-4 bg-green-50 rounded">
+          let details = "";
+          if (sheetName === 'SFPD') {
+            details = `
               <p><strong>ID:</strong> ${match[0]}</p>
-              <p><strong>Name:</strong> ${match[1]}</p>
+              <p><strong>Name:</strong> ${match[1]} ${match[2]}</p>
+              <p><strong>Expiry Date:</strong> ${match[3]}</p>
+              <p><strong>Status:</strong> ${match[4]}</p>
+              <p><strong>Licence No.:</strong> ${match[5]}</p>
+            `;
+          } else {
+            details = `
+              <p><strong>ID:</strong> ${match[0]}</p>
+              <p><strong>Rego:</strong> ${match[1]}</p>
               <p><strong>Expiry Date:</strong> ${match[2]}</p>
               <p><strong>Status:</strong> ${match[3]}</p>
-              <p><strong>Licence No.:</strong> ${match[4]}</p>
+              <p><strong>VIN:</strong> ${match[4]}</p>
+            `;
+          }
+
+          resultBox.innerHTML = `
+            <div class="mt-4 border p-4 bg-green-50 rounded">
+              ${details}
             </div>
           `;
         } else {
