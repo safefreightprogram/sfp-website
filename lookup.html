@@ -68,6 +68,7 @@
       border-left: 5px solid #1c3d5a;
       font-size: 0.95rem;
       color: #1c3d5a;
+      position: relative;
     }
     .result.active {
       background-color: #e6f7e6;
@@ -77,6 +78,18 @@
     }
     .result.warning {
       background-color: #fff8dc;
+    }
+    .result span.copyable {
+      cursor: pointer;
+      text-decoration: underline dotted;
+    }
+    .copied-msg {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      font-size: 0.85rem;
+      color: green;
+      display: none;
     }
     .prefix-label {
       font-weight: bold;
@@ -98,10 +111,10 @@
       <h3>Driver Lookup</h3>
       <div class="input-group">
         <span class="prefix-label">SFPD-</span>
-        <input type="text" id="driverInput" placeholder="e.g. 0071" onkeydown="if(event.key==='Enter'){lookupDriver()}">
+        <input type="text" id="driverInput" placeholder="e.g. 0071" onkeydown="if(event.key==='Enter'){lookupDriver()}" />
       </div>
       <button onclick="lookupDriver()">Search</button>
-      <div id="driverResult" class="result"></div>
+      <div id="driverResult" class="result"><span class="copied-msg" id="copiedDriver"></span></div>
     </div>
 
     <!-- Vehicle Lookup -->
@@ -109,10 +122,13 @@
       <h3>Vehicle Lookup</h3>
       <div class="input-group">
         <span class="prefix-label">SFPV-</span>
-        <input type="text" id="vehicleInput" placeholder="e.g. 0143" onkeydown="if(event.key==='Enter'){lookupVehicle()}">
+        <input type="text" id="vehicleInput" placeholder="e.g. 0143" onkeydown="if(event.key==='Enter'){lookupVehicle()}" />
       </div>
       <button onclick="lookupVehicle()">Search</button>
-      <div id="vehicleResult" class="result"></div>
+      <h4 style="margin-top:2rem;">...or search by Rego</h4>
+      <input type="text" id="regoInput" placeholder="e.g. LMN435" onkeydown="if(event.key==='Enter'){lookupVehicleByRego()}" />
+      <button onclick="lookupVehicleByRego()">Search by Rego</button>
+      <div id="vehicleResult" class="result"><span class="copied-msg" id="copiedVehicle"></span></div>
     </div>
   </div>
 
@@ -136,40 +152,39 @@
       if (Object.prototype.toString.call(d) === '[object Date]' && !isNaN(d)) {
         return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
       }
-
-      let day, month, year;
       if (typeof d === 'string') {
-        if (d.includes('/')) {
-          [day, month, year] = d.split('/').map(n => parseInt(n, 10));
-        } else if (d.includes('-')) {
-          [year, month, day] = d.split('-').map(n => parseInt(n, 10));
-        } else {
-          return 'Invalid Date';
-        }
+        const [year, month, day] = d.split('-').map(n => parseInt(n, 10));
         const parsed = new Date(year, month - 1, day);
         if (isNaN(parsed.getTime())) return 'Invalid Date';
         return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
       }
-
-      const date = new Date(d);
-      return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+      return 'Invalid Date';
     }
 
     function getStatusClass(status, expiryRaw) {
       const statusLC = status.toLowerCase();
       if (statusLC === 'expired' || statusLC === 'non-compliant') return 'non-compliant';
       const today = new Date();
-      let day, month, year;
-      if (expiryRaw.includes('/')) {
-        [day, month, year] = expiryRaw.split('/').map(n => parseInt(n, 10));
-      } else {
-        [year, month, day] = expiryRaw.split('-').map(n => parseInt(n, 10));
-      }
+      const [year, month, day] = expiryRaw.split('-').map(n => parseInt(n, 10));
       const expiryDate = new Date(year, month - 1, day);
       const diffTime = expiryDate - today;
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       if (diffDays <= 30 && diffDays >= 0) return 'warning';
       return 'active';
+    }
+
+    function makeCopyable(label, value, msgEl) {
+      return `<strong>${label}</strong> <span class="copyable" onclick="copyWithMessage('${value}', '${msgEl}')">${value}</span><br>`;
+    }
+
+    function copyWithMessage(value, targetId) {
+      navigator.clipboard.writeText(value);
+      const msg = document.getElementById(targetId);
+      if (msg) {
+        msg.textContent = 'Copied!';
+        msg.style.display = 'inline';
+        setTimeout(() => msg.style.display = 'none', 1200);
+      }
     }
 
     async function lookupDriver() {
@@ -183,10 +198,10 @@
         resultEl.className = 'result ' + statusClass;
         const warningNote = statusClass === 'warning' ? '<br><em>Note: Expiry within 30 days</em>' : '';
         resultEl.innerHTML = `
-          <strong>Name:</strong> ${match[1]} ${match[2]}<br>
-          <strong>SFP ID:</strong> ${match[0]}<br>
-          <strong>Status:</strong> ${match[3]}<br>
-          <strong>Expiry Date:</strong> ${formatDate(match[4])}${warningNote}
+          ${makeCopyable('Name:', match[1] + ' ' + match[2], 'copiedDriver')}
+          ${makeCopyable('SFP ID:', match[0], 'copiedDriver')}
+          ${makeCopyable('Status:', match[3], 'copiedDriver')}
+          ${makeCopyable('Expiry Date:', formatDate(match[4]), 'copiedDriver')}${warningNote}
         `;
       } else {
         resultEl.className = 'result';
@@ -196,20 +211,31 @@
 
     async function lookupVehicle() {
       const raw = document.getElementById('vehicleInput').value.trim();
-      const input = 'SFPV-' + padWithZeros(raw);
+      const paddedInput = 'SFPV-' + padWithZeros(raw);
       const data = await fetchSheetData(VEHICLE_SHEET_URL);
-      const match = data.find(row => row[0] === input);
+      const match = data.find(row => row[0] === paddedInput);
+      showVehicleResult(match);
+    }
+
+    async function lookupVehicleByRego() {
+      const raw = document.getElementById('regoInput').value.trim().toUpperCase();
+      const data = await fetchSheetData(VEHICLE_SHEET_URL);
+      const match = data.find(row => row[2].toUpperCase() === raw);
+      showVehicleResult(match);
+    }
+
+    function showVehicleResult(match) {
       const resultEl = document.getElementById('vehicleResult');
       if (match) {
         const statusClass = getStatusClass(match[4], match[5]);
         resultEl.className = 'result ' + statusClass;
         const warningNote = statusClass === 'warning' ? '<br><em>Note: Expiry within 30 days</em>' : '';
         resultEl.innerHTML = `
-          <strong>Type:</strong> ${match[1]}<br>
-          <strong>Plate:</strong> ${match[2]}<br>
-          <strong>VIN:</strong> ${match[3]}<br>
-          <strong>Status:</strong> ${match[4]}<br>
-          <strong>Expiry Date:</strong> ${formatDate(match[5])}${warningNote}
+          ${makeCopyable('Type:', match[1], 'copiedVehicle')}
+          ${makeCopyable('Plate:', match[2], 'copiedVehicle')}
+          ${makeCopyable('VIN:', match[3], 'copiedVehicle')}
+          ${makeCopyable('Status:', match[4], 'copiedVehicle')}
+          ${makeCopyable('Expiry Date:', formatDate(match[5]), 'copiedVehicle')}${warningNote}
         `;
       } else {
         resultEl.className = 'result';
