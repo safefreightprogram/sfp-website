@@ -154,8 +154,15 @@
       
       // Handle different date formats that Google Sheets might return
       if (typeof d === 'string') {
-        // Try different date formats
-        if (d.includes('/')) {
+        // Handle Google Sheets Date constructor format like "Date(2026,2,27)"
+        if (d.startsWith('Date(') && d.endsWith(')')) {
+          const dateStr = d.slice(5, -1); // Remove "Date(" and ")"
+          const parts = dateStr.split(',').map(p => parseInt(p.trim()));
+          if (parts.length >= 3) {
+            // Google Sheets uses 0-based months, so we don't need to subtract 1
+            parsedDate = new Date(parts[0], parts[1], parts[2]);
+          }
+        } else if (d.includes('/')) {
           // Handle formats like "12/31/2024" or "31/12/2024"
           const parts = d.split('/');
           if (parts.length === 3) {
@@ -216,7 +223,14 @@
       
       // Parse the expiry date using the same logic as formatDate
       if (typeof expiryRaw === 'string') {
-        if (expiryRaw.includes('/')) {
+        // Handle Google Sheets Date constructor format like "Date(2026,2,27)"
+        if (expiryRaw.startsWith('Date(') && expiryRaw.endsWith(')')) {
+          const dateStr = expiryRaw.slice(5, -1);
+          const parts = dateStr.split(',').map(p => parseInt(p.trim()));
+          if (parts.length >= 3) {
+            expiryDate = new Date(parts[0], parts[1], parts[2]);
+          }
+        } else if (expiryRaw.includes('/')) {
           const parts = expiryRaw.split('/');
           if (parts.length === 3) {
             expiryDate = new Date(parts[2], parts[0] - 1, parts[1]);
