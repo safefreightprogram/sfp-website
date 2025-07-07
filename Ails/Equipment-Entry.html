@@ -1,1 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safe Freight Equipment Inspection Entry</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      padding: 2rem;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #1c3d5a;
+    }
+    form {
+      background: white;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      margin-top: 2rem;
+      padding: 0.75rem 1.5rem;
+      background-color: #1c3d5a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #285a7f;
+    }
+    .success {
+      margin-top: 1rem;
+      color: green;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Equipment Inspection Entry</h1>
+  <form id="inspectionForm">
+    <label for="equipmentId">Equipment ID (SFPV-######)</label>
+    <input type="text" id="equipmentId" name="equipmentId" required>
 
+    <label for="type">Equipment Type</label>
+    <select id="type" name="type" required>
+      <option value="">Select Type</option>
+      <option>Prime Mover</option>
+      <option>Tanker Barrel</option>
+      <option>Dolley</option>
+    </select>
+
+    <label for="rego">Registration (Rego)</label>
+    <input type="text" id="rego" name="rego" required>
+
+    <label for="vin">VIN</label>
+    <input type="text" id="vin" name="vin" required>
+
+    <label for="status">Status</label>
+    <select id="status" name="status" required>
+      <option value="">Select Status</option>
+      <option>Active</option>
+      <option>Non-Compliant</option>
+      <option>Expired</option>
+    </select>
+
+    <label for="inspectionDate">Date of Inspection</label>
+    <input type="date" id="inspectionDate" name="inspectionDate" required>
+
+    <label for="complianceGranted">Compliance Granted Date</label>
+    <input type="date" id="complianceGranted" name="complianceGranted">
+
+    <label for="expiryDate">Expiry Date</label>
+    <input type="date" id="expiryDate" name="expiryDate" required>
+
+    <button type="submit">Submit</button>
+    <div class="success" id="successMessage" style="display: none;">Entry submitted successfully!</div>
+  </form>
+
+  <script>
+    document.getElementById('inspectionForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      const formData = {
+        equipmentId: document.getElementById('equipmentId').value.trim(),
+        type: document.getElementById('type').value,
+        rego: document.getElementById('rego').value.trim(),
+        vin: document.getElementById('vin').value.trim(),
+        status: document.getElementById('status').value,
+        inspectionDate: document.getElementById('inspectionDate').value,
+        complianceGranted: document.getElementById('complianceGranted').value,
+        expiryDate: document.getElementById('expiryDate').value
+      };
+
+      console.log("Submitting data:", formData);
+
+      // Placeholder for integration with Google Apps Script or API
+      // You would send this formData to a backend endpoint or Google Apps Script that appends it to the Equipment Sheet
+
+      document.getElementById('successMessage').style.display = 'block';
+      setTimeout(() => document.getElementById('successMessage').style.display = 'none', 3000);
+      this.reset();
+    });
+  </script>
+</body>
+</html>
