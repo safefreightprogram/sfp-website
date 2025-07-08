@@ -1,9 +1,122 @@
-<!DOCTYPE html>
+.map-container {
+            margin-top: 30px;
+            height: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .map-container.active {
+            display: block;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .map-control-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .map-control-btn:hover,
+        .map-control-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .location-search {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .location-search:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .map-legend {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .info-window {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 300px;
+        }
+
+        .info-window h3 {
+            color: #1e40af;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .info-window p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .info-window .badge {
+            background: #28a745;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .info-window .btn-group {
+            margin-top: 15px;
+        }
+
+        .info-window .btn {
+            padding: 6px 12px;
+            margin-right: 5px;
+            border: none<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SFP AIL Finder</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places,geometry&callback=initMap" async defer></script>
     <style>
         * {
             margin: 0;
@@ -385,26 +498,94 @@
 
         .map-container {
             margin-top: 30px;
-            height: 500px;
+            height: 600px;
             border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
             display: none;
-            background: #f8f9fa;
-            position: relative;
         }
 
         .map-container.active {
             display: block;
         }
 
-        .map-placeholder {
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .map-control-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .map-control-btn:hover,
+        .map-control-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .location-search {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .location-search:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .map-legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            font-size: 12px;
+            z-index: 1000;
+        }
+
+        .legend-item {
             display: flex;
             align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #6c757d;
-            font-size: 1.2rem;
+            margin: 5px 0;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .distance-info {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #1976d2;
         }
 
         @media (max-width: 768px) {
@@ -441,7 +622,15 @@
             }
 
             .map-container {
-                height: 350px;
+                height: 400px;
+            }
+
+            .map-controls {
+                flex-direction: column;
+            }
+
+            .location-search {
+                min-width: 100%;
             }
         }
     </style>
@@ -473,6 +662,9 @@
             <button class="btn btn-primary" onclick="loadData()">🔄 Refresh Data</button>
             <button class="btn btn-secondary" onclick="exportResults()">📥 Export Results</button>
             <button class="btn btn-secondary" onclick="showStats()">📊 Statistics</button>
+            <button class="btn btn-secondary" onclick="toggleMap()">🗺️ Toggle Map</button>
+            <button class="btn btn-secondary" onclick="findNearest()">📍 Find Nearest</button>
+            <button class="btn btn-secondary" onclick="openGoogleSheet()">📋 View Source Sheet</button>
         </div>
 
         <div id="statsContainer" class="stats-grid" style="display: none;">
@@ -520,6 +712,17 @@
         let allData = [];
         let filteredData = [];
         let currentView = 'cards';
+        let map = null;
+        let markers = [];
+        let userLocation = null;
+        let directionsService = null;
+        let directionsRenderer = null;
+        let trafficLayer = null;
+        let trafficVisible = false;
+        let geocoder = null;
+        let placesService = null;
+        let userMarker = null;
+        let autocomplete = null;
 
         // State mappings based on phone area codes and postcodes
         const stateMapping = {
@@ -532,23 +735,352 @@
             'TAS': { phones: ['03'], postcodes: [7000, 7999] }
         };
 
-        // Sample data matching the spreadsheet structure
-        const sampleData = `AIL #	Company	Business Address	City	Postcode	Licensed Inspector	Phone	Geocordinates	First Licensed	License Expires
-239	Aero Refuellers	Hanger 8-11 Ogden Street East Albury	Albury Wodonga	2640	-	02 6041 1599	-36.0697, 146.9545		
-222	Australian Fuelling Systems & Equip	7-11 Armstrong Street	Tamworth	2340	-	02 6760 7816	-31.0911, 150.9304		
-220	Doug Sutherland Truck Repairs	222 Urana Street	Wagga Wagga	2650	-	02 6925 2094	-35.1258, 147.3538		
-207	Durham Fabrications	4 Ranton Street Cardiff	Newcastle	2285	-	02 4956 8868	-32.9272, 151.7765		
-208	Durham Fabrications			2285	Luke Howson	02 4956 8868	-32.9272, 151.7765		
-415	Fuel Service Australia	29 Sandmere Road Pinkenba		4008	Kent Frantz	0433 450 603	-27.4679, 153.0281		
-623	Integrated Fuel Services			6000	JP Van Loenhout	08 9434 7000	-31.9505, 115.8605		
-457	Stephen Symes	Mobile Inspector		-	Stephen Symes	0403 277 637	-		
-301	Sydney Fuel Systems	15 Industrial Drive	Sydney	2000	Mark Johnson	02 9555 1234	-33.8688, 151.2093		
-302	Melbourne Tank Services	42 Factory Street	Melbourne	3000	Sarah Wilson	03 9876 5432	-37.8136, 144.9631		
-303	Brisbane Fuel Tech	88 Commerce Road	Brisbane	4000	David Chen	07 3456 7890	-27.4698, 153.0251		
-304	Perth Petroleum Services	25 Marine Terrace	Perth	6000	Lisa Brown	08 9321 6547	-31.9505, 115.8605		
-305	Adelaide Fuel Solutions	33 Port Road	Adelaide	5000	Michael Davis	08 8234 5678	-34.9285, 138.6007		`;
+        // Initialize Google Maps
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 5,
+                center: { lat: -25.2744, lng: 133.7751 }, // Center on Australia
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                styles: [
+                    {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    }
+                ]
+            });
 
-        function loadData() {
+            // Initialize services
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                suppressMarkers: true,
+                polylineOptions: {
+                    strokeColor: "#667eea",
+                    strokeWeight: 4
+                }
+            });
+            directionsRenderer.setMap(map);
+
+            geocoder = new google.maps.Geocoder();
+            placesService = new google.maps.places.PlacesService(map);
+            trafficLayer = new google.maps.TrafficLayer();
+
+            // Initialize autocomplete for location search
+            const locationInput = document.getElementById('locationSearch');
+            autocomplete = new google.maps.places.Autocomplete(locationInput, {
+                componentRestrictions: { country: 'au' },
+                fields: ['place_id', 'geometry', 'name', 'formatted_address']
+            });
+
+            autocomplete.addListener('place_changed', function() {
+                const place = autocomplete.getPlace();
+                if (place.geometry) {
+                    map.setCenter(place.geometry.location);
+                    map.setZoom(12);
+                    
+                    // Set user location and find nearest AILs
+                    userLocation = place.geometry.location;
+                    addUserLocationMarker(userLocation);
+                    findNearestAILs(userLocation);
+                }
+            });
+
+            // Load data and update markers
+            if (allData.length > 0) {
+                updateMapMarkers();
+            }
+        }
+
+        // Add user location marker
+        function addUserLocationMarker(location) {
+            if (userMarker) {
+                userMarker.setMap(null);
+            }
+            
+            userMarker = new google.maps.Marker({
+                position: location,
+                map: map,
+                title: "Your Location",
+                icon: {
+                    url: 'data:image/svg+xml;base64,' + btoa(`
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40">
+                            <path d="M15 0C6.7 0 0 6.7 0 15c0 8.3 15 25 15 25s15-16.7 15-25C30 6.7 23.3 0 15 0z" fill="#dc2626"/>
+                            <circle cx="15" cy="15" r="8" fill="white"/>
+                            <circle cx="15" cy="15" r="4" fill="#dc2626"/>
+                        </svg>
+                    `),
+                    scaledSize: new google.maps.Size(30, 40)
+                }
+            });
+        }
+
+        // Update map markers for AILs
+        function updateMapMarkers() {
+            if (!map) return;
+
+            // Clear existing markers
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+
+            // Add markers for filtered data
+            filteredData.forEach(item => {
+                // Try to geocode the address if we don't have coordinates
+                if (!item.lat || !item.lng) {
+                    geocodeAIL(item);
+                } else {
+                    addAILMarker(item);
+                }
+            });
+        }
+
+        // Add individual AIL marker
+        function addAILMarker(item) {
+            const marker = new google.maps.Marker({
+                position: { lat: item.lat, lng: item.lng },
+                map: map,
+                title: item.company,
+                icon: {
+                    url: 'data:image/svg+xml;base64,' + btoa(`
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40">
+                            <path d="M15 0C6.7 0 0 6.7 0 15c0 8.3 15 25 15 25s15-16.7 15-25C30 6.7 23.3 0 15 0z" fill="${item.isMobile ? '#059669' : '#1e40af'}"/>
+                            <circle cx="15" cy="15" r="8" fill="white"/>
+                            <text x="15" y="20" font-family="Arial" font-size="10" fill="${item.isMobile ? '#059669' : '#1e40af'}" text-anchor="middle" font-weight="bold">${item.isMobile ? 'M' : 'F'}</text>
+                        </svg>
+                    `),
+                    scaledSize: new google.maps.Size(30, 40)
+                }
+            });
+
+            const infoWindow = new google.maps.InfoWindow({
+                content: createInfoWindowContent(item)
+            });
+
+            marker.addListener("click", () => {
+                // Close other info windows
+                markers.forEach(m => {
+                    if (m.infoWindow) m.infoWindow.close();
+                });
+                infoWindow.open(map, marker);
+            });
+
+            marker.infoWindow = infoWindow;
+            markers.push(marker);
+        }
+
+        // Create info window content
+        function createInfoWindowContent(item) {
+            const distance = userLocation ? 
+                google.maps.geometry.spherical.computeDistanceBetween(
+                    userLocation, 
+                    new google.maps.LatLng(item.lat, item.lng)
+                ) / 1000 : null;
+
+            return `
+                <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 300px;">
+                    <h3 style="color: #1e40af; margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">
+                        ${item.company}
+                        ${item.isMobile ? '<span style="background: #059669; color: white; padding: 2px 6px; border-radius: 8px; font-size: 12px; margin-left: 8px;">📱 Mobile</span>' : ''}
+                    </h3>
+                    <p style="margin: 5px 0; font-size: 14px;"><strong>AIL #:</strong> ${item.ail}</p>
+                    ${item.inspector && item.inspector !== '-' ? `<p style="margin: 5px 0; font-size: 14px;"><strong>👤 Inspector:</strong> ${item.inspector}</p>` : ''}
+                    ${item.city ? `<p style="margin: 5px 0; font-size: 14px;"><strong>📍 Location:</strong> ${item.city}${item.postcode ? ` ${item.postcode}` : ''}${item.state ? ` (${item.state})` : ''}</p>` : ''}
+                    ${item.address && !item.isMobile ? `<p style="margin: 5px 0; font-size: 14px;"><strong>🏢 Address:</strong> ${item.address}</p>` : ''}
+                    <p style="margin: 5px 0; font-size: 14px;"><strong>📞 Phone:</strong> <a href="tel:${item.phone}" style="color: #1e40af;">${item.phone}</a></p>
+                    ${distance ? `<div style="background: #e3f2fd; padding: 8px; border-radius: 4px; margin: 10px 0; font-size: 12px; color: #1976d2;"><strong>📏 Distance:</strong> ${distance.toFixed(1)} km away</div>` : ''}
+                    <div style="margin-top: 15px;">
+                        <button onclick="getDirectionsToAIL(${item.lat}, ${item.lng}, '${item.company.replace(/'/g, "\\'")}')" 
+                                style="background: #1e40af; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 12px;">
+                            🗺️ Get Directions
+                        </button>
+                        <button onclick="callAIL('${item.phone}')" 
+                                style="background: #059669; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                            📞 Call
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Geocode AIL address
+        function geocodeAIL(item) {
+            if (!geocoder) return;
+
+            const address = `${item.address}, ${item.city}, ${item.state}, Australia`;
+            
+            geocoder.geocode({ address: address }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    item.lat = results[0].geometry.location.lat();
+                    item.lng = results[0].geometry.location.lng();
+                    addAILMarker(item);
+                }
+            });
+        }
+
+        // Map control functions
+        function toggleMap() {
+            const mapContainer = document.getElementById('mapContainer');
+            mapContainer.classList.toggle('active');
+            
+            if (mapContainer.classList.contains('active')) {
+                // Initialize map if not already done
+                if (!map) {
+                    setTimeout(initMap, 100);
+                } else {
+                    google.maps.event.trigger(map, 'resize');
+                    updateMapMarkers();
+                }
+            }
+        }
+
+        function centerOnAustralia() {
+            if (map) {
+                map.setCenter({ lat: -25.2744, lng: 133.7751 });
+                map.setZoom(5);
+            }
+        }
+
+        function showAllMarkers() {
+            if (map && markers.length > 0) {
+                const bounds = new google.maps.LatLngBounds();
+                markers.forEach(marker => {
+                    bounds.extend(marker.getPosition());
+                });
+                if (userMarker) {
+                    bounds.extend(userMarker.getPosition());
+                }
+                map.fitBounds(bounds);
+            }
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const pos = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        userLocation = new google.maps.LatLng(pos.lat, pos.lng);
+                        addUserLocationMarker(userLocation);
+                        
+                        map.setCenter(pos);
+                        map.setZoom(12);
+                        
+                        findNearestAILs(userLocation);
+                    },
+                    (error) => {
+                        alert('Error getting your location: ' + error.message);
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        }
+
+        function toggleTraffic() {
+            if (trafficVisible) {
+                trafficLayer.setMap(null);
+                trafficVisible = false;
+            } else {
+                trafficLayer.setMap(map);
+                trafficVisible = true;
+            }
+        }
+
+        function clearDirections() {
+            if (directionsRenderer) {
+                directionsRenderer.setDirections({routes: []});
+            }
+        }
+
+        function getDirectionsToAIL(lat, lng, companyName) {
+            if (!userLocation) {
+                alert('Please set your location first by searching for an address or using "My Location"');
+                return;
+            }
+
+            const destination = new google.maps.LatLng(lat, lng);
+            
+            directionsService.route({
+                origin: userLocation,
+                destination: destination,
+                travelMode: google.maps.TravelMode.DRIVING
+            }, (response, status) => {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(response);
+                    
+                    // Show route info
+                    const route = response.routes[0];
+                    const leg = route.legs[0];
+                    
+                    const infoContent = `
+                        <div style="padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                            <h4 style="margin: 0 0 10px 0; color: #1e40af;">Route to ${companyName}</h4>
+                            <p style="margin: 5px 0;"><strong>Distance:</strong> ${leg.distance.text}</p>
+                            <p style="margin: 5px 0;"><strong>Duration:</strong> ${leg.duration.text}</p>
+                            <button onclick="clearDirections()" style="background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-top: 10px;">Clear Route</button>
+                        </div>
+                    `;
+                    
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: infoContent,
+                        position: destination
+                    });
+                    
+                    infoWindow.open(map);
+                } else {
+                    alert('Directions request failed: ' + status);
+                }
+            });
+        }
+
+        function callAIL(phone) {
+            window.open(`tel:${phone}`, '_self');
+        }
+
+        function findNearest() {
+            if (!userLocation) {
+                alert('Please set your location first by searching for an address or using "My Location"');
+                return;
+            }
+
+            findNearestAILs(userLocation);
+        }
+
+        function findNearestAILs(location) {
+            const ailsWithDistance = allData
+                .filter(item => item.lat && item.lng)
+                .map(item => ({
+                    ...item,
+                    distance: google.maps.geometry.spherical.computeDistanceBetween(
+                        location,
+                        new google.maps.LatLng(item.lat, item.lng)
+                    ) / 1000 // Convert to km
+                }))
+                .sort((a, b) => a.distance - b.distance);
+
+            // Show nearest 5 AILs
+            const nearest = ailsWithDistance.slice(0, 5);
+            
+            let message = 'Nearest AILs to your location:\n\n';
+            nearest.forEach((ail, index) => {
+                message += `${index + 1}. ${ail.company} (AIL #${ail.ail})\n`;
+                message += `   📍 ${ail.city || 'Mobile'} - ${ail.distance.toFixed(1)} km away\n`;
+                message += `   📞 ${ail.phone}\n\n`;
+            });
+            
+            alert(message);
+            
+            // Filter results to show nearest AILs
+            filteredData = nearest.slice(0, 10);
+            updateDisplay();
+        }
+
+        // Google Sheets CSV URL for your SFP AIL data
+        const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/13biqIGqstGzfi6d0TNt0SR3vwIxOmC8hlZGX1qIfIYw/export?format=csv';
+
+        async function loadData() {
             const loadingEl = document.getElementById('loadingMessage');
             const errorEl = document.getElementById('errorMessage');
             
@@ -556,78 +1088,156 @@
             errorEl.style.display = 'none';
 
             try {
-                allData = parseTSV(sampleData);
+                // Fetch data from Google Sheets
+                const response = await fetch(GOOGLE_SHEETS_CSV_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const csvData = await response.text();
+                allData = parseCSV(csvData);
                 filteredData = [...allData];
                 
                 loadingEl.style.display = 'none';
                 updateDisplay();
                 updateStats();
                 
+                // Update map markers if map is active
+                if (map) {
+                    updateMapMarkers();
+                }
+                
             } catch (error) {
                 console.error('Error loading data:', error);
                 loadingEl.style.display = 'none';
                 errorEl.style.display = 'block';
+                errorEl.innerHTML = `❌ Error loading data from Google Sheets: ${error.message}<br><small>Please check if the sheet is publicly accessible.</small>`;
             }
         }
 
-        function parseTSV(tsvText) {
-            const lines = tsvText.trim().split('\n');
-            const headers = lines[0].split('\t');
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
             const data = [];
 
+            // Skip header row and process data rows
             for (let i = 1; i < lines.length; i++) {
                 if (lines[i].trim()) {
-                    const values = lines[i].split('\t');
-                    if (values.length >= 4) {
-                        const row = {};
-                        headers.forEach((header, index) => {
-                            row[header.trim()] = values[index] ? values[index].trim() : '';
-                        });
+                    // Parse CSV line handling quoted fields
+                    const values = parseCSVLine(lines[i]);
+                    
+                    if (values.length >= 5 && values[0] && values[1]) { // Must have company and AIL#
+                        const company = values[0].trim();
+                        const ail = values[1].trim();
+                        const cityOrInspector = values[2].trim();
+                        const address = values[3].trim();
+                        const phone = values[4].trim();
                         
-                        const inspector = row['Licensed Inspector'] || '';
-                        const address = row['Business Address'] || '';
-                        const isMobile = (inspector && inspector !== '-') || 
-                                        address.toLowerCase().includes('mobile') ||
-                                        (!address || address === '');
+                        // Determine if this is a mobile inspector
+                        const isMobile = address.toLowerCase().includes('mobile') || 
+                                        cityOrInspector.toLowerCase().includes('mobile') ||
+                                        company.toLowerCase().includes('mobile') ||
+                                        !address || 
+                                        address === '';
                         
-                        const phone = row['Phone'] || '';
-                        const postcode = parseInt(row['Postcode']) || 0;
-                        const state = determineState(phone, postcode);
+                        // Extract city and inspector info
+                        let city = '';
+                        let inspector = '';
+                        
+                        if (isMobile) {
+                            inspector = cityOrInspector;
+                            city = ''; // Mobile inspectors don't have fixed cities
+                        } else {
+                            city = cityOrInspector;
+                            inspector = '';
+                        }
+                        
+                        // Extract postcode from phone number area code
+                        const state = determineStateFromPhone(phone);
+                        let postcode = '';
+                        
+                        // Try to extract postcode from address
+                        const postcodeMatch = address.match(/\b(\d{4})\b/);
+                        if (postcodeMatch) {
+                            postcode = postcodeMatch[1];
+                        }
                         
                         data.push({
-                            ail: row['AIL #'] || '',
-                            company: row['Company'] || '',
+                            ail: ail,
+                            company: company,
                             address: address,
-                            city: row['City'] || '',
-                            postcode: row['Postcode'] || '',
+                            city: city,
+                            postcode: postcode,
                             inspector: inspector,
                             phone: phone,
                             isMobile: isMobile,
                             state: state,
-                            firstLicensed: row['First Licensed'] || '',
-                            licenseExpires: row['License Expires'] || ''
+                            firstLicensed: '',
+                            licenseExpires: ''
                         });
                     }
                 }
             }
 
-            return data.filter(item => item.company && item.ail);
+            return data;
         }
 
-        function determineState(phone, postcode) {
-            // Try by postcode first
-            for (const [state, data] of Object.entries(stateMapping)) {
-                if (postcode >= data.postcodes[0] && postcode <= data.postcodes[1]) {
-                    return state;
+        function parseCSVLine(line) {
+            const values = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    values.push(current);
+                    current = '';
+                } else {
+                    current += char;
                 }
             }
             
-            // Fallback to phone area code
-            for (const [state, data] of Object.entries(stateMapping)) {
-                if (data.phones.some(prefix => phone.startsWith(prefix))) {
-                    return state;
-                }
+            values.push(current);
+            return values;
+        }
+
+        function determineStateFromPhone(phone) {
+            if (phone.startsWith('02')) return 'NSW';
+            if (phone.startsWith('03')) return 'VIC';
+            if (phone.startsWith('07')) return 'QLD';
+            if (phone.startsWith('08')) {
+                // Need to differentiate between SA, WA, NT based on context
+                // This is a simplified approach - you might want to enhance this
+                return 'SA/WA/NT';
             }
+            return '';
+        }
+
+        function determineState(phone, postcode) {
+            // First try by phone area code
+            if (phone.startsWith('02')) return 'NSW';
+            if (phone.startsWith('03')) return 'VIC';
+            if (phone.startsWith('07')) return 'QLD';
+            if (phone.startsWith('08')) {
+                // For 08 numbers, we need more context - could be SA, WA, or NT
+                // This is a simplified determination
+                if (postcode >= 5000 && postcode <= 5999) return 'SA';
+                if (postcode >= 6000 && postcode <= 6999) return 'WA';
+                if (postcode >= 800 && postcode <= 999) return 'NT';
+                return 'SA/WA/NT'; // Default for 08 numbers without clear postcode
+            }
+            
+            // Fallback to postcode ranges
+            const postcodeNum = parseInt(postcode);
+            if (postcodeNum >= 1000 && postcodeNum <= 2999) return 'NSW';
+            if (postcodeNum >= 3000 && postcodeNum <= 3999) return 'VIC';
+            if (postcodeNum >= 4000 && postcodeNum <= 4999) return 'QLD';
+            if (postcodeNum >= 5000 && postcodeNum <= 5999) return 'SA';
+            if (postcodeNum >= 6000 && postcodeNum <= 6999) return 'WA';
+            if (postcodeNum >= 7000 && postcodeNum <= 7999) return 'TAS';
+            if (postcodeNum >= 800 && postcodeNum <= 999) return 'NT';
             
             return '';
         }
@@ -774,9 +1384,13 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `ail_search_results_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `sfp_ail_search_results_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
             window.URL.revokeObjectURL(url);
+        }
+
+        function openGoogleSheet() {
+            window.open('https://docs.google.com/spreadsheets/d/13biqIGqstGzfi6d0TNt0SR3vwIxOmC8hlZGX1qIfIYw/edit?usp=sharing', '_blank');
         }
 
         function convertToCSV(data) {
@@ -812,7 +1426,7 @@
                     item.ail.includes(searchTerm) ||
                     (item.inspector && item.inspector.toLowerCase().includes(searchTerm));
 
-                const matchesState = !stateFilter || item.state === stateFilter;
+                const matchesState = !stateFilter || item.state.includes(stateFilter);
                 
                 const matchesType = !typeFilter || 
                     (typeFilter === 'mobile' && item.isMobile) ||
@@ -822,6 +1436,11 @@
             });
 
             updateDisplay();
+            
+            // Update map markers if map is active
+            if (map && document.getElementById('mapContainer').classList.contains('active')) {
+                updateMapMarkers();
+            }
         }
 
         // Event listeners
