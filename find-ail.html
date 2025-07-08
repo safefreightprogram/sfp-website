@@ -353,24 +353,6 @@
             font-size: 1.1rem;
         }
 
-        .map-container {
-            margin-top: 30px;
-            height: 500px;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            display: none;
-        }
-
-        .map-container.active {
-            display: block;
-        }
-
-        #map {
-            width: 100%;
-            height: 100%;
-        }
-
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -401,58 +383,28 @@
             letter-spacing: 0.5px;
         }
 
-        .state-filter-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
-            margin-top: 15px;
+        .map-container {
+            margin-top: 30px;
+            height: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            display: none;
+            background: #f8f9fa;
+            position: relative;
         }
 
-        .state-btn {
-            padding: 8px 12px;
-            border: 2px solid #e9ecef;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 14px;
-            font-weight: 600;
-            text-align: center;
+        .map-container.active {
+            display: block;
         }
 
-        .state-btn.active {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-
-        .state-btn:hover {
-            border-color: #667eea;
-        }
-
-        .map-controls {
+        .map-placeholder {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        .map-control-btn {
-            padding: 8px 16px;
-            border: 2px solid #667eea;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 14px;
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .map-control-btn:hover,
-        .map-control-btn.active {
-            background: #667eea;
-            color: white;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #6c757d;
+            font-size: 1.2rem;
         }
 
         @media (max-width: 768px) {
@@ -520,9 +472,7 @@
         <div class="controls">
             <button class="btn btn-primary" onclick="loadData()">🔄 Refresh Data</button>
             <button class="btn btn-secondary" onclick="exportResults()">📥 Export Results</button>
-            <button class="btn btn-secondary" onclick="toggleMap()">🗺️ Toggle Map</button>
             <button class="btn btn-secondary" onclick="showStats()">📊 Statistics</button>
-            <button class="btn btn-secondary" onclick="findNearest()">📍 Find Nearest</button>
         </div>
 
         <div id="statsContainer" class="stats-grid" style="display: none;">
@@ -542,20 +492,6 @@
                 <div class="stat-number" id="fixedCount">0</div>
                 <div class="stat-label">Fixed Locations</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="mappableCount">0</div>
-                <div class="stat-label">Mappable Locations</div>
-            </div>
-        </div>
-
-        <div class="map-container" id="mapContainer">
-            <div class="map-controls">
-                <button class="map-control-btn" onclick="centerOnAustralia()">🇦🇺 Center Australia</button>
-                <button class="map-control-btn" onclick="showAllMarkers()">📍 Show All Markers</button>
-                <button class="map-control-btn" onclick="toggleTraffic()">🚦 Toggle Traffic</button>
-                <button class="map-control-btn" onclick="getCurrentLocation()">📍 My Location</button>
-            </div>
-            <div id="map"></div>
         </div>
 
         <div class="results-container">
@@ -584,13 +520,6 @@
         let allData = [];
         let filteredData = [];
         let currentView = 'cards';
-        let map = null;
-        let markers = [];
-        let userLocation = null;
-        let directionsService = null;
-        let directionsRenderer = null;
-        let trafficLayer = null;
-        let trafficVisible = false;
 
         // State mappings based on phone area codes and postcodes
         const stateMapping = {
@@ -603,18 +532,8 @@
             'TAS': { phones: ['03'], postcodes: [7000, 7999] }
         };
 
-        // Icons for different detail types
-        const icons = {
-            city: '📍',
-            address: '🏢',
-            phone: '📞',
-            inspector: '👤',
-            postcode: '📮',
-            map: '🗺️'
-        };
-
         // Sample data matching the spreadsheet structure
-        const sampleData = `AIL #	Company	Business Address	City	Postcode	Licensed Inspector	Phone	Geocordinates	First Lincensed	Licence Expires
+        const sampleData = `AIL #	Company	Business Address	City	Postcode	Licensed Inspector	Phone	Geocordinates	First Licensed	License Expires
 239	Aero Refuellers	Hanger 8-11 Ogden Street East Albury	Albury Wodonga	2640	-	02 6041 1599	-36.0697, 146.9545		
 222	Australian Fuelling Systems & Equip	7-11 Armstrong Street	Tamworth	2340	-	02 6760 7816	-31.0911, 150.9304		
 220	Doug Sutherland Truck Repairs	222 Urana Street	Wagga Wagga	2650	-	02 6925 2094	-35.1258, 147.3538		
@@ -622,33 +541,14 @@
 208	Durham Fabrications			2285	Luke Howson	02 4956 8868	-32.9272, 151.7765		
 415	Fuel Service Australia	29 Sandmere Road Pinkenba		4008	Kent Frantz	0433 450 603	-27.4679, 153.0281		
 623	Integrated Fuel Services			6000	JP Van Loenhout	08 9434 7000	-31.9505, 115.8605		
-457	Stephen Symes	Mobile Inspector		-	Stephen Symes	0403 277 637	-		`;
+457	Stephen Symes	Mobile Inspector		-	Stephen Symes	0403 277 637	-		
+301	Sydney Fuel Systems	15 Industrial Drive	Sydney	2000	Mark Johnson	02 9555 1234	-33.8688, 151.2093		
+302	Melbourne Tank Services	42 Factory Street	Melbourne	3000	Sarah Wilson	03 9876 5432	-37.8136, 144.9631		
+303	Brisbane Fuel Tech	88 Commerce Road	Brisbane	4000	David Chen	07 3456 7890	-27.4698, 153.0251		
+304	Perth Petroleum Services	25 Marine Terrace	Perth	6000	Lisa Brown	08 9321 6547	-31.9505, 115.8605		
+305	Adelaide Fuel Solutions	33 Port Road	Adelaide	5000	Michael Davis	08 8234 5678	-34.9285, 138.6007		`;
 
-        // Initialize Google Maps
-        function initMap() {
-            map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 5,
-                center: { lat: -25.2744, lng: 133.7751 }, // Center on Australia
-                mapTypeId: google.maps.MapTypeId.ROADMAP,
-                styles: [
-                    {
-                        featureType: "poi",
-                        elementType: "labels",
-                        stylers: [{ visibility: "off" }]
-                    }
-                ]
-            });
-
-            directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer();
-            directionsRenderer.setMap(map);
-
-            trafficLayer = new google.maps.TrafficLayer();
-
-            updateMapMarkers();
-        }
-
-        async function loadData() {
+        function loadData() {
             const loadingEl = document.getElementById('loadingMessage');
             const errorEl = document.getElementById('errorMessage');
             
@@ -656,14 +556,12 @@
             errorEl.style.display = 'none';
 
             try {
-                // Parse the sample data for now - you can replace this with actual Google Sheets API call
                 allData = parseTSV(sampleData);
                 filteredData = [...allData];
                 
                 loadingEl.style.display = 'none';
                 updateDisplay();
                 updateStats();
-                updateMapMarkers();
                 
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -686,25 +584,12 @@
                             row[header.trim()] = values[index] ? values[index].trim() : '';
                         });
                         
-                        // Parse coordinates
-                        const coordStr = row['Geocordinates'] || '';
-                        let lat = null, lng = null;
-                        if (coordStr && coordStr !== '-') {
-                            const coords = coordStr.split(',').map(c => parseFloat(c.trim()));
-                            if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
-                                lat = coords[0];
-                                lng = coords[1];
-                            }
-                        }
-                        
-                        // Determine if it's a mobile inspector
                         const inspector = row['Licensed Inspector'] || '';
                         const address = row['Business Address'] || '';
                         const isMobile = (inspector && inspector !== '-') || 
                                         address.toLowerCase().includes('mobile') ||
                                         (!address || address === '');
                         
-                        // Determine state
                         const phone = row['Phone'] || '';
                         const postcode = parseInt(row['Postcode']) || 0;
                         const state = determineState(phone, postcode);
@@ -717,12 +602,10 @@
                             postcode: row['Postcode'] || '',
                             inspector: inspector,
                             phone: phone,
-                            lat: lat,
-                            lng: lng,
                             isMobile: isMobile,
                             state: state,
-                            firstLicensed: row['First Lincensed'] || '',
-                            licenseExpires: row['Licence Expires'] || ''
+                            firstLicensed: row['First Licensed'] || '',
+                            licenseExpires: row['License Expires'] || ''
                         });
                     }
                 }
@@ -732,15 +615,10 @@
         }
 
         function determineState(phone, postcode) {
-            // First try by postcode
+            // Try by postcode first
             for (const [state, data] of Object.entries(stateMapping)) {
-                const ranges = Array.isArray(data.postcodes[0]) ? data.postcodes : [data.postcodes];
-                for (const range of ranges) {
-                    if (Array.isArray(range)) {
-                        if (postcode >= range[0] && postcode <= range[1]) return state;
-                    } else {
-                        if (postcode >= data.postcodes[0] && postcode <= data.postcodes[1]) return state;
-                    }
+                if (postcode >= data.postcodes[0] && postcode <= data.postcodes[1]) {
+                    return state;
                 }
             }
             
@@ -754,69 +632,205 @@
             return '';
         }
 
-        function updateMapMarkers() {
-            if (!map) return;
-
-            // Clear existing markers
-            markers.forEach(marker => marker.setMap(null));
-            markers = [];
-
-            // Add markers for filtered data with coordinates
-            const mappableData = filteredData.filter(item => item.lat && item.lng);
+        function updateDisplay() {
+            if (currentView === 'cards') {
+                updateCardView();
+            } else {
+                updateTableView();
+            }
             
-            mappableData.forEach(item => {
-                const marker = new google.maps.Marker({
-                    position: { lat: item.lat, lng: item.lng },
-                    map: map,
-                    title: item.company,
-                    icon: {
-                        url: 'data:image/svg+xml;base64,' + btoa(`
-                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40">
-                                <path d="M15 0C6.7 0 0 6.7 0 15c0 8.3 15 25 15 25s15-16.7 15-25C30 6.7 23.3 0 15 0z" fill="${item.isMobile ? '#28a745' : '#1e40af'}"/>
-                                <circle cx="15" cy="15" r="8" fill="white"/>
-                                <text x="15" y="20" font-family="Arial" font-size="12" fill="${item.isMobile ? '#28a745' : '#1e40af'}" text-anchor="middle" font-weight="bold">${item.isMobile ? '📱' : '✓'}</text>
-                            </svg>
-                        `),
-                        scaledSize: new google.maps.Size(30, 40)
-                    }
-                });
-
-                const infoWindow = new google.maps.InfoWindow({
-                    content: createInfoWindowContent(item)
-                });
-
-                marker.addListener("click", () => {
-                    // Close any open info windows
-                    markers.forEach(m => {
-                        if (m.infoWindow) m.infoWindow.close();
-                    });
-                    infoWindow.open(map, marker);
-                });
-
-                marker.infoWindow = infoWindow;
-                markers.push(marker);
-            });
+            const resultsCount = document.getElementById('resultsCount');
+            resultsCount.textContent = `Found ${filteredData.length} AIL${filteredData.length !== 1 ? 's' : ''}`;
         }
 
-        function createInfoWindowContent(item) {
-            return `
-                <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 300px;">
-                    <h3 style="color: #1e40af; margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">
-                        ${item.company}
-                        ${item.isMobile ? '<span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 8px; font-size: 12px; margin-left: 8px;">📱 Mobile</span>' : ''}
-                    </h3>
-                    <p style="margin: 5px 0; font-size: 14px;"><strong>AIL #:</strong> ${item.ail}</p>
-                    ${item.inspector && item.inspector !== '-' ? `<p style="margin: 5px 0; font-size: 14px;"><strong>👤 Inspector:</strong> ${item.inspector}</p>` : ''}
-                    ${item.city ? `<p style="margin: 5px 0; font-size: 14px;"><strong>📍 Location:</strong> ${item.city}${item.postcode ? ` ${item.postcode}` : ''}${item.state ? ` (${item.state})` : ''}</p>` : ''}
-                    ${item.address && !item.isMobile ? `<p style="margin: 5px 0; font-size: 14px;"><strong>🏢 Address:</strong> ${item.address}</p>` : ''}
-                    <p style="margin: 5px 0; font-size: 14px;"><strong>📞 Phone:</strong> <a href="tel:${item.phone}" style="color: #1e40af;">${item.phone}</a></p>
-                    <div style="margin-top: 15px;">
-                        <button onclick="getDirectionsToAIL(${item.lat}, ${item.lng}, '${item.company.replace(/'/g, "\\'")}')" 
-                                style="background: #1e40af; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 12px;">
-                            🗺️ Get Directions
-                        </button>
-                        <button onclick="callAIL('${item.phone}')" 
-                                style="background: #059669; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 12px;">
-                            📞 Call
-                        </button>
-                        <button onclick="showNearbyAILs(${item
+        function updateCardView() {
+            const cardView = document.getElementById('cardView');
+            
+            if (filteredData.length === 0) {
+                cardView.innerHTML = '<div class="no-results">No AILs found matching your search criteria.</div>';
+                return;
+            }
+
+            const cardsHtml = filteredData.map(item => `
+                <div class="company-card">
+                    <div class="card-header">
+                        <div class="company-name">${item.company}${item.isMobile ? '<span class="mobile-badge">📱 Mobile</span>' : ''}</div>
+                        <div class="ail-badge">AIL #${item.ail}</div>
+                    </div>
+                    <div class="card-details">
+                        ${item.inspector && item.inspector !== '-' ? `
+                            <div class="detail-row">
+                                <span class="detail-icon">👤</span>
+                                <span class="detail-text">${item.inspector}</span>
+                            </div>
+                        ` : ''}
+                        ${item.city ? `
+                            <div class="detail-row">
+                                <span class="detail-icon">📍</span>
+                                <span class="detail-text">${item.city}${item.postcode ? `<span class="postcode-tag">${item.postcode}</span>` : ''}${item.state ? ` (${item.state})` : ''}</span>
+                            </div>
+                        ` : ''}
+                        ${item.address && !item.isMobile ? `
+                            <div class="detail-row">
+                                <span class="detail-icon">🏢</span>
+                                <span class="detail-text">${item.address}</span>
+                            </div>
+                        ` : ''}
+                        <div class="detail-row">
+                            <span class="detail-icon">📞</span>
+                            <span class="detail-text"><a href="tel:${item.phone}" class="phone-link">${item.phone}</a></span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            cardView.innerHTML = cardsHtml;
+        }
+
+        function updateTableView() {
+            const tableView = document.getElementById('tableView');
+            
+            if (filteredData.length === 0) {
+                tableView.innerHTML = '<div class="no-results">No AILs found matching your search criteria.</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>AIL #</th>
+                            <th>Company</th>
+                            <th>Inspector</th>
+                            <th>Location</th>
+                            <th>Phone</th>
+                            <th>Type</th>
+                            <th>State</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filteredData.map(item => `
+                            <tr>
+                                <td>${item.ail}</td>
+                                <td>${item.company}</td>
+                                <td>${item.inspector && item.inspector !== '-' ? item.inspector : '-'}</td>
+                                <td>${item.city || '-'}${item.postcode ? ` (${item.postcode})` : ''}</td>
+                                <td><a href="tel:${item.phone}" class="phone-link">${item.phone}</a></td>
+                                <td>${item.isMobile ? '📱 Mobile' : '🏢 Fixed'}</td>
+                                <td>${item.state || '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            tableView.innerHTML = tableHtml;
+        }
+
+        function switchView(view) {
+            currentView = view;
+            
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`button[onclick="switchView('${view}')"]`).classList.add('active');
+            
+            if (view === 'cards') {
+                document.getElementById('cardView').style.display = 'grid';
+                document.getElementById('tableView').style.display = 'none';
+            } else {
+                document.getElementById('cardView').style.display = 'none';
+                document.getElementById('tableView').style.display = 'block';
+            }
+            
+            updateDisplay();
+        }
+
+        function updateStats() {
+            const statsContainer = document.getElementById('statsContainer');
+            const totalCount = document.getElementById('totalCount');
+            const stateCount = document.getElementById('stateCount');
+            const mobileCount = document.getElementById('mobileCount');
+            const fixedCount = document.getElementById('fixedCount');
+
+            totalCount.textContent = allData.length;
+            
+            const states = [...new Set(allData.map(item => item.state).filter(state => state))];
+            stateCount.textContent = states.length;
+            
+            const mobileAILs = allData.filter(item => item.isMobile);
+            mobileCount.textContent = mobileAILs.length;
+            
+            const fixedAILs = allData.filter(item => !item.isMobile);
+            fixedCount.textContent = fixedAILs.length;
+        }
+
+        function showStats() {
+            const statsContainer = document.getElementById('statsContainer');
+            statsContainer.style.display = statsContainer.style.display === 'none' ? 'grid' : 'none';
+        }
+
+        function exportResults() {
+            const csv = convertToCSV(filteredData);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ail_search_results_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function convertToCSV(data) {
+            const headers = ['AIL #', 'Company', 'Inspector', 'City', 'Postcode', 'Address', 'Phone', 'Type', 'State'];
+            const rows = data.map(item => [
+                item.ail,
+                item.company,
+                item.inspector || '',
+                item.city || '',
+                item.postcode || '',
+                item.address || '',
+                item.phone || '',
+                item.isMobile ? 'Mobile' : 'Fixed',
+                item.state || ''
+            ]);
+            
+            return [headers, ...rows].map(row => 
+                row.map(field => `"${field}"`).join(',')
+            ).join('\n');
+        }
+
+        function filterData() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const stateFilter = document.getElementById('stateFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+
+            filteredData = allData.filter(item => {
+                const matchesSearch = !searchTerm || 
+                    item.company.toLowerCase().includes(searchTerm) ||
+                    item.city.toLowerCase().includes(searchTerm) ||
+                    item.address.toLowerCase().includes(searchTerm) ||
+                    item.phone.includes(searchTerm) ||
+                    item.ail.includes(searchTerm) ||
+                    (item.inspector && item.inspector.toLowerCase().includes(searchTerm));
+
+                const matchesState = !stateFilter || item.state === stateFilter;
+                
+                const matchesType = !typeFilter || 
+                    (typeFilter === 'mobile' && item.isMobile) ||
+                    (typeFilter === 'fixed' && !item.isMobile);
+
+                return matchesSearch && matchesState && matchesType;
+            });
+
+            updateDisplay();
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterData);
+        document.getElementById('stateFilter').addEventListener('change', filterData);
+        document.getElementById('typeFilter').addEventListener('change', filterData);
+
+        // Initialize the application
+        loadData();
+    </script>
+</body>
+</html
