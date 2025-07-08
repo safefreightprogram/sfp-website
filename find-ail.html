@@ -430,6 +430,31 @@
             border-color: #667eea;
         }
 
+        .map-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .map-control-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .map-control-btn:hover,
+        .map-control-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
@@ -524,6 +549,12 @@
         </div>
 
         <div class="map-container" id="mapContainer">
+            <div class="map-controls">
+                <button class="map-control-btn" onclick="centerOnAustralia()">🇦🇺 Center Australia</button>
+                <button class="map-control-btn" onclick="showAllMarkers()">📍 Show All Markers</button>
+                <button class="map-control-btn" onclick="toggleTraffic()">🚦 Toggle Traffic</button>
+                <button class="map-control-btn" onclick="getCurrentLocation()">📍 My Location</button>
+            </div>
             <div id="map"></div>
         </div>
 
@@ -549,10 +580,6 @@
         </div>
     </div>
 
-    <!-- Leaflet CSS and JS for mapping -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <script>
         let allData = [];
         let filteredData = [];
@@ -560,6 +587,10 @@
         let map = null;
         let markers = [];
         let userLocation = null;
+        let directionsService = null;
+        let directionsRenderer = null;
+        let trafficLayer = null;
+        let trafficVisible = false;
 
         // State mappings based on phone area codes and postcodes
         const stateMapping = {
@@ -593,6 +624,30 @@
 623	Integrated Fuel Services			6000	JP Van Loenhout	08 9434 7000	-31.9505, 115.8605		
 457	Stephen Symes	Mobile Inspector		-	Stephen Symes	0403 277 637	-		`;
 
+        // Initialize Google Maps
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 5,
+                center: { lat: -25.2744, lng: 133.7751 }, // Center on Australia
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                styles: [
+                    {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    }
+                ]
+            });
+
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+
+            trafficLayer = new google.maps.TrafficLayer();
+
+            updateMapMarkers();
+        }
+
         async function loadData() {
             const loadingEl = document.getElementById('loadingMessage');
             const errorEl = document.getElementById('errorMessage');
@@ -608,6 +663,7 @@
                 loadingEl.style.display = 'none';
                 updateDisplay();
                 updateStats();
+                updateMapMarkers();
                 
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -698,160 +754,69 @@
             return '';
         }
 
-        function filterData() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const stateFilter = document.getElementById('stateFilter').value;
-            const typeFilter = document.getElementById('typeFilter').value;
+        function updateMapMarkers() {
+            if (!map) return;
 
-            filteredData = allData.filter(item => {
-                const matchesSearch = !searchTerm || 
-                    item.company.toLowerCase().includes(searchTerm) ||
-                    item.city.toLowerCase().includes(searchTerm) ||
-                    item.address.toLowerCase().includes(searchTerm) ||
-                    item.phone.includes(searchTerm) ||
-                    item.ail.includes(searchTerm) ||
-                    item.inspector.toLowerCase().includes(searchTerm) ||
-                    item.postcode.includes(searchTerm);
+            // Clear existing markers
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
 
-                const matchesState = !stateFilter || item.state === stateFilter;
+            // Add markers for filtered data with coordinates
+            const mappableData = filteredData.filter(item => item.lat && item.lng);
+            
+            mappableData.forEach(item => {
+                const marker = new google.maps.Marker({
+                    position: { lat: item.lat, lng: item.lng },
+                    map: map,
+                    title: item.company,
+                    icon: {
+                        url: 'data:image/svg+xml;base64,' + btoa(`
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40">
+                                <path d="M15 0C6.7 0 0 6.7 0 15c0 8.3 15 25 15 25s15-16.7 15-25C30 6.7 23.3 0 15 0z" fill="${item.isMobile ? '#28a745' : '#1e40af'}"/>
+                                <circle cx="15" cy="15" r="8" fill="white"/>
+                                <text x="15" y="20" font-family="Arial" font-size="12" fill="${item.isMobile ? '#28a745' : '#1e40af'}" text-anchor="middle" font-weight="bold">${item.isMobile ? '📱' : '✓'}</text>
+                            </svg>
+                        `),
+                        scaledSize: new google.maps.Size(30, 40)
+                    }
+                });
 
-                const matchesType = !typeFilter ||
-                    (typeFilter === 'mobile' && item.isMobile) ||
-                    (typeFilter === 'fixed' && !item.isMobile);
+                const infoWindow = new google.maps.InfoWindow({
+                    content: createInfoWindowContent(item)
+                });
 
-                return matchesSearch && matchesState && matchesType;
+                marker.addListener("click", () => {
+                    // Close any open info windows
+                    markers.forEach(m => {
+                        if (m.infoWindow) m.infoWindow.close();
+                    });
+                    infoWindow.open(map, marker);
+                });
+
+                marker.infoWindow = infoWindow;
+                markers.push(marker);
             });
-
-            updateDisplay();
-            updateMap();
         }
 
-        function updateDisplay() {
-            const resultsCount = document.getElementById('resultsCount');
-            resultsCount.textContent = `${filteredData.length} AIL${filteredData.length !== 1 ? 's' : ''} found`;
-
-            if (currentView === 'cards') {
-                updateCardView();
-            } else {
-                updateTableView();
-            }
-        }
-
-        function updateCardView() {
-            const cardView = document.getElementById('cardView');
-            
-            if (filteredData.length === 0) {
-                cardView.innerHTML = '<div class="no-results">🔍 No AILs found matching your criteria</div>';
-                return;
-            }
-
-            cardView.innerHTML = filteredData.map(item => `
-                <div class="company-card">
-                    <div class="card-header">
-                        <div class="company-name">
-                            ${item.company}
-                            ${item.isMobile ? '<span class="mobile-badge">📱 Mobile</span>' : ''}
-                        </div>
-                        <div class="ail-badge">AIL #${item.ail}</div>
-                    </div>
-                    <div class="card-details">
-                        ${item.isMobile && item.inspector && item.inspector !== '-' ? `
-                            <div class="detail-row">
-                                <div class="detail-icon">${icons.inspector}</div>
-                                <div class="detail-text">${item.inspector}</div>
-                            </div>
-                        ` : ''}
-                        ${item.city ? `
-                            <div class="detail-row">
-                                <div class="detail-icon">${icons.city}</div>
-                                <div class="detail-text">
-                                    ${item.city}
-                                    ${item.postcode ? `<span class="postcode-tag">${item.postcode}</span>` : ''}
-                                    ${item.state ? `<span class="postcode-tag">${item.state}</span>` : ''}
-                                </div>
-                            </div>
-                        ` : ''}
-                        ${item.address && !item.isMobile ? `
-                            <div class="detail-row">
-                                <div class="detail-icon">${icons.address}</div>
-                                <div class="detail-text">${item.address}</div>
-                            </div>
-                        ` : ''}
-                        <div class="detail-row">
-                            <div class="detail-icon">${icons.phone}</div>
-                            <div class="detail-text">
-                                <a href="tel:${item.phone}" class="phone-link">${item.phone}</a>
-                            </div>
-                        </div>
-                        ${item.lat && item.lng ? `
-                            <div class="detail-row">
-                                <div class="detail-icon">${icons.map}</div>
-                                <div class="detail-text">
-                                    <a href="https://maps.google.com/?q=${item.lat},${item.lng}" target="_blank" class="phone-link">
-                                        View on Map
-                                    </a>
-                                    <span style="margin-left: 10px; color: #6c757d; font-size: 0.9rem;">
-                                        ${item.lat.toFixed(4)}, ${item.lng.toFixed(4)}
-                                    </span>
-                                </div>
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function updateTableView() {
-            const tableView = document.getElementById('tableView');
-            
-            if (filteredData.length === 0) {
-                tableView.innerHTML = '<div class="no-results">🔍 No AILs found matching your criteria</div>';
-                return;
-            }
-
-            tableView.innerHTML = `
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>AIL #</th>
-                            <th>Company</th>
-                            <th>City</th>
-                            <th>Address</th>
-                            <th>Postcode</th>
-                            <th>Inspector</th>
-                            <th>Phone</th>
-                            <th>State</th>
-                            <th>Type</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${filteredData.map(item => `
-                            <tr>
-                                <td><strong>${item.ail}</strong></td>
-                                <td>${item.company}</td>
-                                <td>${item.city}</td>
-                                <td>${item.address}</td>
-                                <td>${item.postcode}</td>
-                                <td>${item.inspector === '-' ? '' : item.inspector}</td>
-                                <td><a href="tel:${item.phone}" class="phone-link">${item.phone}</a></td>
-                                <td>${item.state}</td>
-                                <td>${item.isMobile ? '📱 Mobile' : '🏢 Fixed'}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
-
-        function switchView(view) {
-            currentView = view;
-            
-            const cardView = document.getElementById('cardView');
-            const tableView = document.getElementById('tableView');
-            const viewBtns = document.querySelectorAll('.view-btn');
-            
-            viewBtns.forEach(btn => btn.classList.remove('active'));
-            
-            if (view === 'cards') {
-                cardView.style.display = 'grid';
-                tableView.style.display = 'none';
+        function createInfoWindowContent(item) {
+            return `
+                <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 300px;">
+                    <h3 style="color: #1e40af; margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">
+                        ${item.company}
+                        ${item.isMobile ? '<span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 8px; font-size: 12px; margin-left: 8px;">📱 Mobile</span>' : ''}
+                    </h3>
+                    <p style="margin: 5px 0; font-size: 14px;"><strong>AIL #:</strong> ${item.ail}</p>
+                    ${item.inspector && item.inspector !== '-' ? `<p style="margin: 5px 0; font-size: 14px;"><strong>👤 Inspector:</strong> ${item.inspector}</p>` : ''}
+                    ${item.city ? `<p style="margin: 5px 0; font-size: 14px;"><strong>📍 Location:</strong> ${item.city}${item.postcode ? ` ${item.postcode}` : ''}${item.state ? ` (${item.state})` : ''}</p>` : ''}
+                    ${item.address && !item.isMobile ? `<p style="margin: 5px 0; font-size: 14px;"><strong>🏢 Address:</strong> ${item.address}</p>` : ''}
+                    <p style="margin: 5px 0; font-size: 14px;"><strong>📞 Phone:</strong> <a href="tel:${item.phone}" style="color: #1e40af;">${item.phone}</a></p>
+                    <div style="margin-top: 15px;">
+                        <button onclick="getDirectionsToAIL(${item.lat}, ${item.lng}, '${item.company.replace(/'/g, "\\'")}')" 
+                                style="background: #1e40af; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 12px;">
+                            🗺️ Get Directions
+                        </button>
+                        <button onclick="callAIL('${item.phone}')" 
+                                style="background: #059669; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 12px;">
+                            📞 Call
+                        </button>
+                        <button onclick="showNearbyAILs(${item
