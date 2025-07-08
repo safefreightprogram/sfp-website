@@ -1,5 +1,595 @@
 <!DOCTYPE html>
+<html lang="en"><!DOCTYPE html>
 <html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safe Freight Equipment Inspection Entry</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      padding: 2rem;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #1c3d5a;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 2rem;
+    }
+    .form-container {
+      background: white;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Authentication Section */
+    .auth-section {
+      background-color: #e8f4f8;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      border-left: 4px solid #1c3d5a;
+    }
+    
+    /* Form Sections */
+    .form-section {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+    }
+    
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #1c3d5a;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #1c3d5a;
+      padding-bottom: 0.5rem;
+    }
+    
+    .form-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .form-group {
+      flex: 1;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-weight: bold;
+      color: #555;
+    }
+    
+    input, select, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    
+    /* File Upload Styling */
+    .file-upload {
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      padding: 2rem;
+      text-align: center;
+      margin-top: 0.5rem;
+      transition: border-color 0.3s;
+    }
+    
+    .file-upload:hover {
+      border-color: #1c3d5a;
+    }
+    
+    .file-upload.dragover {
+      border-color: #1c3d5a;
+      background-color: #f0f8ff;
+    }
+    
+    /* Digital Signature */
+    .signature-section {
+      background-color: #fffbf0;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid #ffd700;
+    }
+    
+    .signature-pad {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: white;
+      cursor: crosshair;
+      display: block;
+      margin: 1rem 0;
+    }
+    
+    .signature-controls {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .signature-controls button {
+      padding: 0.5rem 1rem;
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    
+    .signature-controls button:hover {
+      background-color: #5a6268;
+    }
+    
+    /* Buttons */
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      justify-content: center;
+    }
+    
+    button {
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    .btn-primary {
+      background-color: #1c3d5a;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: #285a7f;
+    }
+    
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #5a6268;
+    }
+    
+    .btn-download {
+      background-color: #28a745;
+      color: white;
+    }
+    
+    .btn-download:hover {
+      background-color: #218838;
+    }
+    
+    /* Status Messages */
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 1rem;
+      border-radius: 6px;
+      border: 1px solid #c3e6cb;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 1rem;
+      border-radius: 6px;
+      border: 1px solid #f5c6cb;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    
+    .required {
+      color: #dc3545;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+      }
+      
+      .button-group {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      body {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Equipment Inspection Entry</h1>
+  <p class="subtitle">Authorised Inspection Location (AIL) Portal</p>
+  
+  <div class="form-container">
+    <!-- Authentication Section -->
+    <div class="auth-section">
+      <div class="section-title">Inspector Authentication</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="ailId">AIL ID <span class="required">*</span></label>
+          <input type="text" id="ailId" name="ailId" required placeholder="AIL-####">
+        </div>
+        <div class="form-group">
+          <label for="inspectorId">Inspector ID <span class="required">*</span></label>
+          <input type="text" id="inspectorId" name="inspectorId" required placeholder="Inspector identification">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="inspectorName">Inspector Name <span class="required">*</span></label>
+          <input type="text" id="inspectorName" name="inspectorName" required>
+        </div>
+        <div class="form-group">
+          <label for="qualification">Qualification/Certification <span class="required">*</span></label>
+          <input type="text" id="qualification" name="qualification" required>
+        </div>
+      </div>
+    </div>
+
+    <form id="inspectionForm">
+      <!-- Equipment Details Section -->
+      <div class="form-section">
+        <div class="section-title">Equipment Details</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="equipmentId">Equipment ID (SFPV-######) <span class="required">*</span></label>
+            <input type="text" id="equipmentId" name="equipmentId" required pattern="SFPV-\d{6}" placeholder="SFPV-123456">
+          </div>
+          <div class="form-group">
+            <label for="type">Equipment Type <span class="required">*</span></label>
+            <select id="type" name="type" required>
+              <option value="">Select Type</option>
+              <option>Prime Mover</option>
+              <option>Tanker Barrel</option>
+              <option>Dolley</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="rego">Registration (Rego) <span class="required">*</span></label>
+            <input type="text" id="rego" name="rego" required>
+          </div>
+          <div class="form-group">
+            <label for="vin">VIN <span class="required">*</span></label>
+            <input type="text" id="vin" name="vin" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inspection Details Section -->
+      <div class="form-section">
+        <div class="section-title">Inspection Details</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="inspectionDate">Date of Inspection <span class="required">*</span></label>
+            <input type="date" id="inspectionDate" name="inspectionDate" required>
+          </div>
+          <div class="form-group">
+            <label for="inspectionTime">Time of Inspection <span class="required">*</span></label>
+            <input type="time" id="inspectionTime" name="inspectionTime" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="status">Status <span class="required">*</span></label>
+            <select id="status" name="status" required>
+              <option value="">Select Status</option>
+              <option>Active</option>
+              <option>Non-Compliant</option>
+              <option>Expired</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="expiryDate">Expiry Date <span class="required">*</span></label>
+            <input type="date" id="expiryDate" name="expiryDate" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="complianceGranted">Compliance Granted Date</label>
+          <input type="date" id="complianceGranted" name="complianceGranted">
+        </div>
+      </div>
+
+      <!-- Inspection Documentation Section -->
+      <div class="form-section">
+        <div class="section-title">Inspection Documentation</div>
+        
+        <div class="form-group">
+          <label>Download Inspection Checklist</label>
+          <button type="button" class="btn-download" onclick="downloadChecklist()">
+            Download SFP Inspection Checklist
+          </button>
+        </div>
+        
+        <div class="form-group">
+          <label for="checklistUpload">Upload Completed Checklist <span class="required">*</span></label>
+          <div class="file-upload" id="checklistUpload">
+            <input type="file" id="checklistFile" name="checklistFile" accept=".pdf,.jpg,.jpeg,.png" required style="display: none;">
+            <p>Drag and drop your completed checklist here or click to browse</p>
+            <p style="font-size: 0.9rem; color: #666;">Accepted formats: PDF, JPG, PNG</p>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="additionalPhotos">Additional Photos (optional)</label>
+          <div class="file-upload" id="additionalPhotos">
+            <input type="file" id="photoFiles" name="photoFiles" accept=".jpg,.jpeg,.png" multiple style="display: none;">
+            <p>Upload additional inspection photos</p>
+            <p style="font-size: 0.9rem; color: #666;">Multiple files allowed</p>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="notes">Additional Notes</label>
+          <textarea id="notes" name="notes" placeholder="Any additional observations or notes..."></textarea>
+        </div>
+      </div>
+
+      <!-- Digital Signature Section -->
+      <div class="form-section signature-section">
+        <div class="section-title">Digital Signature</div>
+        <p style="margin-bottom: 1rem; color: #666;">
+          By signing below, I certify that I am an authorized nominee of the AIL and that this inspection has been conducted in accordance with SFP standards.
+        </p>
+        
+        <label for="signaturePad">Digital Signature <span class="required">*</span></label>
+        <canvas id="signaturePad" class="signature-pad" width="400" height="200"></canvas>
+        
+        <div class="signature-controls">
+          <button type="button" onclick="clearSignature()">Clear Signature</button>
+          <button type="button" onclick="saveSignature()">Save Signature</button>
+        </div>
+        
+        <div class="form-row" style="margin-top: 1rem;">
+          <div class="form-group">
+            <label for="signatureDate">Date Signed <span class="required">*</span></label>
+            <input type="date" id="signatureDate" name="signatureDate" required>
+          </div>
+          <div class="form-group">
+            <label for="signatureTime">Time Signed <span class="required">*</span></label>
+            <input type="time" id="signatureTime" name="signatureTime" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button type="button" class="btn-secondary" onclick="saveDraft()">Save as Draft</button>
+        <button type="submit" class="btn-primary">Submit Inspection</button>
+      </div>
+      
+      <div id="successMessage" class="success" style="display: none;">
+        Inspection submitted successfully! Equipment sheet has been updated.
+      </div>
+      
+      <div id="errorMessage" class="error" style="display: none;">
+        Error submitting inspection. Please check all fields and try again.
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Initialize signature pad
+    const canvas = document.getElementById('signaturePad');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let hasSignature = false;
+
+    // Set current date and time
+    document.getElementById('inspectionDate').valueAsDate = new Date();
+    document.getElementById('inspectionTime').value = new Date().toTimeString().slice(0,5);
+    document.getElementById('signatureDate').valueAsDate = new Date();
+    document.getElementById('signatureTime').value = new Date().toTimeString().slice(0,5);
+
+    // Signature pad functionality
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+
+    // Touch events for mobile
+    canvas.addEventListener('touchstart', handleTouch);
+    canvas.addEventListener('touchmove', handleTouch);
+    canvas.addEventListener('touchend', stopDrawing);
+
+    function startDrawing(e) {
+      isDrawing = true;
+      draw(e);
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#000';
+      
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      
+      hasSignature = true;
+    }
+
+    function stopDrawing() {
+      if (!isDrawing) return;
+      isDrawing = false;
+      ctx.beginPath();
+    }
+
+    function handleTouch(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 
+                                       e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+      canvas.dispatchEvent(mouseEvent);
+    }
+
+    function clearSignature() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      hasSignature = false;
+    }
+
+    function saveSignature() {
+      if (!hasSignature) {
+        alert('Please provide a signature before saving.');
+        return;
+      }
+      alert('Signature saved successfully!');
+    }
+
+    // File upload functionality
+    function setupFileUpload(uploadId, inputId) {
+      const uploadArea = document.getElementById(uploadId);
+      const input = document.getElementById(inputId);
+      
+      uploadArea.addEventListener('click', () => input.click());
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        input.files = e.dataTransfer.files;
+        updateUploadDisplay(uploadArea, input.files);
+      });
+      
+      input.addEventListener('change', () => {
+        updateUploadDisplay(uploadArea, input.files);
+      });
+    }
+
+    function updateUploadDisplay(uploadArea, files) {
+      if (files.length > 0) {
+        const fileNames = Array.from(files).map(file => file.name).join(', ');
+        uploadArea.innerHTML = `<p style="color: #28a745;">✓ ${files.length} file(s) selected: ${fileNames}</p>`;
+      }
+    }
+
+    // Initialize file uploads
+    setupFileUpload('checklistUpload', 'checklistFile');
+    setupFileUpload('additionalPhotos', 'photoFiles');
+
+    function downloadChecklist() {
+      // This would link to your actual checklist PDF
+      alert('Downloading SFP Inspection Checklist...');
+      // window.open('/path/to/checklist.pdf', '_blank');
+    }
+
+    function saveDraft() {
+      alert('Draft saved successfully!');
+    }
+
+    // Form submission
+    document.getElementById('inspectionForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+      
+      // Validate signature
+      if (!hasSignature) {
+        document.getElementById('errorMessage').textContent = 'Digital signature is required.';
+        document.getElementById('errorMessage').style.display = 'block';
+        return;
+      }
+      
+      // Collect form data
+      const formData = new FormData();
+      
+      // Add all form fields
+      const inputs = this.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        if (input.type === 'file') {
+          for (let file of input.files) {
+            formData.append(input.name, file);
+          }
+        } else {
+          formData.append(input.name, input.value);
+        }
+      });
+      
+      // Add signature as base64
+      formData.append('signature', canvas.toDataURL());
+      
+      // Add authentication data
+      formData.append('ailId', document.getElementById('ailId').value);
+      formData.append('inspectorId', document.getElementById('inspectorId').value);
+      formData.append('inspectorName', document.getElementById('inspectorName').value);
+      formData.append('qualification', document.getElementById('qualification').value);
+      
+      console.log("Submitting inspection data:", Object.fromEntries(formData));
+      
+      try {
+        // Here you would send to your backend/Google Apps Script
+        // const response = await fetch('/api/submit-inspection', {
+        //   method: 'POST',
+        //   body: formData
+        // });
+        
+        // Simulate success
+        document.getElementById('successMessage').style.display = 'block';
+        document.getElementById('errorMessage').style.display = 'none';
+        
+        setTimeout(() => {
+          document.getElementById('successMessage').style.display = 'none';
+          this.reset();
+          clearSignature();
+        }, 3000);
+        
+      } catch (error) {
+        document.getElementById('errorMessage').textContent = 'Error submitting inspection: ' + error.message;
+        document.getElementById('errorMessage').style.display = 'block';
+        document.getElementById('successMessage').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
