@@ -30,6 +30,15 @@
     .info-window h3 {
       margin: 0 0 5px;
     }
+    #debug {
+      white-space: pre-wrap;
+      font-size: 12px;
+      margin-top: 10px;
+      background: #f3f3f3;
+      padding: 10px;
+      border: 1px dashed #999;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -37,6 +46,7 @@
   <p>Search for your location and view nearby Authorised Inspection Licensees (AILs):</p>
   <input id="locationSearch" type="text" placeholder="e.g. Parramatta, NSW" />
   <div id="mapContainer"></div>
+  <div id="debug"></div>
 
   <script>
     let map;
@@ -108,20 +118,31 @@
         const response = await fetch(SHEET_URL);
         const csv = await response.text();
         const data = parseCSV(csv);
+        if (!data.length) {
+          document.getElementById('debug').style.display = 'block';
+          document.getElementById('debug').textContent = '❌ No valid AIL data found. Check if the sheet format changed or CSV fields have extra commas.';
+        }
         geocodeAndAddMarkers(data);
       } catch (error) {
         console.error("Failed to load AIL data:", error);
+        document.getElementById('debug').style.display = 'block';
+        document.getElementById('debug').textContent = '❌ Failed to load Google Sheet: ' + error;
       }
     }
 
     function parseCSV(text) {
-      const lines = text.trim().split('\n');
+      const lines = text.trim().split(/\r?\n/);
       const result = [];
-      for (let i = 1; i < lines.length; i++) {
-        const row = lines[i].split(',');
-        if (row.length < 5) continue;
-        const [company, ail, cityOrInspector, address, phone] = row.map(cell => cell.trim());
+      const regex = /(?:"([^"]*)")|([^,\n]+)/g;
 
+      for (let i = 1; i < lines.length; i++) {
+        const row = [];
+        let match;
+        while ((match = regex.exec(lines[i]))) {
+          row.push(match[1] || match[2]);
+        }
+        if (row.length < 5) continue;
+        const [company, ail, cityOrInspector, address, phone] = row.map(cell => (cell || '').trim());
         const isMobile = address.toLowerCase().includes("mobile") || cityOrInspector.toLowerCase().includes("mobile");
         const city = isMobile ? "" : cityOrInspector;
         const inspector = isMobile ? cityOrInspector : "";
@@ -144,12 +165,14 @@
 
     function geocodeAndAddMarkers(data) {
       let delay = 0;
-      data.forEach((item) => {
+      let plotted = 0;
+      data.forEach((item, index) => {
         if (!item.address || item.isMobile) {
           const fallback = STATE_CENTERS[item.state] || STATE_CENTERS['NSW'];
           item.lat = fallback.lat + (Math.random() - 0.5) * 0.5;
           item.lng = fallback.lng + (Math.random() - 0.5) * 0.5;
           addMarker(item);
+          if (++plotted === 1) map.setZoom(5);
         } else {
           setTimeout(() => {
             geocoder.geocode({ address: `${item.address}, ${item.city}, Australia` }, (results, status) => {
@@ -158,12 +181,13 @@
                 item.lat = latLng.lat();
                 item.lng = latLng.lng();
                 addMarker(item);
+                if (++plotted === 1) map.setZoom(5);
               } else {
                 console.warn(`Geocode failed for ${item.company}: ${status}`);
               }
             });
           }, delay);
-          delay += 250;
+          delay += 300;
         }
       });
     }
@@ -204,10 +228,7 @@
     }
   </script>
 
-  <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfGBAzqWsctQDwUnPpbr8dPujAzSx-ohs&libraries=places"
-    defer
-  ></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfGBAzqWsctQDwUnPpbr8dPujAzSx-ohs&libraries=places" defer></script>
   <script>
     window.addEventListener("load", () => {
       const checkReady = setInterval(() => {
