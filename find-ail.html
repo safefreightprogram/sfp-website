@@ -1,92 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Find an AIL – Safe Freight Program</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <style>
-    #map {
-      height: 80vh;
-      width: 100%;
-    }
-  </style>
 </head>
-<body class="bg-gray-100 text-gray-900">
-  <header class="bg-white shadow p-4 flex justify-between items-center">
-    <h1 class="text-2xl font-bold">Find an AIL</h1>
-    <a href="/" class="text-blue-600 hover:underline">Back to Home</a>
-  </header>
+<body class="bg-white text-gray-800 font-sans">
 
-  <main class="p-4">
-    <p class="mb-4">This page shows the locations of Authorised Inspection Licensees (AILs) across Australia. Use the map to find one near you.</p>
-    <div id="map" class="mb-4 rounded shadow"></div>
-    <p id="statusMsg" class="text-sm text-gray-600">Data is synced live from <a href="https://docs.google.com/spreadsheets/d/13biqIGqstGzfi6d0TNt0SR3vwIxOmC8hlZGX1qIfIYw/edit?usp=sharing" class="text-blue-500 underline" target="_blank">this Google Sheet</a>.</p>
-    <p class="text-xs text-red-600 mt-2">Note: If you see a map loading error, ensure the domain <code>https://web-sandbox.oaiusercontent.com</code> is listed as an authorized HTTP referrer in your <a href="https://console.cloud.google.com/apis/credentials" class="underline text-blue-500" target="_blank">Google Cloud Console API key settings</a>.</p>
-  </main>
+  <div class="max-w-xl mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">Find an Authorised Inspection Licensee (AIL)</h1>
+    
+    <input type="text" id="searchInput" placeholder="Search suburb, postcode or state" 
+           class="w-full p-2 border border-gray-300 rounded mb-4"/>
 
-  <!-- REPLACE WITH YOUR OWN KEY FOR DEPLOYMENT -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfGBAzqWsctQDwUnPpbr8dPujAzSx-ohs"></script>
+    <div id="results" class="space-y-3 text-sm text-gray-700"></div>
+  </div>
+
   <script>
-    async function loadAILData() {
-      const sheetUrl = 'https://opensheet.elk.sh/13biqIGqstGzfi6d0TNt0SR3vwIxOmC8hlZGX1qIfIYw/Sheet1';
-      try {
-        const res = await fetch(sheetUrl);
-        if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
-        const data = await res.json();
-        return data.filter(entry => entry["Geocoordinates"] && entry["Geocoordinates"].includes(','));
-      } catch (err) {
-        console.error("Error fetching AIL data:", err);
-        document.getElementById("statusMsg").innerText = "Failed to load AIL data.";
-        return [];
-      }
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3NOomqJpRrT_gP2u9uTvAfOPeDcvz7aGhnH3EIGl6BYfQ2cgJ4c1O-TZb8ShFsPqH5Zdfy7CjDZvc/pub?output=csv";
+
+    async function fetchSheetData() {
+      const response = await fetch(sheetURL);
+      const csvText = await response.text();
+      const [headerLine, ...rows] = csvText.split("\n");
+      const headers = headerLine.split(",").map(h => h.trim());
+
+      return rows.map(row => {
+        const values = row.split(",");
+        const obj = {};
+        headers.forEach((key, idx) => obj[key] = values[idx]?.trim());
+        return obj;
+      });
     }
 
-    function initMap(ailData) {
-      const map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 4.5,
-        center: { lat: -25.2744, lng: 133.7751 },
-      });
-
-      let markerCount = 0;
-
-      ailData.forEach((ail, index) => {
-        try {
-          const [lat, lng] = ail["Geocoordinates"].split(',').map(Number);
-          if (isNaN(lat) || isNaN(lng)) throw new Error("Invalid coordinates");
-
-          const marker = new google.maps.Marker({
-            position: { lat, lng },
-            map,
-            title: ail["Company"] || `AIL #${ail["AIL #"]}`
-          });
-
-          const infoWindow = new google.maps.InfoWindow({
-            content: `
-              <div class="text-sm">
-                <strong>${ail["Company"] || 'Unknown Company'}</strong><br>
-                ${ail["Business Address Line 1"] || ''}, ${ail["Suburb"] || ''} ${ail["Postcode"] || ''}<br>
-                Inspector: ${ail["Licensed Inspector"] || 'N/A'}<br>
-                Phone: ${ail["Phone"] || 'N/A'}
-              </div>`
-          });
-
-          marker.addListener("click", () => {
-            infoWindow.open(map, marker);
-          });
-
-          markerCount++;
-        } catch (err) {
-          console.warn(`Skipping row ${index + 1} due to error:`, err);
-        }
-      });
-
-      if (markerCount === 0) {
-        document.getElementById("statusMsg").innerText = "No valid AIL locations were found in the data.";
-      }
+    function filterData(data, query) {
+      const lowerQuery = query.toLowerCase();
+      return data.filter(entry =>
+        entry["Suburb"]?.toLowerCase().includes(lowerQuery) ||
+        entry["Postcode"]?.toLowerCase().includes(lowerQuery) ||
+        entry["State"]?.toLowerCase().includes(lowerQuery)
+      );
     }
 
-    loadAILData().then(initMap);
+    function renderResults(matches) {
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = matches.length
+        ? matches.map(entry =>
+            `<div class="border-b pb-2">
+              <div class="font-semibold">${entry["Business Name"]}</div>
+              <div>${entry["Suburb"]}, ${entry["State"]} ${entry["Postcode"]}</div>
+              <div>${entry["Contact"] || ""}</div>
+            </div>`
+          ).join("")
+        : "<div>No results found.</div>";
+    }
+
+    let allData = [];
+
+    document.getElementById("searchInput").addEventListener("input", e => {
+      const query = e.target.value;
+      const results = filterData(allData, query);
+      renderResults(results);
+    });
+
+    // Init
+    fetchSheetData().then(data => {
+      allData = data;
+      renderResults(data); // optionally show all initially
+    });
   </script>
+
 </body>
 </html>
