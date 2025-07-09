@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SFP AIL Map Test</title>
+  <title>SFP AIL Map + Data</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -24,11 +24,17 @@
       border: 2px solid #ccc;
       border-radius: 6px;
     }
+    .info-window {
+      font-size: 14px;
+    }
+    .info-window h3 {
+      margin: 0 0 5px;
+    }
   </style>
 </head>
 <body>
-  <h2>SFP AIL Finder - Map Functionality Test</h2>
-  <p>Enter a location or suburb to test search and map response:</p>
+  <h2>SFP AIL Finder</h2>
+  <p>Search for your location and view nearby Authorised Inspection Licensees (AILs):</p>
   <input id="locationSearch" type="text" placeholder="e.g. Parramatta, NSW" />
   <div id="mapContainer"></div>
 
@@ -36,11 +42,33 @@
     let map;
     let autocomplete;
     let userMarker;
+    let markers = [];
+
+    const AIL_DATA = [
+      {
+        ail: "001",
+        company: "ABC Inspections",
+        lat: -33.8688,
+        lng: 151.2093,
+        phone: "0299991234",
+        isMobile: false,
+        city: "Sydney"
+      },
+      {
+        ail: "002",
+        company: "Mobile Check QLD",
+        lat: -27.4698,
+        lng: 153.0251,
+        phone: "0733335678",
+        isMobile: true,
+        city: "Brisbane"
+      }
+    ];
 
     function initMap() {
       map = new google.maps.Map(document.getElementById("mapContainer"), {
         zoom: 5,
-        center: { lat: -25.2744, lng: 133.7751 }, // Australia
+        center: { lat: -25.2744, lng: 133.7751 },
         mapTypeId: "roadmap",
       });
 
@@ -55,7 +83,7 @@
         if (place.geometry && place.geometry.location) {
           const location = place.geometry.location;
           map.setCenter(location);
-          map.setZoom(12);
+          map.setZoom(10);
 
           if (userMarker) userMarker.setMap(null);
 
@@ -63,8 +91,49 @@
             position: location,
             map: map,
             title: place.name,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: "#dc2626",
+              fillOpacity: 1,
+              strokeWeight: 2,
+              strokeColor: "white"
+            }
           });
         }
+      });
+
+      addAILMarkers();
+    }
+
+    function addAILMarkers() {
+      AIL_DATA.forEach(item => {
+        const marker = new google.maps.Marker({
+          position: { lat: item.lat, lng: item.lng },
+          map,
+          title: item.company,
+          icon: {
+            url: `https://maps.google.com/mapfiles/ms/icons/${item.isMobile ? 'green' : 'blue'}-dot.png`
+          }
+        });
+
+        const infoWindow = new google.maps.InfoWindow({
+          content: `
+            <div class="info-window">
+              <h3>${item.company}</h3>
+              <p><strong>AIL #:</strong> ${item.ail}</p>
+              <p><strong>City:</strong> ${item.city}</p>
+              <p><strong>Type:</strong> ${item.isMobile ? 'Mobile' : 'Fixed'}</p>
+              <p><strong>Phone:</strong> <a href="tel:${item.phone}">${item.phone}</a></p>
+            </div>
+          `
+        });
+
+        marker.addListener("click", () => {
+          infoWindow.open(map, marker);
+        });
+
+        markers.push(marker);
       });
     }
   </script>
