@@ -10,7 +10,7 @@
       padding: 20px;
     }
     #mapContainer {
-      height: 500px;
+      height: 250px;
       width: 100%;
       margin-top: 20px;
       border: 2px solid #ccc;
@@ -44,6 +44,7 @@
     let userMarker;
     let markers = [];
     let geocoder;
+    let infoWindows = [];
     const bounds = new google.maps.LatLngBounds();
 
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/13biqIGqstGzfi6d0TNt0SR3vwIxOmC8hlZGX1qIfIYw/export?format=csv';
@@ -118,6 +119,7 @@
       const result = [];
       for (let i = 1; i < lines.length; i++) {
         const row = lines[i].split(',');
+        if (row.length < 5) continue;
         const [company, ail, cityOrInspector, address, phone] = row.map(cell => cell.trim());
 
         const isMobile = address.toLowerCase().includes("mobile") || cityOrInspector.toLowerCase().includes("mobile");
@@ -193,9 +195,11 @@
       });
 
       marker.addListener("click", () => {
+        infoWindows.forEach(w => w.close());
         infoWindow.open(map, marker);
       });
 
+      infoWindows.push(infoWindow);
       markers.push(marker);
     }
   </script>
