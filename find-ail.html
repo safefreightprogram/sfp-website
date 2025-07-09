@@ -43,8 +43,21 @@
     let autocomplete;
     let userMarker;
     let markers = [];
+    let geocoder;
+    const bounds = new google.maps.LatLngBounds();
 
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/13biqIGqstGzfi6d0TNt0SR3vwIxOmC8hlZGX1qIfIYw/export?format=csv';
+
+    const STATE_CENTERS = {
+      'NSW': { lat: -31.2532, lng: 146.9211 },
+      'VIC': { lat: -37.4713, lng: 144.7852 },
+      'QLD': { lat: -20.9176, lng: 142.7028 },
+      'WA':  { lat: -27.6728, lng: 121.6283 },
+      'SA':  { lat: -30.0002, lng: 136.2092 },
+      'TAS': { lat: -41.4545, lng: 145.9707 },
+      'NT':  { lat: -19.4914, lng: 132.5509 },
+      'ACT': { lat: -35.4735, lng: 149.0124 },
+    };
 
     function initMap() {
       map = new google.maps.Map(document.getElementById("mapContainer"), {
@@ -52,6 +65,8 @@
         center: { lat: -25.2744, lng: 133.7751 },
         mapTypeId: "roadmap",
       });
+
+      geocoder = new google.maps.Geocoder();
 
       const input = document.getElementById("locationSearch");
       autocomplete = new google.maps.places.Autocomplete(input, {
@@ -92,7 +107,7 @@
         const response = await fetch(SHEET_URL);
         const csv = await response.text();
         const data = parseCSV(csv);
-        addAILMarkers(data);
+        geocodeAndAddMarkers(data);
       } catch (error) {
         console.error("Failed to load AIL data:", error);
       }
@@ -108,9 +123,8 @@
         const isMobile = address.toLowerCase().includes("mobile") || cityOrInspector.toLowerCase().includes("mobile");
         const city = isMobile ? "" : cityOrInspector;
         const inspector = isMobile ? cityOrInspector : "";
-
-        const lat = null;
-        const lng = null;
+        const stateMatch = address.match(/\b(NSW|VIC|QLD|WA|SA|TAS|NT|ACT)\b/i);
+        const state = stateMatch ? stateMatch[1].toUpperCase() : "NSW";
 
         result.push({
           company,
@@ -120,45 +134,69 @@
           address,
           phone,
           isMobile,
-          lat,
-          lng
+          state
         });
       }
       return result;
     }
 
-    function addAILMarkers(data) {
-      data.forEach(item => {
-        if (!item.lat || !item.lng) return; // Needs geocoding to work dynamically
-
-        const marker = new google.maps.Marker({
-          position: { lat: parseFloat(item.lat), lng: parseFloat(item.lng) },
-          map,
-          title: item.company,
-          icon: {
-            url: `https://maps.google.com/mapfiles/ms/icons/${item.isMobile ? 'green' : 'blue'}-dot.png`
-          }
-        });
-
-        const infoWindow = new google.maps.InfoWindow({
-          content: `
-            <div class="info-window">
-              <h3>${item.company}</h3>
-              <p><strong>AIL #:</strong> ${item.ail}</p>
-              ${item.city ? `<p><strong>City:</strong> ${item.city}</p>` : ''}
-              ${item.inspector ? `<p><strong>Inspector:</strong> ${item.inspector}</p>` : ''}
-              <p><strong>Type:</strong> ${item.isMobile ? 'Mobile' : 'Fixed'}</p>
-              <p><strong>Phone:</strong> <a href="tel:${item.phone}">${item.phone}</a></p>
-            </div>
-          `
-        });
-
-        marker.addListener("click", () => {
-          infoWindow.open(map, marker);
-        });
-
-        markers.push(marker);
+    function geocodeAndAddMarkers(data) {
+      let delay = 0;
+      data.forEach((item) => {
+        if (!item.address || item.isMobile) {
+          const fallback = STATE_CENTERS[item.state] || STATE_CENTERS['NSW'];
+          item.lat = fallback.lat + (Math.random() - 0.5) * 0.5;
+          item.lng = fallback.lng + (Math.random() - 0.5) * 0.5;
+          addMarker(item);
+        } else {
+          setTimeout(() => {
+            geocoder.geocode({ address: `${item.address}, ${item.city}, Australia` }, (results, status) => {
+              if (status === "OK" && results[0]) {
+                const latLng = results[0].geometry.location;
+                item.lat = latLng.lat();
+                item.lng = latLng.lng();
+                addMarker(item);
+              } else {
+                console.warn(`Geocode failed for ${item.company}: ${status}`);
+              }
+            });
+          }, delay);
+          delay += 250;
+        }
       });
+    }
+
+    function addMarker(item) {
+      const marker = new google.maps.Marker({
+        position: { lat: item.lat, lng: item.lng },
+        map,
+        title: item.company,
+        icon: {
+          url: `https://maps.google.com/mapfiles/ms/icons/${item.isMobile ? 'red' : 'blue'}-dot.png`
+        }
+      });
+
+      bounds.extend(marker.getPosition());
+      map.fitBounds(bounds);
+
+      const infoWindow = new google.maps.InfoWindow({
+        content: `
+          <div class="info-window">
+            <h3>${item.company}</h3>
+            <p><strong>AIL #:</strong> ${item.ail}</p>
+            ${item.city ? `<p><strong>City:</strong> ${item.city}</p>` : ''}
+            ${item.inspector ? `<p><strong>Inspector:</strong> ${item.inspector}</p>` : ''}
+            <p><strong>Type:</strong> ${item.isMobile ? 'Mobile' : 'Fixed'}</p>
+            <p><strong>Phone:</strong> <a href="tel:${item.phone}">${item.phone}</a></p>
+          </div>
+        `
+      });
+
+      marker.addListener("click", () => {
+        infoWindow.open(map, marker);
+      });
+
+      markers.push(marker);
     }
   </script>
 
