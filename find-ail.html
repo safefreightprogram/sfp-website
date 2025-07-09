@@ -14,7 +14,7 @@
     }
 
     #mapContainer {
-      height: 50vh;
+      height: 45vh;
       width: 100%;
       position: relative;
       z-index: 1;
@@ -56,20 +56,6 @@
       z-index: 10;
     }
 
-    #resultsContainer {
-      padding: 10px 20px;
-      max-height: 50vh;
-      overflow-y: auto;
-      background: #fff;
-      border-top: 1px solid #ccc;
-    }
-
-    .result-entry {
-      margin-bottom: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #eee;
-    }
-
     .toggle-controls {
       padding: 10px 20px;
       background: #eaeaea;
@@ -80,6 +66,19 @@
 
     .toggle-controls label {
       font-weight: bold;
+    }
+
+    #resultsContainer {
+      padding: 10px 20px;
+      background: #fff;
+      max-height: calc(55vh - 40px);
+      overflow-y: auto;
+    }
+
+    .result-entry {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #eee;
     }
   </style>
 </head>
@@ -104,23 +103,12 @@
     let geocoder;
     let infoWindows = [];
 
-    const AUS_BOUNDS = {
-      north: -9.0,
-      south: -44.0,
-      west: 112.0,
-      east: 154.0
-    };
-
     function initMap() {
       map = new google.maps.Map(document.getElementById("mapContainer"), {
         zoom: 4,
         center: { lat: -25.2744, lng: 133.7751 },
         mapTypeId: "roadmap",
-        gestureHandling: "greedy",
-        restriction: {
-          latLngBounds: AUS_BOUNDS,
-          strictBounds: false
-        }
+        gestureHandling: "greedy"
       });
 
       geocoder = new google.maps.Geocoder();
