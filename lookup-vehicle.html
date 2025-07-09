@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vehicle Lookup – Safe Freight Program</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 2rem; color: #333; }
+    h1 { text-align: center; color: #1c3d5a; }
+    .lookup-box { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 480px; margin: 0 auto; text-align: center; }
+    input { width: 80%; padding: 0.75rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 8px; text-align: center; }
+    input:focus { outline: none; border-color: #1c3d5a; box-shadow: 0 0 0 3px rgba(28, 61, 90, 0.1); }
+    input::placeholder { color: #888; font-size: 0.9rem; }
+    button { margin-top: 1rem; padding: 0.75rem 1.5rem; background-color: #1c3d5a; color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+    button:hover { background-color: #285a7f; }
+    .result { margin-top: 1rem; text-align: left; padding: 1rem; border-radius: 8px; border-left: 5px solid #1c3d5a; font-size: 0.95rem; color: #1c3d5a; position: relative; }
+    .result.active { background-color: #e8f5e8; border-left-color: #28a745; }
+    .result.expired, .result.non-compliant { background-color: #fdeaea; border-left-color: #dc3545; }
+    .result.warning { background-color: #fff3cd; border-left-color: #ffc107; }
+    .copyable { cursor: pointer; color: #1c3d5a; font-weight: 500; }
+    .copyable:hover { background-color: #f0f8ff; padding: 2px 4px; border-radius: 3px; }
+    .copied-msg { position: absolute; top: 5px; right: 10px; font-size: 0.85rem; color: #28a745; background: white; padding: 2px 6px; border-radius: 4px; display: none; }
+    .prefix-label { font-weight: bold; margin-right: 5px; color: #1c3d5a; font-size: 1rem; }
+    .input-group { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 0.75rem; }
+  </style>
+</head>
+<body>
+  <h1>Vehicle Lookup</h1>
+  <div class="lookup-box">
+    <h3>Enter SFPV ID or Rego</h3>
+    <div class="input-group">
+      <span class="prefix-label">SFPV-</span>
+      <input type="text" id="vehicleInput" placeholder="e.g. 001234" onkeydown="if(event.key==='Enter'){searchVehicle()}" />
+    </div>
+    <div class="input-group">
+      <span class="prefix-label">Rego:</span>
+      <input type="text" id="regoInput" placeholder="e.g. ABC123" onkeydown="if(event.key==='Enter'){searchVehicle()}" />
+    </div>
+    <button onclick="searchVehicle()">Search Vehicle</button>
+    <div id="vehicleResult" class="result"><span class="copied-msg" id="copiedVehicle"></span></div>
+  </div>
+
+  <script>
+    const VEHICLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFC
