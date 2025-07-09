@@ -44,26 +44,7 @@
     let userMarker;
     let markers = [];
 
-    const AIL_DATA = [
-      {
-        ail: "001",
-        company: "ABC Inspections",
-        lat: -33.8688,
-        lng: 151.2093,
-        phone: "0299991234",
-        isMobile: false,
-        city: "Sydney"
-      },
-      {
-        ail: "002",
-        company: "Mobile Check QLD",
-        lat: -27.4698,
-        lng: 153.0251,
-        phone: "0733335678",
-        isMobile: true,
-        city: "Brisbane"
-      }
-    ];
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/13biqIGqstGzfi6d0TNt0SR3vwIxOmC8hlZGX1qIfIYw/export?format=csv';
 
     function initMap() {
       map = new google.maps.Map(document.getElementById("mapContainer"), {
@@ -103,13 +84,55 @@
         }
       });
 
-      addAILMarkers();
+      loadAilData();
     }
 
-    function addAILMarkers() {
-      AIL_DATA.forEach(item => {
+    async function loadAilData() {
+      try {
+        const response = await fetch(SHEET_URL);
+        const csv = await response.text();
+        const data = parseCSV(csv);
+        addAILMarkers(data);
+      } catch (error) {
+        console.error("Failed to load AIL data:", error);
+      }
+    }
+
+    function parseCSV(text) {
+      const lines = text.trim().split('\n');
+      const result = [];
+      for (let i = 1; i < lines.length; i++) {
+        const row = lines[i].split(',');
+        const [company, ail, cityOrInspector, address, phone] = row.map(cell => cell.trim());
+
+        const isMobile = address.toLowerCase().includes("mobile") || cityOrInspector.toLowerCase().includes("mobile");
+        const city = isMobile ? "" : cityOrInspector;
+        const inspector = isMobile ? cityOrInspector : "";
+
+        const lat = null;
+        const lng = null;
+
+        result.push({
+          company,
+          ail,
+          city,
+          inspector,
+          address,
+          phone,
+          isMobile,
+          lat,
+          lng
+        });
+      }
+      return result;
+    }
+
+    function addAILMarkers(data) {
+      data.forEach(item => {
+        if (!item.lat || !item.lng) return; // Needs geocoding to work dynamically
+
         const marker = new google.maps.Marker({
-          position: { lat: item.lat, lng: item.lng },
+          position: { lat: parseFloat(item.lat), lng: parseFloat(item.lng) },
           map,
           title: item.company,
           icon: {
@@ -122,7 +145,8 @@
             <div class="info-window">
               <h3>${item.company}</h3>
               <p><strong>AIL #:</strong> ${item.ail}</p>
-              <p><strong>City:</strong> ${item.city}</p>
+              ${item.city ? `<p><strong>City:</strong> ${item.city}</p>` : ''}
+              ${item.inspector ? `<p><strong>Inspector:</strong> ${item.inspector}</p>` : ''}
               <p><strong>Type:</strong> ${item.isMobile ? 'Mobile' : 'Fixed'}</p>
               <p><strong>Phone:</strong> <a href="tel:${item.phone}">${item.phone}</a></p>
             </div>
