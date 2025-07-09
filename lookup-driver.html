@@ -1,1 +1,109 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Driver Lookup – Safe Freight Program</title>
+  <style>
+    /* Same styling from original */
+    body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 2rem; color: #333; }
+    h1 { text-align: center; color: #1c3d5a; }
+    .lookup-box { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 400px; margin: 0 auto; text-align: center; }
+    input { width: 80%; padding: 0.75rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 8px; text-align: center; }
+    input:focus { outline: none; border-color: #1c3d5a; box-shadow: 0 0 0 3px rgba(28, 61, 90, 0.1); }
+    input::placeholder { color: #888; font-size: 0.9rem; }
+    button { margin-top: 1rem; padding: 0.75rem 1.5rem; background-color: #1c3d5a; color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+    button:hover { background-color: #285a7f; }
+    .result { margin-top: 1rem; text-align: left; padding: 1rem; border-radius: 8px; border-left: 5px solid #1c3d5a; font-size: 0.95rem; color: #1c3d5a; position: relative; }
+    .result.active { background-color: #e8f5e8; border-left-color: #28a745; }
+    .result.expired, .result.non-compliant { background-color: #fdeaea; border-left-color: #dc3545; }
+    .result.warning { background-color: #fff3cd; border-left-color: #ffc107; }
+    .copyable { cursor: pointer; color: #1c3d5a; font-weight: 500; }
+    .copyable:hover { background-color: #f0f8ff; padding: 2px 4px; border-radius: 3px; }
+    .copied-msg { position: absolute; top: 5px; right: 10px; font-size: 0.85rem; color: #28a745; background: white; padding: 2px 6px; border-radius: 4px; display: none; }
+    .prefix-label { font-weight: bold; margin-right: 5px; color: #1c3d5a; font-size: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Driver Lookup</h1>
+  <div class="lookup-box">
+    <h3>Enter Driver ID</h3>
+    <div class="input-group">
+      <span class="prefix-label">SFPD-</span>
+      <input type="text" id="driverInput" placeholder="e.g. 001234" onkeydown="if(event.key==='Enter'){lookupDriver()}" />
+    </div>
+    <button onclick="lookupDriver()">Search</button>
+    <div id="driverResult" class="result"><span class="copied-msg" id="copiedDriver"></span></div>
+  </div>
 
+  <script>
+    const DRIVER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json';
+
+    async function fetchSheetData(url) {
+      const response = await fetch(url);
+      const text = await response.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
+    }
+
+    function padWithZeros(input, length = 6) {
+      return input.padStart(length, '0');
+    }
+
+    function formatDate(d) {
+      try {
+        if (!d) return '';
+        if (typeof d === 'string' && d.startsWith('Date(')) {
+          const [y, m, day] = d.slice(5, -1).split(',').map(Number);
+          return new Date(y, m, day).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+        return new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+      } catch {
+        return 'Invalid Date';
+      }
+    }
+
+    function getStatusClass(status, expiryRaw) {
+      const statusLC = status.toLowerCase();
+      if (statusLC === 'expired' || statusLC === 'non-compliant') return 'non-compliant';
+      const expiryDate = new Date(formatDate(expiryRaw));
+      const diffDays = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+      return (diffDays <= 30 && diffDays >= 0) ? 'warning' : 'active';
+    }
+
+    function makeCopyable(label, value, msgEl) {
+      return `<strong>${label}</strong> <span class="copyable" onclick="copyWithMessage('${value}', '${msgEl}')">${value}</span><br>`;
+    }
+
+    function copyWithMessage(value, targetId) {
+      navigator.clipboard.writeText(value);
+      const msg = document.getElementById(targetId);
+      msg.textContent = 'Copied!';
+      msg.style.display = 'inline';
+      setTimeout(() => msg.style.display = 'none', 1200);
+    }
+
+    async function lookupDriver() {
+      const raw = document.getElementById('driverInput').value.trim();
+      const input = 'SFPD-' + padWithZeros(raw);
+      const data = await fetchSheetData(DRIVER_SHEET_URL);
+      const match = data.find(row => row[0] === input);
+      const resultEl = document.getElementById('driverResult');
+      if (match) {
+        const statusClass = getStatusClass(match[3], match[4]);
+        const warningNote = statusClass === 'warning' ? '<br><em>Note: Expiry within 30 days</em>' : '';
+        resultEl.className = 'result ' + statusClass;
+        resultEl.innerHTML = `
+          ${makeCopyable('Name:', match[1] + ' ' + match[2], 'copiedDriver')}
+          ${makeCopyable('SFP ID:', match[0], 'copiedDriver')}
+          ${makeCopyable('Status:', match[3], 'copiedDriver')}
+          ${makeCopyable('Expiry Date:', formatDate(match[4]), 'copiedDriver')}${warningNote}
+        `;
+      } else {
+        resultEl.className = 'result';
+        resultEl.textContent = 'Driver not found';
+      }
+    }
+  </script>
+</body>
+</html>
