@@ -1,17 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-AU">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Safe Freight Program</title>
+
+  <!-- Favicon -->
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="The Safe Freight Program sets the new standard for compliant, safety-driven road freight operations in Australia." />
+  <meta name="author" content="Safe Freight Program" />
+  <meta property="og:title" content="Safe Freight Program" />
+  <meta property="og:description" content="Professional. Compliant. Safe. Get your Safe Freight Passport today." />
+  <meta property="og:image" content="/images/social-preview.jpg" />
+  <meta property="og:type" content="website" />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Safe Freight Program",
+    "url": "https://safefreightprogram.com.au",
+    "logo": "https://safefreightprogram.com.au/logo.png",
+    "sameAs": [],
+    "description": "Australia’s standard for safe and compliant freight operations."
+  }
+  </script>
 </head>
+
 <body class="bg-gray-50 text-gray-800 font-sans">
   <header class="bg-blue-900 text-white p-4">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <a href="index.html" class="text-xl font-bold hover:underline">Safe Freight Program</a>
-      <nav class="space-x-4">
+      <a href="index.html" class="text-xl font-bold hover:underline">
+        <h1>Safe Freight Program</h1>
+      </a>
+      <nav class="hidden md:flex space-x-4" aria-label="Main navigation">
         <a href="about.html" class="hover:underline">About</a>
         <a href="passport.html" class="hover:underline">Passport</a>
         <a href="ail.html" class="hover:underline">AIL</a>
@@ -21,28 +49,31 @@
       </nav>
     </div>
   </header>
+
   <main class="max-w-5xl mx-auto p-6">
     <section class="text-center py-12">
       <h2 class="text-3xl font-bold text-blue-800 mb-4">Safer Freight Starts Here</h2>
       <p class="text-lg mb-6">The Safe Freight Program (SFP) is the new industry standard for professional, compliant, and safety-driven road freight operations.</p>
-      <a href="passport.html" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded shadow-lg transition">Get Your Passport</a>
+      <a href="passport.html" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-full shadow-lg transition transform hover:scale-105">Get Your Passport</a>
     </section>
+
     <section class="grid md:grid-cols-3 gap-6 py-12">
       <div class="bg-white rounded shadow p-6">
-        <h3 class="text-xl font-semibold text-blue-700 mb-2">Drivers</h3>
+        <h3 class="text-lg md:text-xl font-semibold text-blue-700 mb-2">Drivers</h3>
         <p>Complete the free online course, get verified, and carry your Safe Freight Passport on the road.</p>
       </div>
       <div class="bg-white rounded shadow p-6">
-        <h3 class="text-xl font-semibold text-blue-700 mb-2">Receivers</h3>
+        <h3 class="text-lg md:text-xl font-semibold text-blue-700 mb-2">Receivers</h3>
         <p>Search QR codes and check credentials with confidence. Reduce time on site and improve safety.</p>
       </div>
       <div class="bg-white rounded shadow p-6">
-        <h3 class="text-xl font-semibold text-blue-700 mb-2">Inspection Sites (AIL)</h3>
+        <h3 class="text-lg md:text-xl font-semibold text-blue-700 mb-2">Inspection Sites (AIL)</h3>
         <p>Become an Authorised Inspection Location to help maintain standards and keep freight moving safely.</p>
       </div>
     </section>
   </main>
-  <footer class="bg-gray-100 text-sm text-center text-gray-600 p-4 mt-8">
+
+  <footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
     &copy; 2025 Safe Freight Program. All rights reserved.
   </footer>
 </body>
