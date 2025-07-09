@@ -1,80 +1,87 @@
-<!-- DEBUGGED: SFP AIL Finder Map Code -->
-<!-- Fixes included: 
-  1. Added missing #mapContainer and #map div
-  2. Added missing #locationSearch input
-  3. Moved Maps API script to the end
-  4. Removed callback from API script and manually call initMap
-  5. Confirmed DOM loads before map initialisation
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SFP AIL Finder</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Assuming styles moved to external file -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SFP AIL Map Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    #mapContainer {
+      height: 500px;
+      width: 100%;
+      margin-top: 20px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+    }
+    #locationSearch {
+      padding: 10px;
+      width: 100%;
+      max-width: 400px;
+      font-size: 16px;
+      border: 2px solid #ccc;
+      border-radius: 6px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔍 SFP AIL Finder</h1>
+  <h2>SFP AIL Finder - Map Functionality Test</h2>
+  <p>Enter a location or suburb to test search and map response:</p>
+  <input id="locationSearch" type="text" placeholder="e.g. Parramatta, NSW" />
+  <div id="mapContainer"></div>
 
-        <div class="search-container">
-            <input type="text" id="searchInput" class="search-input" placeholder="Search by company name, city, address, phone, AIL #, or inspector...">
-            <select id="stateFilter" class="filter-select">
-                <option value="">All States</option>
-                <option value="NSW">NSW</option>
-                <option value="QLD">QLD</option>
-                <option value="VIC">VIC</option>
-                <option value="SA">SA</option>
-                <option value="WA">WA</option>
-                <option value="NT">NT</option>
-                <option value="TAS">TAS</option>
-            </select>
-            <select id="typeFilter" class="filter-select">
-                <option value="">All Types</option>
-                <option value="mobile">Mobile Inspectors</option>
-                <option value="fixed">Fixed Locations</option>
-            </select>
-        </div>
+  <script>
+    let map;
+    let autocomplete;
+    let userMarker;
 
-        <div class="map-controls">
-            <input type="text" id="locationSearch" class="location-search" placeholder="Enter your address or suburb">
-            <button class="btn btn-secondary" onclick="getCurrentLocation()">📍 My Location</button>
-            <button class="btn btn-secondary" onclick="toggleTraffic()">🚦 Toggle Traffic</button>
-        </div>
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("mapContainer"), {
+        zoom: 5,
+        center: { lat: -25.2744, lng: 133.7751 }, // Australia
+        mapTypeId: "roadmap",
+      });
 
-        <div class="controls">
-            <button class="btn btn-primary" onclick="loadData()">🔄 Refresh Data</button>
-            <button class="btn btn-secondary" onclick="exportResults()">📥 Export Results</button>
-            <button class="btn btn-secondary" onclick="showStats()">📊 Statistics</button>
-            <button class="btn btn-secondary" onclick="toggleMap()">🗺️ Toggle Map</button>
-            <button class="btn btn-secondary" onclick="findNearest()">📍 Find Nearest</button>
-            <button class="btn btn-secondary" onclick="openGoogleSheet()">📋 View Source Sheet</button>
-        </div>
+      const input = document.getElementById("locationSearch");
+      autocomplete = new google.maps.places.Autocomplete(input, {
+        componentRestrictions: { country: "au" },
+        fields: ["geometry", "name"],
+      });
 
-        <!-- STATS and RESULTS sections here... (unchanged) -->
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (place.geometry && place.geometry.location) {
+          const location = place.geometry.location;
+          map.setCenter(location);
+          map.setZoom(12);
 
-        <!-- MAP CONTAINER FIXED -->
-        <div id="mapContainer" class="map-container">
-            <div id="map"></div>
-        </div>
-    </div>
+          if (userMarker) userMarker.setMap(null);
 
-    <!-- JS SCRIPTS -->
-    <script src="script.js"></script> <!-- Assuming all logic moved to separate JS file -->
+          userMarker = new google.maps.Marker({
+            position: location,
+            map: map,
+            title: place.name,
+          });
+        }
+      });
+    }
+  </script>
 
-    <!-- Moved API script to end and removed callback param -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfGBAzqWsctQDwUnPpbr8dPujAzSx-ohs&libraries=places,geometry"></script>
-
-    <!-- Ensure initMap is only called after the script loads -->
-    <script>
-        window.addEventListener('load', () => {
-            if (typeof google !== 'undefined' && google.maps) {
-                initMap();
-            } else {
-                console.error('Google Maps failed to load.');
-            }
-        });
-    </script>
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfGBAzqWsctQDwUnPpbr8dPujAzSx-ohs&libraries=places"
+    defer
+  ></script>
+  <script>
+    window.addEventListener("load", () => {
+      const checkReady = setInterval(() => {
+        if (typeof google !== "undefined" && google.maps) {
+          clearInterval(checkReady);
+          initMap();
+        }
+      }, 200);
+    });
+  </script>
 </body>
 </html>
