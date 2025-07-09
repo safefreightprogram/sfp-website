@@ -1,672 +1,281 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SFP AIL Finder</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfGBAzqWsctQDwUnPpbr8dPujAzSx-ohs&libraries=places,geometry" defer></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 1200px;
-            margin: 0 auto;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        }
-        
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.2rem;
-            font-weight: 300;
-        }
-        
-        .search-container {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .search-input {
-            flex: 1;
-            min-width: 250px;
-            padding: 15px 20px;
-            border: 2px solid #e0e6ed;
-            border-radius: 12px;
-            font-size: 16px;
-            background: white;
-            transition: all 0.3s ease;
-        }
-        
-        .search-input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: #f8f9fa;
-            color: #495057;
-            border: 2px solid #e9ecef;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-        
-        .map-container {
-            height: 600px;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .map-container.active {
-            display: block;
-        }
-        
-        #map {
-            width: 100%;
-            height: 100%;
-        }
-        
-        .results-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 15px 20px;
-            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
-            border-radius: 12px;
-        }
-        
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 20px;
-        }
-        
-        .company-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            border: 1px solid #f0f3f7;
-            position: relative;
-        }
-        
-        .company-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-        }
-        
-        .company-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-        }
-        
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-        
-        .company-name {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #2c3e50;
-            flex: 1;
-        }
-        
-        .ail-badge {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-        
-        .mobile-badge {
-            background: linear-gradient(45deg, #28a745, #20c997);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            margin-left: 8px;
-        }
-        
-        .detail-row {
-            display: flex;
-            margin-bottom: 12px;
-            align-items: flex-start;
-        }
-        
-        .detail-icon {
-            width: 20px;
-            margin-right: 12px;
-            opacity: 0.7;
-        }
-        
-        .detail-text {
-            color: #5a6c7d;
-            line-height: 1.5;
-        }
-        
-        .phone-link {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .phone-link:hover {
-            text-decoration: underline;
-        }
-        
-        .loading, .error, .no-results {
-            text-align: center;
-            padding: 40px;
-            border-radius: 12px;
-            margin: 20px 0;
-        }
-        
-        .loading {
-            color: #6c757d;
-        }
-        
-        .error {
-            color: #dc3545;
-            background: #f8d7da;
-        }
-        
-        .no-results {
-            color: #6c757d;
-            background: #f8f9fa;
-        }
-        
-        .debug {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
-            font-size: 12px;
-        }
-        
-        @media (max-width: 768px) {
-            .search-container, .controls {
-                flex-direction: column;
-            }
-            .card-grid {
-                grid-template-columns: 1fr;
-            }
-            .map-container {
-                height: 400px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SFP AIL Finder Map</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      height: 100%;
+      background-color: #f2f2f2;
+    }
+
+    #mapContainer {
+      height: 50vh;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    #locationSearch {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      width: 300px;
+      padding: 8px;
+      font-size: 16px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .info-window {
+      font-size: 14px;
+    }
+
+    .info-window h3 {
+      margin: 0 0 5px;
+    }
+
+    #debug {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: #fff8f8;
+      color: #b30000;
+      padding: 10px;
+      border: 1px solid #b30000;
+      border-radius: 4px;
+      font-size: 12px;
+      max-width: 300px;
+      display: none;
+      z-index: 10;
+    }
+
+    #resultsContainer {
+      padding: 10px 20px;
+      max-height: 50vh;
+      overflow-y: auto;
+      background: #fff;
+      border-top: 1px solid #ccc;
+    }
+
+    .result-entry {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .toggle-controls {
+      padding: 10px 20px;
+      background: #eaeaea;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .toggle-controls label {
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔍 SFP AIL Finder</h1>
-        
-        <div class="search-container">
-            <input type="text" id="searchInput" class="search-input" placeholder="Search by company name, city, phone, AIL #...">
-            <input type="text" id="locationSearch" class="search-input" placeholder="Search location (e.g. Parramatta, NSW)">
-        </div>
+  <input id="locationSearch" type="text" placeholder="e.g. Parramatta, NSW" />
+  <div id="mapContainer"></div>
+  <div class="toggle-controls">
+    <label><input type="checkbox" id="toggleMobile" checked> Show Mobile</label>
+    <label><input type="checkbox" id="toggleFixed" checked> Show Fixed</label>
+  </div>
+  <div id="resultsContainer"></div>
+  <div id="debug"></div>
 
-        <div class="controls">
-            <button class="btn btn-primary" onclick="loadData()">🔄 Refresh Data</button>
-            <button class="btn btn-secondary" onclick="toggleMap()">🗺️ Toggle Map</button>
-            <button class="btn btn-secondary" onclick="getCurrentLocation()">📍 My Location</button>
-        </div>
+  <script>
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT2SCY7K1S7RQbqViTY9yXz0HyQ96wKR0mE-Mcni_tDbT7CKfd0SvH2Hg3k3AkGRnFk3O7aJYtSzdNo/pub?output=csv';
 
-        <div id="mapContainer" class="map-container">
-            <div id="map"></div>
-        </div>
+    let map;
+    let autocomplete;
+    let userMarker;
+    let markers = [];
+    let allData = [];
+    let geocoder;
+    let infoWindows = [];
 
-        <div class="results-header">
-            <div id="resultsCount">Loading...</div>
-        </div>
+    const AUS_BOUNDS = {
+      north: -9.0,
+      south: -44.0,
+      west: 112.0,
+      east: 154.0
+    };
 
-        <div id="loadingMessage" class="loading">🔄 Loading AIL data...</div>
-        <div id="errorMessage" class="error" style="display: none;"></div>
-        <div id="debugMessage" class="debug" style="display: none;"></div>
-        <div id="cardView" class="card-grid"></div>
-    </div>
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("mapContainer"), {
+        zoom: 4,
+        center: { lat: -25.2744, lng: 133.7751 },
+        mapTypeId: "roadmap",
+        gestureHandling: "greedy",
+        restriction: {
+          latLngBounds: AUS_BOUNDS,
+          strictBounds: false
+        }
+      });
 
-    <script>
-        let allData = [];
-        let filteredData = [];
-        let map = null;
-        let markers = [];
-        let userMarker = null;
-        let autocomplete = null;
-        let geocoder = null;
-        let userLocation = null;
+      geocoder = new google.maps.Geocoder();
 
-        // Try multiple data sources
-        const DATA_SOURCES = [
-            'https://docs.google.com/spreadsheets/d/e/2PACX-1vT2SCY7K1S7RQbqViTY9yXz0HyQ96wKR0mE-Mcni_tDbT7CKfd0SvH2Hg3k3AkGRnFk3O7aJYtSzdNo/pub?output=csv',
-            'https://docs.google.com/spreadsheets/d/13biqIGqstGzfi6d0TNt0SR3vwIxOmC8hlZGX1qIfIYw/export?format=csv'
-        ];
+      const input = document.getElementById("locationSearch");
+      autocomplete = new google.maps.places.Autocomplete(input, {
+        componentRestrictions: { country: "au" },
+        fields: ["geometry", "name"],
+      });
 
-        async function loadData() {
-            const loadingEl = document.getElementById('loadingMessage');
-            const errorEl = document.getElementById('errorMessage');
-            const debugEl = document.getElementById('debugMessage');
-            
-            loadingEl.style.display = 'block';
-            errorEl.style.display = 'none';
-            debugEl.style.display = 'none';
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (place.geometry && place.geometry.location) {
+          const location = place.geometry.location;
+          map.setCenter(location);
+          map.setZoom(10);
 
-            for (let i = 0; i < DATA_SOURCES.length; i++) {
-                try {
-                    debugEl.innerHTML = `Trying data source ${i + 1}...`;
-                    debugEl.style.display = 'block';
-                    
-                    const response = await fetch(DATA_SOURCES[i]);
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    
-                    const csvData = await response.text();
-                    debugEl.innerHTML = `Data loaded, parsing... (${csvData.length} characters)`;
-                    
-                    allData = parseCSV(csvData);
-                    if (allData.length > 0) {
-                        filteredData = [...allData];
-                        loadingEl.style.display = 'none';
-                        debugEl.style.display = 'none';
-                        updateDisplay();
-                        return;
-                    }
-                } catch (error) {
-                    console.error(`Data source ${i + 1} failed:`, error);
-                    debugEl.innerHTML = `Source ${i + 1} failed: ${error.message}`;
-                }
+          if (userMarker) userMarker.setMap(null);
+
+          userMarker = new google.maps.Marker({
+            position: location,
+            map: map,
+            title: place.name,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: "#dc2626",
+              fillOpacity: 1,
+              strokeWeight: 2,
+              strokeColor: "white"
             }
-
-            // If all sources fail, show error
-            loadingEl.style.display = 'none';
-            errorEl.style.display = 'block';
-            errorEl.textContent = '❌ Failed to load data from all sources. Please try again later.';
+          });
         }
+      });
 
-        function parseCSV(csvText) {
-            const lines = csvText.trim().split('\n');
-            const data = [];
-            const debugEl = document.getElementById('debugMessage');
+      document.getElementById("toggleMobile").addEventListener('change', updateMarkers);
+      document.getElementById("toggleFixed").addEventListener('change', updateMarkers);
 
-            debugEl.innerHTML = `Parsing ${lines.length} lines...`;
+      loadAilData();
+    }
 
-            // Try different parsing approaches
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                
-                try {
-                    // Method 1: Standard CSV parsing
-                    const values = parseCSVLine(lines[i]);
-                    
-                    // Method 2: Try to detect if it has coordinates
-                    let item = null;
-                    if (values.length > 5) {
-                        // Check if this looks like the coordinate format
-                        const coords = values.find(v => v.includes(',') && v.match(/-?\d+\.\d+,-?\d+\.\d+/));
-                        if (coords) {
-                            const [lat, lng] = coords.split(',').map(c => parseFloat(c.trim()));
-                            if (!isNaN(lat) && !isNaN(lng)) {
-                                item = {
-                                    company: values[0] || 'Unknown Company',
-                                    ail: values[1] || 'Unknown AIL',
-                                    city: values[2] || '',
-                                    inspector: values[3] || '',
-                                    phone: values[4] || '',
-                                    lat,
-                                    lng,
-                                    isMobile: !values[3] || values[3].toLowerCase().includes('mobile')
-                                };
-                            }
-                        }
-                    }
-                    
-                    // Method 3: Try original format
-                    if (!item && values.length >= 5) {
-                        const company = values[0].trim();
-                        const ail = values[1].trim();
-                        const cityOrInspector = values[2].trim();
-                        const address = values[3].trim();
-                        const phone = values[4].trim();
-                        
-                        if (company && ail && phone) {
-                            const isMobile = address.toLowerCase().includes('mobile') || !address;
-                            item = {
-                                company,
-                                ail,
-                                city: isMobile ? '' : cityOrInspector,
-                                inspector: isMobile ? cityOrInspector : '',
-                                phone,
-                                address,
-                                isMobile,
-                                lat: null,
-                                lng: null
-                            };
-                        }
-                    }
-                    
-                    if (item) {
-                        data.push(item);
-                    }
-                } catch (error) {
-                    console.error('Error parsing line:', lines[i], error);
-                }
-            }
+    async function loadAilData() {
+      try {
+        const response = await fetch(SHEET_URL);
+        const csv = await response.text();
+        allData = parseCSV(csv);
+        updateMarkers();
+      } catch (error) {
+        document.getElementById('debug').style.display = 'block';
+        document.getElementById('debug').textContent = '❌ Failed to load Google Sheet: ' + error;
+      }
+    }
 
-            debugEl.innerHTML = `Parsed ${data.length} valid entries`;
-            return data;
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r?\n/);
+      const headers = lines[0].split(',');
+      const data = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const row = lines[i].split(',');
+        const obj = {};
+        headers.forEach((h, j) => obj[h.trim()] = (row[j] || '').trim());
+
+        const coords = obj['Geocordinates']?.split(',') || [];
+        const lat = parseFloat(coords[0]);
+        const lng = parseFloat(coords[1]);
+        const isMobile = obj['Business Address Line 1'] === '' || obj['Business Address Line 1']?.toLowerCase().includes('mobile');
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+          data.push({
+            company: obj['Company'],
+            ail: obj['AIL #'],
+            city: obj['Suburb'],
+            inspector: obj['Licensed Inspector'],
+            phone: obj['Phone'],
+            lat,
+            lng,
+            isMobile
+          });
         }
+      }
+      return data;
+    }
 
-        function parseCSVLine(line) {
-            const values = [];
-            let current = '';
-            let inQuotes = false;
-            
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                if (char === '"') {
-                    inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
-                    values.push(current);
-                    current = '';
-                } else {
-                    current += char;
-                }
-            }
-            values.push(current);
-            return values;
+    function updateMarkers() {
+      const showMobile = document.getElementById("toggleMobile").checked;
+      const showFixed = document.getElementById("toggleFixed").checked;
+      const resultsContainer = document.getElementById("resultsContainer");
+
+      markers.forEach(marker => marker.setMap(null));
+      markers = [];
+      infoWindows.forEach(w => w.close());
+      infoWindows = [];
+      resultsContainer.innerHTML = '';
+
+      const filtered = allData.filter(item => (item.isMobile && showMobile) || (!item.isMobile && showFixed));
+
+      const bounds = new google.maps.LatLngBounds();
+      filtered.forEach(item => {
+        const marker = addMarker(item);
+        bounds.extend(marker.getPosition());
+        resultsContainer.innerHTML += `
+          <div class="result-entry">
+            <strong>${item.company}</strong><br/>
+            AIL #: ${item.ail}<br/>
+            ${item.city ? `City: ${item.city}<br/>` : ''}
+            ${item.inspector ? `Inspector: ${item.inspector}<br/>` : ''}
+            Phone: <a href="tel:${item.phone}">${item.phone}</a><br/>
+            Type: ${item.isMobile ? 'Mobile' : 'Fixed'}
+          </div>`;
+      });
+      if (filtered.length) map.fitBounds(bounds);
+    }
+
+    function addMarker(item) {
+      const marker = new google.maps.Marker({
+        position: { lat: item.lat, lng: item.lng },
+        map,
+        title: item.company,
+        icon: `https://maps.google.com/mapfiles/ms/icons/${item.isMobile ? 'red' : 'blue'}-dot.png`
+      });
+
+      const infoWindow = new google.maps.InfoWindow({
+        content: `
+          <div class="info-window">
+            <h3>${item.company}</h3>
+            <p><strong>AIL #:</strong> ${item.ail}</p>
+            ${item.city ? `<p><strong>City:</strong> ${item.city}</p>` : ''}
+            ${item.inspector ? `<p><strong>Inspector:</strong> ${item.inspector}</p>` : ''}
+            <p><strong>Type:</strong> ${item.isMobile ? 'Mobile' : 'Fixed'}</p>
+            <p><strong>Phone:</strong> <a href="tel:${item.phone}">${item.phone}</a></p>
+          </div>`
+      });
+
+      marker.addListener("click", () => {
+        infoWindows.forEach(w => w.close());
+        infoWindow.open(map, marker);
+      });
+
+      infoWindows.push(infoWindow);
+      markers.push(marker);
+      return marker;
+    }
+  </script>
+
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfGBAzqWsctQDwUnPpbr8dPujAzSx-ohs&libraries=places" defer></script>
+  <script>
+    window.addEventListener("load", () => {
+      const checkReady = setInterval(() => {
+        if (typeof google !== "undefined" && google.maps) {
+          clearInterval(checkReady);
+          initMap();
         }
-
-        function initMap() {
-            if (!window.google) {
-                setTimeout(initMap, 100);
-                return;
-            }
-
-            map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 5,
-                center: { lat: -25.2744, lng: 133.7751 },
-                mapTypeId: google.maps.MapTypeId.ROADMAP
-            });
-
-            geocoder = new google.maps.Geocoder();
-
-            const locationInput = document.getElementById('locationSearch');
-            autocomplete = new google.maps.places.Autocomplete(locationInput, {
-                componentRestrictions: { country: 'au' },
-                fields: ['geometry', 'name', 'formatted_address']
-            });
-
-            autocomplete.addListener('place_changed', function() {
-                const place = autocomplete.getPlace();
-                if (place.geometry) {
-                    userLocation = place.geometry.location;
-                    map.setCenter(userLocation);
-                    map.setZoom(12);
-                    
-                    if (userMarker) userMarker.setMap(null);
-                    userMarker = new google.maps.Marker({
-                        position: userLocation,
-                        map: map,
-                        title: "Your Location",
-                        icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            scale: 8,
-                            fillColor: "#dc2626",
-                            fillOpacity: 1,
-                            strokeWeight: 2,
-                            strokeColor: "white"
-                        }
-                    });
-                    
-                    updateMapMarkers();
-                }
-            });
-
-            updateMapMarkers();
-        }
-
-        function updateMapMarkers() {
-            if (!map) return;
-
-            markers.forEach(marker => marker.setMap(null));
-            markers = [];
-
-            filteredData.forEach(item => {
-                if (item.lat && item.lng) {
-                    addMarkerToMap(item);
-                } else if (item.address || item.city) {
-                    geocodeAndAddMarker(item);
-                }
-            });
-        }
-
-        function addMarkerToMap(item) {
-            const marker = new google.maps.Marker({
-                position: { lat: item.lat, lng: item.lng },
-                map: map,
-                title: item.company,
-                icon: `https://maps.google.com/mapfiles/ms/icons/${item.isMobile ? 'red' : 'blue'}-dot.png`
-            });
-
-            const infoWindow = new google.maps.InfoWindow({
-                content: `
-                    <div>
-                        <h3>${item.company}</h3>
-                        <p><strong>AIL #:</strong> ${item.ail}</p>
-                        ${item.city ? `<p><strong>City:</strong> ${item.city}</p>` : ''}
-                        ${item.inspector ? `<p><strong>Inspector:</strong> ${item.inspector}</p>` : ''}
-                        <p><strong>Type:</strong> ${item.isMobile ? 'Mobile' : 'Fixed'}</p>
-                        <p><strong>Phone:</strong> <a href="tel:${item.phone}">${item.phone}</a></p>
-                        ${userLocation ? `<p><strong>Distance:</strong> ${calculateDistance(userLocation, {lat: item.lat, lng: item.lng}).toFixed(1)} km</p>` : ''}
-                    </div>
-                `
-            });
-
-            marker.addListener('click', () => {
-                infoWindow.open(map, marker);
-            });
-
-            markers.push(marker);
-        }
-
-        function geocodeAndAddMarker(item) {
-            if (!geocoder) return;
-            
-            const address = `${item.address || item.city}, Australia`;
-            geocoder.geocode({ address: address }, (results, status) => {
-                if (status === 'OK' && results[0]) {
-                    item.lat = results[0].geometry.location.lat();
-                    item.lng = results[0].geometry.location.lng();
-                    addMarkerToMap(item);
-                }
-            });
-        }
-
-        function calculateDistance(pos1, pos2) {
-            const R = 6371; // Earth's radius in km
-            const dLat = (pos2.lat - pos1.lat()) * Math.PI / 180;
-            const dLon = (pos2.lng - pos1.lng()) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                    Math.cos(pos1.lat() * Math.PI / 180) * Math.cos(pos2.lat * Math.PI / 180) *
-                    Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-
-        function toggleMap() {
-            const mapContainer = document.getElementById('mapContainer');
-            mapContainer.classList.toggle('active');
-            
-            if (mapContainer.classList.contains('active')) {
-                if (!map) {
-                    setTimeout(initMap, 100);
-                } else {
-                    google.maps.event.trigger(map, 'resize');
-                    updateMapMarkers();
-                }
-            }
-        }
-
-        function getCurrentLocation() {
-            if (!navigator.geolocation) {
-                alert('Geolocation is not supported by this browser.');
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    userLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-                    
-                    if (map) {
-                        map.setCenter(userLocation);
-                        map.setZoom(12);
-                        
-                        if (userMarker) userMarker.setMap(null);
-                        userMarker = new google.maps.Marker({
-                            position: userLocation,
-                            map: map,
-                            title: "Your Location",
-                            icon: {
-                                path: google.maps.SymbolPath.CIRCLE,
-                                scale: 8,
-                                fillColor: "#dc2626",
-                                fillOpacity: 1,
-                                strokeWeight: 2,
-                                strokeColor: "white"
-                            }
-                        });
-                        
-                        updateMapMarkers();
-                    }
-                },
-                (error) => {
-                    alert('Error getting location: ' + error.message);
-                }
-            );
-        }
-
-        function updateDisplay() {
-            const cardView = document.getElementById('cardView');
-            const resultsCount = document.getElementById('resultsCount');
-            
-            resultsCount.textContent = `Found ${filteredData.length} AIL${filteredData.length !== 1 ? 's' : ''}`;
-            
-            if (filteredData.length === 0) {
-                cardView.innerHTML = '<div class="no-results">No AILs found matching your search criteria.</div>';
-                return;
-            }
-
-            const cardsHtml = filteredData.map(item => `
-                <div class="company-card">
-                    <div class="card-header">
-                        <div class="company-name">${item.company}${item.isMobile ? '<span class="mobile-badge">📱 Mobile</span>' : ''}</div>
-                        <div class="ail-badge">AIL #${item.ail}</div>
-                    </div>
-                    <div class="card-details">
-                        ${item.inspector ? `
-                            <div class="detail-row">
-                                <span class="detail-icon">👤</span>
-                                <span class="detail-text">${item.inspector}</span>
-                            </div>
-                        ` : ''}
-                        ${item.city ? `
-                            <div class="detail-row">
-                                <span class="detail-icon">📍</span>
-                                <span class="detail-text">${item.city}</span>
-                            </div>
-                        ` : ''}
-                        ${item.address && !item.isMobile ? `
-                            <div class="detail-row">
-                                <span class="detail-icon">🏢</span>
-                                <span class="detail-text">${item.address}</span>
-                            </div>
-                        ` : ''}
-                        <div class="detail-row">
-                            <span class="detail-icon">📞</span>
-                            <span class="detail-text"><a href="tel:${item.phone}" class="phone-link">${item.phone}</a></span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-
-            cardView.innerHTML = cardsHtml;
-        }
-
-        function filterData() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            
-            filteredData = allData.filter(item => {
-                return !searchTerm || 
-                    item.company.toLowerCase().includes(searchTerm) ||
-                    (item.city && item.city.toLowerCase().includes(searchTerm)) ||
-                    (item.address && item.address.toLowerCase().includes(searchTerm)) ||
-                    item.phone.includes(searchTerm) ||
-                    item.ail.includes(searchTerm) ||
-                    (item.inspector && item.inspector.toLowerCase().includes(searchTerm));
-            });
-
-            updateDisplay();
-            if (map) updateMapMarkers();
-        }
-
-        // Event listeners
-        document.getElementById('searchInput').addEventListener('input', filterData);
-
-        // Initialize
-        loadData();
-    </script>
+      }, 200);
+    });
+  </script>
 </body>
 </html>
