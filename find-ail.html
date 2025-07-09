@@ -122,7 +122,8 @@
           document.getElementById('debug').style.display = 'block';
           document.getElementById('debug').textContent = '❌ No valid AIL data found. Check if the sheet format changed or CSV fields have extra commas.';
         }
-        geocodeAndAddMarkers(data);
+        data.forEach(addMarker);
+        map.fitBounds(bounds);
       } catch (error) {
         console.error("Failed to load AIL data:", error);
         document.getElementById('debug').style.display = 'block';
@@ -132,64 +133,49 @@
 
     function parseCSV(text) {
       const lines = text.trim().split(/\r?\n/);
-      const result = [];
-      const regex = /(?:"([^"]*)")|([^,\n]+)/g;
+      const headers = lines[0].split(',');
+      const data = [];
 
       for (let i = 1; i < lines.length; i++) {
-        const row = [];
-        let match;
-        while ((match = regex.exec(lines[i]))) {
-          row.push(match[1] || match[2]);
-        }
-        if (row.length < 5) continue;
-        const [company, ail, cityOrInspector, address, phone] = row.map(cell => (cell || '').trim());
-        const isMobile = address.toLowerCase().includes("mobile") || cityOrInspector.toLowerCase().includes("mobile");
-        const city = isMobile ? "" : cityOrInspector;
-        const inspector = isMobile ? cityOrInspector : "";
-        const stateMatch = address.match(/\b(NSW|VIC|QLD|WA|SA|TAS|NT|ACT)\b/i);
-        const state = stateMatch ? stateMatch[1].toUpperCase() : "NSW";
+        const row = lines[i].split(',');
+        const obj = {};
+        headers.forEach((h, j) => obj[h.trim()] = (row[j] || '').trim());
 
-        result.push({
-          company,
-          ail,
-          city,
-          inspector,
-          address,
-          phone,
-          isMobile,
-          state
-        });
+        const coords = obj['Geocordinates']?.split(',') || [];
+        const lat = parseFloat(coords[0]);
+        const lng = parseFloat(coords[1]);
+        const isMobile = !obj['Business Address Line 1']?.trim();
+        const state = getStateFromPostcode(obj['Postcode']);
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+          data.push({
+            company: obj['Company'],
+            ail: obj['AIL #'],
+            city: obj['Suburb'],
+            inspector: obj['Licensed Inspector'],
+            phone: obj['Phone'],
+            lat,
+            lng,
+            isMobile,
+            state
+          });
+        }
       }
-      return result;
+      return data;
     }
 
-    function geocodeAndAddMarkers(data) {
-      let delay = 0;
-      let plotted = 0;
-      data.forEach((item, index) => {
-        if (!item.address || item.isMobile) {
-          const fallback = STATE_CENTERS[item.state] || STATE_CENTERS['NSW'];
-          item.lat = fallback.lat + (Math.random() - 0.5) * 0.5;
-          item.lng = fallback.lng + (Math.random() - 0.5) * 0.5;
-          addMarker(item);
-          if (++plotted === 1) map.setZoom(5);
-        } else {
-          setTimeout(() => {
-            geocoder.geocode({ address: `${item.address}, ${item.city}, Australia` }, (results, status) => {
-              if (status === "OK" && results[0]) {
-                const latLng = results[0].geometry.location;
-                item.lat = latLng.lat();
-                item.lng = latLng.lng();
-                addMarker(item);
-                if (++plotted === 1) map.setZoom(5);
-              } else {
-                console.warn(`Geocode failed for ${item.company}: ${status}`);
-              }
-            });
-          }, delay);
-          delay += 300;
-        }
-      });
+    function getStateFromPostcode(postcode) {
+      const pc = parseInt(postcode);
+      if (pc >= 1000 && pc <= 2599) return 'NSW';
+      if (pc >= 2600 && pc <= 2899) return 'ACT';
+      if (pc >= 2900 && pc <= 2999) return 'NSW';
+      if (pc >= 3000 && pc <= 3999) return 'VIC';
+      if (pc >= 4000 && pc <= 4999) return 'QLD';
+      if (pc >= 5000 && pc <= 5799) return 'SA';
+      if (pc >= 6000 && pc <= 6797) return 'WA';
+      if (pc >= 7000 && pc <= 7799) return 'TAS';
+      if (pc >= 800 && pc <= 899) return 'NT';
+      return 'NSW';
     }
 
     function addMarker(item) {
@@ -203,7 +189,6 @@
       });
 
       bounds.extend(marker.getPosition());
-      map.fitBounds(bounds);
 
       const infoWindow = new google.maps.InfoWindow({
         content: `
