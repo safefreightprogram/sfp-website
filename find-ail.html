@@ -5,27 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SFP AIL Map + Data</title>
   <style>
-    body {
+    html, body {
+      margin: 0;
+      padding: 0;
       font-family: Arial, sans-serif;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      height: 100%;
+      overflow: hidden;
     }
     #mapContainer {
-      height: 562px; /* 50% taller */
-      width: 50%; /* half width */
-      margin-top: 20px;
-      border: 2px solid #ccc;
-      border-radius: 8px;
+      height: 100%;
+      width: 100%;
     }
     #locationSearch {
-      padding: 10px;
-      width: 100%;
-      max-width: 400px;
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      width: 300px;
+      padding: 8px;
       font-size: 16px;
-      border: 2px solid #ccc;
-      border-radius: 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
     }
     .info-window {
       font-size: 14px;
@@ -34,43 +35,35 @@
       margin: 0 0 5px;
     }
     #debug {
-      white-space: pre-wrap;
-      font-size: 12px;
-      margin-top: 10px;
-      background: #f3f3f3;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: #fff8f8;
+      color: #b30000;
       padding: 10px;
-      border: 1px dashed #999;
+      border: 1px solid #b30000;
+      border-radius: 4px;
+      font-size: 12px;
+      max-width: 300px;
       display: none;
+      z-index: 10;
     }
   </style>
 </head>
 <body>
-  <h2>SFP AIL Finder</h2>
-  <p>Search for your location and view nearby Authorised Inspection Licensees (AILs):</p>
   <input id="locationSearch" type="text" placeholder="e.g. Parramatta, NSW" />
   <div id="mapContainer"></div>
   <div id="debug"></div>
 
   <script>
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT2SCY7K1S7RQbqViTY9yXz0HyQ96wKR0mE-Mcni_tDbT7CKfd0SvH2Hg3k3AkGRnFk3O7aJYtSzdNo/pub?output=csv';
+
     let map;
     let autocomplete;
     let userMarker;
     let markers = [];
     let geocoder;
     let infoWindows = [];
-
-    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/13biqIGqstGzfi6d0TNt0SR3vwIxOmC8hlZGX1qIfIYw/export?format=csv';
-
-    const STATE_CENTERS = {
-      'NSW': { lat: -31.2532, lng: 146.9211 },
-      'VIC': { lat: -37.4713, lng: 144.7852 },
-      'QLD': { lat: -20.9176, lng: 142.7028 },
-      'WA':  { lat: -27.6728, lng: 121.6283 },
-      'SA':  { lat: -30.0002, lng: 136.2092 },
-      'TAS': { lat: -41.4545, lng: 145.9707 },
-      'NT':  { lat: -19.4914, lng: 132.5509 },
-      'ACT': { lat: -35.4735, lng: 149.0124 },
-    };
 
     const AUS_BOUNDS = {
       north: -9.0,
@@ -81,10 +74,9 @@
 
     function initMap() {
       map = new google.maps.Map(document.getElementById("mapContainer"), {
-        zoom: 5,
+        zoom: 4,
         center: { lat: -25.2744, lng: 133.7751 },
         mapTypeId: "roadmap",
-        disableDefaultUI: false,
         gestureHandling: "greedy",
         restriction: {
           latLngBounds: AUS_BOUNDS,
@@ -133,10 +125,8 @@
         const response = await fetch(SHEET_URL);
         const csv = await response.text();
         const data = parseCSV(csv);
-        if (!data.length) {
-          document.getElementById('debug').style.display = 'block';
-          document.getElementById('debug').textContent = '❌ No valid AIL data found. Check if the sheet format changed or CSV fields have extra commas.';
-        }
+        if (!data.length) throw new Error('No valid AIL entries found');
+
         const bounds = new google.maps.LatLngBounds();
         data.forEach(item => {
           const marker = addMarker(item);
@@ -164,7 +154,6 @@
         const lat = parseFloat(coords[0]);
         const lng = parseFloat(coords[1]);
         const isMobile = !obj['Business Address Line 1']?.trim();
-        const state = getStateFromPostcode(obj['Postcode']);
 
         if (!isNaN(lat) && !isNaN(lng)) {
           data.push({
@@ -175,26 +164,11 @@
             phone: obj['Phone'],
             lat,
             lng,
-            isMobile,
-            state
+            isMobile
           });
         }
       }
       return data;
-    }
-
-    function getStateFromPostcode(postcode) {
-      const pc = parseInt(postcode);
-      if (pc >= 1000 && pc <= 2599) return 'NSW';
-      if (pc >= 2600 && pc <= 2899) return 'ACT';
-      if (pc >= 2900 && pc <= 2999) return 'NSW';
-      if (pc >= 3000 && pc <= 3999) return 'VIC';
-      if (pc >= 4000 && pc <= 4999) return 'QLD';
-      if (pc >= 5000 && pc <= 5799) return 'SA';
-      if (pc >= 6000 && pc <= 6797) return 'WA';
-      if (pc >= 7000 && pc <= 7799) return 'TAS';
-      if (pc >= 800 && pc <= 899) return 'NT';
-      return 'NSW';
     }
 
     function addMarker(item) {
@@ -202,9 +176,7 @@
         position: { lat: item.lat, lng: item.lng },
         map,
         title: item.company,
-        icon: {
-          url: `https://maps.google.com/mapfiles/ms/icons/${item.isMobile ? 'red' : 'blue'}-dot.png`
-        }
+        icon: `https://maps.google.com/mapfiles/ms/icons/${item.isMobile ? 'red' : 'blue'}-dot.png`
       });
 
       const infoWindow = new google.maps.InfoWindow({
