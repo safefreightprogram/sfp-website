@@ -1,269 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SFP AIL Finder Map</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find an AIL – Safe Freight Program</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      height: 100%;
-      background-color: #f2f2f2;
-    }
-
-    #mapContainer {
-      height: 45vh;
+    #map {
+      height: 80vh;
       width: 100%;
-      position: relative;
-      z-index: 1;
-    }
-
-    #locationSearch {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 5;
-      width: 300px;
-      padding: 8px;
-      font-size: 16px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
-
-    .info-window {
-      font-size: 14px;
-    }
-
-    .info-window h3 {
-      margin: 0 0 5px;
-    }
-
-    #debug {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      background: #fff8f8;
-      color: #b30000;
-      padding: 10px;
-      border: 1px solid #b30000;
-      border-radius: 4px;
-      font-size: 12px;
-      max-width: 300px;
-      display: none;
-      z-index: 10;
-    }
-
-    .toggle-controls {
-      padding: 10px 20px;
-      background: #eaeaea;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .toggle-controls label {
-      font-weight: bold;
-    }
-
-    #resultsContainer {
-      padding: 10px 20px;
-      background: #fff;
-      max-height: calc(55vh - 40px);
-      overflow-y: auto;
-    }
-
-    .result-entry {
-      margin-bottom: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #eee;
     }
   </style>
 </head>
-<body>
-  <input id="locationSearch" type="text" placeholder="e.g. Parramatta, NSW" />
-  <div id="mapContainer"></div>
-  <div class="toggle-controls">
-    <label><input type="checkbox" id="toggleMobile" checked> Show Mobile</label>
-    <label><input type="checkbox" id="toggleFixed" checked> Show Fixed</label>
-  </div>
-  <div id="resultsContainer"></div>
-  <div id="debug"></div>
+<body class="bg-gray-100 text-gray-900">
+  <header class="bg-white shadow p-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold">Find an AIL</h1>
+    <a href="/" class="text-blue-600 hover:underline">Back to Home</a>
+  </header>
 
+  <main class="p-4">
+    <p class="mb-4">This page shows the locations of Authorised Inspection Licensees (AILs) across Australia. Use the map to find one near you.</p>
+    <div id="map" class="mb-4 rounded shadow"></div>
+    <p id="statusMsg" class="text-sm text-gray-600">Data is synced live from <a href="https://docs.google.com/spreadsheets/d/13biqIGqstGzfi6d0TNt0SR3vwIxOmC8hlZGX1qIfIYw/edit?usp=sharing" class="text-blue-500 underline" target="_blank">this Google Sheet</a>.</p>
+    <p class="text-xs text-red-600 mt-2">Note: If you see a map loading error, ensure the domain <code>https://web-sandbox.oaiusercontent.com</code> is listed as an authorized HTTP referrer in your <a href="https://console.cloud.google.com/apis/credentials" class="underline text-blue-500" target="_blank">Google Cloud Console API key settings</a>.</p>
+  </main>
+
+  <!-- REPLACE WITH YOUR OWN KEY FOR DEPLOYMENT -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfGBAzqWsctQDwUnPpbr8dPujAzSx-ohs"></script>
   <script>
-    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT2SCY7K1S7RQbqViTY9yXz0HyQ96wKR0mE-Mcni_tDbT7CKfd0SvH2Hg3k3AkGRnFk3O7aJYtSzdNo/pub?output=csv';
-
-    let map;
-    let autocomplete;
-    let userMarker;
-    let markers = [];
-    let allData = [];
-    let geocoder;
-    let infoWindows = [];
-
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("mapContainer"), {
-        zoom: 4,
-        center: { lat: -25.2744, lng: 133.7751 },
-        mapTypeId: "roadmap",
-        gestureHandling: "greedy"
-      });
-
-      geocoder = new google.maps.Geocoder();
-
-      const input = document.getElementById("locationSearch");
-      autocomplete = new google.maps.places.Autocomplete(input, {
-        componentRestrictions: { country: "au" },
-        fields: ["geometry", "name"],
-      });
-
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        if (place.geometry && place.geometry.location) {
-          const location = place.geometry.location;
-          map.setCenter(location);
-          map.setZoom(10);
-
-          if (userMarker) userMarker.setMap(null);
-
-          userMarker = new google.maps.Marker({
-            position: location,
-            map: map,
-            title: place.name,
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 8,
-              fillColor: "#dc2626",
-              fillOpacity: 1,
-              strokeWeight: 2,
-              strokeColor: "white"
-            }
-          });
-        }
-      });
-
-      document.getElementById("toggleMobile").addEventListener('change', updateMarkers);
-      document.getElementById("toggleFixed").addEventListener('change', updateMarkers);
-
-      loadAilData();
-    }
-
-    async function loadAilData() {
+    async function loadAILData() {
+      const sheetUrl = 'https://opensheet.elk.sh/13biqIGqstGzfi6d0TNt0SR3vwIxOmC8hlZGX1qIfIYw/Sheet1';
       try {
-        const response = await fetch(SHEET_URL);
-        const csv = await response.text();
-        allData = parseCSV(csv);
-        updateMarkers();
-      } catch (error) {
-        document.getElementById('debug').style.display = 'block';
-        document.getElementById('debug').textContent = '❌ Failed to load Google Sheet: ' + error;
+        const res = await fetch(sheetUrl);
+        if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
+        const data = await res.json();
+        return data.filter(entry => entry["Geocoordinates"] && entry["Geocoordinates"].includes(','));
+      } catch (err) {
+        console.error("Error fetching AIL data:", err);
+        document.getElementById("statusMsg").innerText = "Failed to load AIL data.";
+        return [];
       }
     }
 
-    function parseCSV(text) {
-      const lines = text.trim().split(/\r?\n/);
-      const headers = lines[0].split(',');
-      const data = [];
+    function initMap(ailData) {
+      const map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 4.5,
+        center: { lat: -25.2744, lng: 133.7751 },
+      });
 
-      for (let i = 1; i < lines.length; i++) {
-        const row = lines[i].split(',');
-        const obj = {};
-        headers.forEach((h, j) => obj[h.trim()] = (row[j] || '').trim());
+      let markerCount = 0;
 
-        const coords = obj['Geocordinates']?.split(',') || [];
-        const lat = parseFloat(coords[0]);
-        const lng = parseFloat(coords[1]);
-        const isMobile = obj['Business Address Line 1'] === '' || obj['Business Address Line 1']?.toLowerCase().includes('mobile');
+      ailData.forEach((ail, index) => {
+        try {
+          const [lat, lng] = ail["Geocoordinates"].split(',').map(Number);
+          if (isNaN(lat) || isNaN(lng)) throw new Error("Invalid coordinates");
 
-        if (!isNaN(lat) && !isNaN(lng)) {
-          data.push({
-            company: obj['Company'],
-            ail: obj['AIL #'],
-            city: obj['Suburb'],
-            inspector: obj['Licensed Inspector'],
-            phone: obj['Phone'],
-            lat,
-            lng,
-            isMobile
+          const marker = new google.maps.Marker({
+            position: { lat, lng },
+            map,
+            title: ail["Company"] || `AIL #${ail["AIL #"]}`
           });
+
+          const infoWindow = new google.maps.InfoWindow({
+            content: `
+              <div class="text-sm">
+                <strong>${ail["Company"] || 'Unknown Company'}</strong><br>
+                ${ail["Business Address Line 1"] || ''}, ${ail["Suburb"] || ''} ${ail["Postcode"] || ''}<br>
+                Inspector: ${ail["Licensed Inspector"] || 'N/A'}<br>
+                Phone: ${ail["Phone"] || 'N/A'}
+              </div>`
+          });
+
+          marker.addListener("click", () => {
+            infoWindow.open(map, marker);
+          });
+
+          markerCount++;
+        } catch (err) {
+          console.warn(`Skipping row ${index + 1} due to error:`, err);
         }
+      });
+
+      if (markerCount === 0) {
+        document.getElementById("statusMsg").innerText = "No valid AIL locations were found in the data.";
       }
-      return data;
     }
 
-    function updateMarkers() {
-      const showMobile = document.getElementById("toggleMobile").checked;
-      const showFixed = document.getElementById("toggleFixed").checked;
-      const resultsContainer = document.getElementById("resultsContainer");
-
-      markers.forEach(marker => marker.setMap(null));
-      markers = [];
-      infoWindows.forEach(w => w.close());
-      infoWindows = [];
-      resultsContainer.innerHTML = '';
-
-      const filtered = allData.filter(item => (item.isMobile && showMobile) || (!item.isMobile && showFixed));
-
-      const bounds = new google.maps.LatLngBounds();
-      filtered.forEach(item => {
-        const marker = addMarker(item);
-        bounds.extend(marker.getPosition());
-        resultsContainer.innerHTML += `
-          <div class="result-entry">
-            <strong>${item.company}</strong><br/>
-            AIL #: ${item.ail}<br/>
-            ${item.city ? `City: ${item.city}<br/>` : ''}
-            ${item.inspector ? `Inspector: ${item.inspector}<br/>` : ''}
-            Phone: <a href="tel:${item.phone}">${item.phone}</a><br/>
-            Type: ${item.isMobile ? 'Mobile' : 'Fixed'}
-          </div>`;
-      });
-      if (filtered.length) map.fitBounds(bounds);
-    }
-
-    function addMarker(item) {
-      const marker = new google.maps.Marker({
-        position: { lat: item.lat, lng: item.lng },
-        map,
-        title: item.company,
-        icon: `https://maps.google.com/mapfiles/ms/icons/${item.isMobile ? 'red' : 'blue'}-dot.png`
-      });
-
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div class="info-window">
-            <h3>${item.company}</h3>
-            <p><strong>AIL #:</strong> ${item.ail}</p>
-            ${item.city ? `<p><strong>City:</strong> ${item.city}</p>` : ''}
-            ${item.inspector ? `<p><strong>Inspector:</strong> ${item.inspector}</p>` : ''}
-            <p><strong>Type:</strong> ${item.isMobile ? 'Mobile' : 'Fixed'}</p>
-            <p><strong>Phone:</strong> <a href="tel:${item.phone}">${item.phone}</a></p>
-          </div>`
-      });
-
-      marker.addListener("click", () => {
-        infoWindows.forEach(w => w.close());
-        infoWindow.open(map, marker);
-      });
-
-      infoWindows.push(infoWindow);
-      markers.push(marker);
-      return marker;
-    }
-  </script>
-
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfGBAzqWsctQDwUnPpbr8dPujAzSx-ohs&libraries=places" defer></script>
-  <script>
-    window.addEventListener("load", () => {
-      const checkReady = setInterval(() => {
-        if (typeof google !== "undefined" && google.maps) {
-          clearInterval(checkReady);
-          initMap();
-        }
-      }, 200);
-    });
+    loadAILData().then(initMap);
   </script>
 </body>
 </html>
