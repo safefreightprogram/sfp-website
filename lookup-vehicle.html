@@ -7,7 +7,7 @@
   <style>
     body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 2rem; color: #333; }
     h1 { text-align: center; color: #1c3d5a; }
-    .lookup-box { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 480px; margin: 0 auto; text-align: center; }
+    .lookup-box { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 400px; margin: 0 auto; text-align: center; }
     input { width: 80%; padding: 0.75rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 8px; text-align: center; }
     input:focus { outline: none; border-color: #1c3d5a; box-shadow: 0 0 0 3px rgba(28, 61, 90, 0.1); }
     input::placeholder { color: #888; font-size: 0.9rem; }
@@ -21,24 +21,117 @@
     .copyable:hover { background-color: #f0f8ff; padding: 2px 4px; border-radius: 3px; }
     .copied-msg { position: absolute; top: 5px; right: 10px; font-size: 0.85rem; color: #28a745; background: white; padding: 2px 6px; border-radius: 4px; display: none; }
     .prefix-label { font-weight: bold; margin-right: 5px; color: #1c3d5a; font-size: 1rem; }
-    .input-group { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 0.75rem; }
+    .input-group { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 0.5rem; }
   </style>
 </head>
 <body>
   <h1>Vehicle Lookup</h1>
   <div class="lookup-box">
-    <h3>Enter SFPV ID or Rego</h3>
+    <h3>Enter Vehicle Details</h3>
     <div class="input-group">
       <span class="prefix-label">SFPV-</span>
-      <input type="text" id="vehicleInput" placeholder="e.g. 001234" onkeydown="if(event.key==='Enter'){searchVehicle()}" />
+      <input type="text" id="vehicleInput" placeholder="e.g. 123456" onkeydown="if(event.key==='Enter'){performVehicleSearch()}" />
     </div>
-    <div class="input-group">
+    <div class="input-group" style="margin-top: 1rem;">
       <span class="prefix-label">Rego:</span>
-      <input type="text" id="regoInput" placeholder="e.g. ABC123" onkeydown="if(event.key==='Enter'){searchVehicle()}" />
+      <input type="text" id="regoInput" placeholder="e.g. ABC123" onkeydown="if(event.key==='Enter'){performVehicleSearch()}" />
     </div>
-    <button onclick="searchVehicle()">Search Vehicle</button>
+    <button onclick="performVehicleSearch()">Search Vehicle</button>
     <div id="vehicleResult" class="result"><span class="copied-msg" id="copiedVehicle"></span></div>
   </div>
 
   <script>
-    const VEHICLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFC
+    const VEHICLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFCekJjBtJNTP8/gviz/tq?tqx=out:json';
+
+    async function fetchSheetData(url) {
+      const response = await fetch(url);
+      const text = await response.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
+    }
+
+    function padWithZeros(input, length = 6) {
+      return input.padStart(length, '0');
+    }
+
+    function formatDate(d) {
+      try {
+        if (!d) return '';
+        if (typeof d === 'string' && d.startsWith('Date(')) {
+          const [y, m, day] = d.slice(5, -1).split(',').map(Number);
+          return new Date(y, m, day).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+        return new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+      } catch {
+        return 'Invalid Date';
+      }
+    }
+
+    function getStatusClass(status, expiryRaw) {
+      const statusLC = status.toLowerCase();
+      if (statusLC === 'expired' || statusLC === 'non-compliant') return 'non-compliant';
+      const expiryDate = new Date(formatDate(expiryRaw));
+      const diffDays = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+      return (diffDays <= 30 && diffDays >= 0) ? 'warning' : 'active';
+    }
+
+    function makeCopyable(label, value, msgEl) {
+      return `<strong>${label}</strong> <span class="copyable" onclick="copyWithMessage('${value}', '${msgEl}')">${value}</span><br>`;
+    }
+
+    function copyWithMessage(value, targetId) {
+      navigator.clipboard.writeText(value);
+      const msg = document.getElementById(targetId);
+      msg.textContent = 'Copied!';
+      msg.style.display = 'inline';
+      setTimeout(() => msg.style.display = 'none', 1200);
+    }
+
+    async function performVehicleSearch() {
+      const sfpvInput = document.getElementById('vehicleInput').value.trim();
+      const regoInput = document.getElementById('regoInput').value.trim().toUpperCase();
+      if (sfpvInput) {
+        await lookupVehicleById(sfpvInput);
+      } else if (regoInput) {
+        await lookupVehicleByRego(regoInput);
+      } else {
+        const resultEl = document.getElementById('vehicleResult');
+        resultEl.className = 'result';
+        resultEl.textContent = 'Please enter either an SFPV number or a registration number.';
+      }
+    }
+
+    async function lookupVehicleById(raw) {
+      const paddedInput = 'SFPV-' + padWithZeros(raw);
+      const data = await fetchSheetData(VEHICLE_SHEET_URL);
+      const match = data.find(row => row[0] === paddedInput);
+      showVehicleResult(match);
+    }
+
+    async function lookupVehicleByRego(raw) {
+      const data = await fetchSheetData(VEHICLE_SHEET_URL);
+      const match = data.find(row => row[2].toUpperCase() === raw);
+      showVehicleResult(match);
+    }
+
+    function showVehicleResult(match) {
+      const resultEl = document.getElementById('vehicleResult');
+      if (match) {
+        const statusClass = getStatusClass(match[4], match[5]);
+        const warningNote = statusClass === 'warning' ? '<br><em>Note: Expiry within 30 days</em>' : '';
+        resultEl.className = 'result ' + statusClass;
+        resultEl.innerHTML = `
+          ${makeCopyable('Type:', match[1], 'copiedVehicle')}
+          ${makeCopyable('Plate:', match[2], 'copiedVehicle')}
+          ${makeCopyable('VIN:', match[3], 'copiedVehicle')}
+          ${makeCopyable('Status:', match[4], 'copiedVehicle')}
+          ${makeCopyable('Expiry Date:', formatDate(match[5]), 'copiedVehicle')}${warningNote}
+        `;
+      } else {
+        resultEl.className = 'result';
+        resultEl.textContent = 'Vehicle not found';
+      }
+    }
+  </script>
+</body>
+</html>
