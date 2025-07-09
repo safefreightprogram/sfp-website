@@ -13,8 +13,8 @@
       align-items: center;
     }
     #mapContainer {
-      height: 375px; /* increased from 250px */
-      width: 50%; /* now only half width */
+      height: 562px; /* 50% taller */
+      width: 50%; /* half width */
       margin-top: 20px;
       border: 2px solid #ccc;
       border-radius: 8px;
@@ -58,7 +58,6 @@
     let markers = [];
     let geocoder;
     let infoWindows = [];
-    const bounds = new google.maps.LatLngBounds();
 
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/13biqIGqstGzfi6d0TNt0SR3vwIxOmC8hlZGX1qIfIYw/export?format=csv';
 
@@ -73,13 +72,24 @@
       'ACT': { lat: -35.4735, lng: 149.0124 },
     };
 
+    const AUS_BOUNDS = {
+      north: -9.0,
+      south: -44.0,
+      west: 112.0,
+      east: 154.0
+    };
+
     function initMap() {
       map = new google.maps.Map(document.getElementById("mapContainer"), {
         zoom: 5,
         center: { lat: -25.2744, lng: 133.7751 },
         mapTypeId: "roadmap",
         disableDefaultUI: false,
-        gestureHandling: "greedy"
+        gestureHandling: "greedy",
+        restriction: {
+          latLngBounds: AUS_BOUNDS,
+          strictBounds: false
+        }
       });
 
       geocoder = new google.maps.Geocoder();
@@ -127,7 +137,11 @@
           document.getElementById('debug').style.display = 'block';
           document.getElementById('debug').textContent = '❌ No valid AIL data found. Check if the sheet format changed or CSV fields have extra commas.';
         }
-        data.forEach(addMarker);
+        const bounds = new google.maps.LatLngBounds();
+        data.forEach(item => {
+          const marker = addMarker(item);
+          bounds.extend(marker.getPosition());
+        });
         map.fitBounds(bounds);
       } catch (error) {
         console.error("Failed to load AIL data:", error);
@@ -193,8 +207,6 @@
         }
       });
 
-      bounds.extend(marker.getPosition());
-
       const infoWindow = new google.maps.InfoWindow({
         content: `
           <div class="info-window">
@@ -215,6 +227,7 @@
 
       infoWindows.push(infoWindow);
       markers.push(marker);
+      return marker;
     }
   </script>
 
