@@ -12,182 +12,182 @@
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
 
-  <!-- Header -->
-  <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false, showSearch: false }">
-    <div class="max-w-7xl mx-auto p-4 flex justify-between items-center">
-      <a href="index.html" class="text-xl font-bold transition-transform transform hover:scale-[1.03]">Safe Freight Program</a>
-      <div class="flex items-center space-x-4">
-        <button @click="showSearch = !showSearch" class="md:hidden transition-transform transform hover:scale-105">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </button>
-        <button class="md:hidden transition-transform transform hover:scale-105" @click="open = !open">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      </div>
-      <nav class="hidden md:flex space-x-4">
-        <a href="about.html" class="hover:underline">About</a>
-        <a href="passport.html" class="hover:underline">Passport</a>
-        <a href="training.html" class="hover:underline">Find SFP Training</a>
-        <a href="trainer-login.html" class="hover:underline">Trainer Login</a>
-        <a href="ail-login.html" class="hover:underline">AIL Login</a>
-        <a href="find-ail.html" class="hover:underline">Find AIL</a>
-        <a href="lookup-driver.html" class="hover:underline">Driver Lookup</a>
-        <a href="lookup-vehicle.html" class="hover:underline">Vehicle Lookup</a>
-        <a href="contact.html" class="hover:underline">Contact</a>
-      </nav>
+<header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false, showSearch: false }">
+  <div class="max-w-7xl mx-auto p-4 flex justify-between items-center">
+    <a href="index.html" class="text-xl font-bold transition-transform transform hover:scale-[1.015]">Safe Freight Program</a>
+    <div class="flex items-center space-x-4">
+      <button @click="showSearch = !showSearch" class="md:hidden inline-flex transition-transform transform hover:scale-105">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </button>
+      <button class="md:hidden inline-flex transition-transform transform hover:scale-105" @click="open = !open">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
     </div>
-
-    <div class="md:hidden px-4 pt-2" x-show="showSearch" x-transition>
-      <form action="search/results.html" method="GET">
-        <input type="text" name="q" placeholder="Search..." class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-500">
-      </form>
-    </div>
-
-    <div class="md:hidden px-4 pb-4 space-y-2" x-show="open" @click.away="open = false" x-transition>
-      <nav class="flex flex-col space-y-2">
-        <a href="about.html" class="transition-transform transform hover:scale-[1.02]">About</a>
-        <div class="pt-2"></div>
-        <a href="lookup-driver.html" class="transition-transform transform hover:scale-[1.02]">Driver Lookup</a>
-        <a href="lookup-vehicle.html" class="transition-transform transform hover:scale-[1.02]">Vehicle Lookup</a>
-        <a href="passport.html" class="transition-transform transform hover:scale-[1.02]">Passport</a>
-        <a href="find-ail.html" class="transition-transform transform hover:scale-[1.02]">Find AIL</a>
-        <a href="ail-login.html" class="transition-transform transform hover:scale-[1.02]">AIL Login</a>
-        <a href="training.html" class="transition-transform transform hover:scale-[1.02]">Find SFP Training</a>
-        <a href="trainer-login.html" class="transition-transform transform hover:scale-[1.02]">Trainer Login</a>
-      </nav>
-      <div class="pt-4 border-t border-gray-200 mt-4">
-        <a href="subscribe.html" class="block text-sm text-gray-300 hover:text-white">Subscribe</a>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main -->
-  <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <section class="text-center">
-      <h2 class="text-3xl font-bold text-blue-800 mb-4">Driver Credential Lookup</h2>
-      <p class="mb-4 text-gray-600">Scan or enter a Safe Freight Passport Driver Number to check driver credentials.</p>
-      <div class="mb-4 text-center">
-        <button type="button" onclick="startScan()" class="text-blue-700 hover:text-blue-900 text-sm border border-blue-700 px-2 py-1 rounded inline-flex items-center space-x-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h2l2-3h10l2 3h2a1 1 0 011 1v11a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1zm9 3a4 4 0 100 8 4 4 0 000-8z" />
-          </svg>
-          <span>Scan QR Code</span>
-        </button>
-      </div>
-    </section>
-
-    <div class="bg-white shadow-md rounded-lg p-6 max-w-xl mx-auto">
-      <form onsubmit="lookupDriver(); return false;" class="space-y-4">
-        <label class="block text-sm font-medium text-gray-700">Safe Freight Passport Driver Number</label>
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <span class="text-blue-700 font-semibold">SFPD-</span>
-          <input type="text" id="driverInput" class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. 001234" />
-        </div>
-        <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-md shadow">Search</button>
-      </form>
-      <div id="driverResult" class="mt-6 hidden"></div>
-    </div>
-  </main>
-
-  <footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
-    &copy; 2025 Safe Freight Program. All rights reserved.
-  </footer>
-
-  <!-- QR Scanner Modal -->
-  <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
-    <div class="bg-white p-4 rounded-md shadow-md max-w-sm w-full relative">
-      <div id="qr-reader" style="width: 100%;"></div>
-      <button onclick="stopScan()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">&times;</button>
-    </div>
+    <nav class="hidden md:flex space-x-4">
+      <a href="about.html" class="hover:underline">About</a>
+      <a href="passport.html" class="hover:underline">Passport</a>
+      <a href="training.html" class="hover:underline">Find SFP Training</a>
+      <a href="trainer-login.html" class="hover:underline">Trainer Login</a>
+      <a href="ail-login.html" class="hover:underline">AIL Login</a>
+      <a href="find-ail.html" class="hover:underline">Find AIL</a>
+      <a href="lookup-driver.html" class="hover:underline">Driver Lookup</a>
+      <a href="lookup-vehicle.html" class="hover:underline">Vehicle Lookup</a>
+      <a href="contact.html" class="hover:underline">Contact</a>
+    </nav>
   </div>
 
-  <!-- Script -->
-  <script>
-    const DRIVER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json';
-    let qrScanner;
+  <div class="md:hidden px-4 pt-2" x-show="showSearch" x-transition>
+    <form action="search/results.html" method="GET">
+      <input type="search" name="q" placeholder="Type a word" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-500">
+    </form>
+  </div>
 
-    async function fetchSheetData(url) {
-      const response = await fetch(url);
-      const text = await response.text();
-      const json = JSON.parse(text.substr(47).slice(0, -2));
-      return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
+  <div class="md:hidden px-4 pb-4 space-y-2" x-show="open" @click.away="open = false" x-transition>
+    <nav class="flex flex-col space-y-2">
+      <a href="about.html" class="inline-flex transition-transform transform hover:scale-[1.015]">About</a>
+      <div class="pt-2"></div>
+      <a href="lookup-driver.html" class="inline-flex transition-transform transform hover:scale-[1.015]">Driver Lookup</a>
+      <a href="lookup-vehicle.html" class="inline-flex transition-transform transform hover:scale-[1.015]">Vehicle Lookup</a>
+      <a href="passport.html" class="inline-flex transition-transform transform hover:scale-[1.015]">Passport</a>
+      <a href="find-ail.html" class="inline-flex transition-transform transform hover:scale-[1.015]">Find AIL</a>
+      <a href="ail-login.html" class="inline-flex transition-transform transform hover:scale-[1.015]">AIL Login</a>
+      <a href="training.html" class="inline-flex transition-transform transform hover:scale-[1.015]">Find SFP Training</a>
+      <a href="trainer-login.html" class="inline-flex transition-transform transform hover:scale-[1.015]">Trainer Login</a>
+    </nav>
+    <div class="pt-4 border-t border-gray-200 mt-4">
+      <a href="subscribe.html" class="block text-sm text-gray-300 hover:text-white">Subscribe</a>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <section class="text-center">
+    <h2 class="text-3xl font-bold text-blue-800 mb-4">Driver Credential Lookup</h2>
+    <p class="mb-4 text-gray-600">Scan or enter a Safe Freight Passport Driver Number to check driver credentials.</p>
+    <div class="mb-4 text-center">
+      <button type="button" onclick="startScan()" class="text-blue-700 hover:text-blue-900 text-sm border border-blue-700 px-2 py-1 rounded inline-flex items-center space-x-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h2l2-3h10l2 3h2a1 1 0 011 1v11a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1zm9 3a4 4 0 100 8 4 4 0 000-8z" />
+        </svg>
+        <span>Scan QR Code</span>
+      </button>
+    </div>
+  </section>
+
+  <div class="bg-white shadow-md rounded-lg p-6 max-w-xl mx-auto">
+    <form onsubmit="lookupDriver(); return false;" class="space-y-4">
+      <label for="driverInput" class="block text-sm font-medium text-gray-700">Safe Freight Passport Driver Number</label>
+      <div class="flex items-center border border-gray-300 rounded-md px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
+        <span class="text-blue-700 font-semibold pr-1">SFPD-</span>
+        <input type="text" id="driverInput" pattern="[0-9]*" inputmode="numeric"
+               class="flex-1 border-none focus:ring-0 focus:outline-none text-sm"
+               placeholder="001234" required />
+      </div>
+      <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-md shadow">Search</button>
+    </form>
+    <div id="driverResult" class="mt-6 hidden"></div>
+  </div>
+</main>
+
+<footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
+  &copy; 2025 Safe Freight Program. All rights reserved.
+</footer>
+
+<!-- QR Modal -->
+<div id="qrModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+  <div class="bg-white p-4 rounded-md shadow-md max-w-sm w-full relative">
+    <div id="qr-reader" style="width: 100%;"></div>
+    <button onclick="stopScan()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">&times;</button>
+  </div>
+</div>
+
+<!-- JS -->
+<script>
+  const DRIVER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json';
+  let qrScanner;
+
+  async function fetchSheetData(url) {
+    const response = await fetch(url);
+    const text = await response.text();
+    const json = JSON.parse(text.substr(47).slice(0, -2));
+    return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
+  }
+
+  function padWithZeros(input, length = 6) {
+    return input.padStart(length, '0');
+  }
+
+  function formatDate(d) {
+    const parsed = new Date(d);
+    return isNaN(parsed.getTime()) ? d : parsed.toLocaleDateString('en-AU', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    });
+  }
+
+  function getStatusClass(status, expiry) {
+    const now = new Date();
+    const expiryDate = new Date(expiry);
+    if (status.toLowerCase() === 'expired') return 'bg-red-100 border-l-4 border-red-500 text-red-800';
+    if (expiryDate - now < 1000 * 60 * 60 * 24 * 30) return 'bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800';
+    return 'bg-green-100 border-l-4 border-green-500 text-green-800';
+  }
+
+  async function lookupDriver() {
+    const raw = document.getElementById('driverInput').value.trim();
+    const input = raw.startsWith('SFPD-') ? raw : 'SFPD-' + padWithZeros(raw);
+    const data = await fetchSheetData(DRIVER_SHEET_URL);
+    const match = data.find(row => row[0] === input);
+    const resultEl = document.getElementById('driverResult');
+
+    if (match) {
+      const className = getStatusClass(match[3], match[4]);
+      resultEl.className = `${className} p-4 rounded-md mt-6`;
+      resultEl.innerHTML = `
+        <dl class="space-y-1">
+          <div class="flex"><dt class="w-24 font-semibold">Name:</dt><dd class="flex-1">${match[1]} ${match[2]}</dd></div>
+          <div class="flex"><dt class="w-24 font-semibold">ID:</dt><dd class="flex-1">${match[0]}</dd></div>
+          <div class="flex"><dt class="w-24 font-semibold">Status:</dt><dd class="flex-1">${match[3]}</dd></div>
+          <div class="flex"><dt class="w-24 font-semibold">Expiry:</dt><dd class="flex-1">${formatDate(match[4])}</dd></div>
+        </dl>
+      `;
+    } else {
+      resultEl.className = 'bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md mt-6';
+      resultEl.innerText = 'Driver not found.';
     }
 
-    function padWithZeros(input, length = 6) {
-      return input.padStart(length, '0');
-    }
+    resultEl.classList.remove('hidden');
+  }
 
-    function formatDate(d) {
-      const parsed = new Date(d);
-      return isNaN(parsed.getTime()) ? d : parsed.toLocaleDateString('en-AU', {
-        day: 'numeric', month: 'long', year: 'numeric'
+  function startScan() {
+    const modal = document.getElementById('qrModal');
+    modal.classList.remove('hidden');
+    qrScanner = new Html5Qrcode("qr-reader");
+    qrScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      (decodedText) => {
+        qrScanner.stop();
+        modal.classList.add('hidden');
+        const clean = decodedText.trim();
+        document.getElementById('driverInput').value =
+          clean.startsWith('SFPD-') ? clean : padWithZeros(clean);
+        lookupDriver();
+      },
+      (err) => {}
+    );
+  }
+
+  function stopScan() {
+    if (qrScanner) {
+      qrScanner.stop().then(() => {
+        document.getElementById('qrModal').classList.add('hidden');
       });
     }
-
-    function getStatusClass(status, expiry) {
-      const now = new Date();
-      const expiryDate = new Date(expiry);
-      if (status.toLowerCase() === 'expired') return 'bg-red-100 border-l-4 border-red-500 text-red-800';
-      if (expiryDate - now < 1000 * 60 * 60 * 24 * 30) return 'bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800';
-      return 'bg-green-100 border-l-4 border-green-500 text-green-800';
-    }
-
-    async function lookupDriver() {
-      const raw = document.getElementById('driverInput').value.trim();
-      const input = raw.startsWith('SFPD-') ? raw : 'SFPD-' + padWithZeros(raw);
-      const data = await fetchSheetData(DRIVER_SHEET_URL);
-      const match = data.find(row => row[0] === input);
-      const resultEl = document.getElementById('driverResult');
-
-      if (match) {
-        const className = getStatusClass(match[3], match[4]);
-        resultEl.className = `${className} p-4 rounded-md mt-6`;
-        resultEl.innerHTML = `
-          <dl class="space-y-1">
-            <div class="flex"><dt class="w-24 font-semibold">Name:</dt><dd class="flex-1">${match[1]} ${match[2]}</dd></div>
-            <div class="flex"><dt class="w-24 font-semibold">ID:</dt><dd class="flex-1">${match[0]}</dd></div>
-            <div class="flex"><dt class="w-24 font-semibold">Status:</dt><dd class="flex-1">${match[3]}</dd></div>
-            <div class="flex"><dt class="w-24 font-semibold">Expiry:</dt><dd class="flex-1">${formatDate(match[4])}</dd></div>
-          </dl>
-        `;
-      } else {
-        resultEl.className = 'bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md mt-6';
-        resultEl.innerText = 'Driver not found.';
-      }
-
-      resultEl.classList.remove('hidden');
-    }
-
-    function startScan() {
-      const modal = document.getElementById('qrModal');
-      modal.classList.remove('hidden');
-      qrScanner = new Html5Qrcode("qr-reader");
-      qrScanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        (decodedText) => {
-          qrScanner.stop();
-          modal.classList.add('hidden');
-          const clean = decodedText.trim();
-          document.getElementById('driverInput').value =
-            clean.startsWith('SFPD-') ? clean : padWithZeros(clean);
-          lookupDriver();
-        },
-        (err) => {}
-      );
-    }
-
-    function stopScan() {
-      if (qrScanner) {
-        qrScanner.stop().then(() => {
-          document.getElementById('qrModal').classList.add('hidden');
-        });
-      }
-    }
-  </script>
+  }
+</script>
 </body>
 </html>
