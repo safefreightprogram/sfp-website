@@ -15,7 +15,7 @@
 <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false, showSearch: false }">
   <div class="max-w-7xl mx-auto p-4 flex justify-between items-center">
     <a href="index.html" class="text-xl font-bold transition-transform transform hover:scale-[1.015]">Safe Freight Program</a>
-    <div class="flex items-center space-x-4 md:hidden">
+    <div class="flex items-center space-x-4">
       <button @click="showSearch = !showSearch" class="inline-flex transition-transform transform hover:scale-105">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -27,27 +27,19 @@
         </svg>
       </button>
     </div>
-    <nav class="hidden md:flex space-x-4">
-      <a href="about.html" class="hover:underline">About</a>
-      <a href="passport.html" class="hover:underline">Passport</a>
-      <a href="training.html" class="hover:underline">Find SFP Training</a>
-      <a href="trainer-login.html" class="hover:underline">Trainer Login</a>
-      <a href="ail-login.html" class="hover:underline">AIL Login</a>
-      <a href="find-ail.html" class="hover:underline">Find AIL</a>
-      <a href="lookup-driver.html" class="hover:underline">Driver Lookup</a>
-      <a href="lookup-vehicle.html" class="hover:underline font-bold">Vehicle Lookup</a>
-      <a href="contact.html" class="hover:underline">Contact</a>
+    <nav class="hidden space-x-4">
+      <!-- Hidden full-width nav for all screen sizes -->
     </nav>
   </div>
 
-  <div class="md:hidden px-4 pt-2" x-show="showSearch" x-transition>
+  <div class="px-4 pt-2" x-show="showSearch" x-transition>
     <form action="search.html" method="GET">
       <input type="search" name="q" placeholder="Type a word"
              class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-500 text-black">
     </form>
   </div>
 
-  <div class="md:hidden px-4 pb-4 space-y-2" x-show="open" @click.away="open = false" x-transition>
+  <div class="px-4 pb-4 space-y-2" x-show="open" @click.away="open = false" x-transition>
     <nav class="flex flex-col space-y-2">
       <a href="about.html" class="inline-flex transition-transform transform hover:scale-[1.015]">About</a>
       <a href="passport.html" class="inline-flex transition-transform transform hover:scale-[1.015]">Passport</a>
@@ -81,7 +73,7 @@
       <label for="vehicleInput" class="block text-sm font-medium text-gray-700">Safe Freight Program Vehicle Number</label>
       <div class="flex items-center border border-gray-300 rounded-md px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
         <span class="text-blue-700 font-semibold pr-1">SFPV-</span>
-        <input type="text" id="vehicleInput" pattern="[0-9]*" inputmode="numeric"
+        <input type="text" id="vehicleInput" pattern="[0-9]*" inputmode="numeric" autocomplete="off"
                class="flex-1 border-none focus:ring-0 focus:outline-none text-sm"
                placeholder="001234" required />
       </div>
@@ -96,7 +88,7 @@
 </footer>
 
 <!-- QR Modal -->
-<div id="qrModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+<div id="qrModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden overflow-hidden">
   <div class="bg-white p-4 rounded-md shadow-md max-w-sm w-full relative">
     <div id="qr-reader" style="width: 100%;"></div>
     <button onclick="stopScan()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">&times;</button>
@@ -110,8 +102,13 @@
   async function fetchSheetData(url) {
     const response = await fetch(url);
     const text = await response.text();
-    const json = JSON.parse(text.substr(47).slice(0, -2));
-    return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
+    try {
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
+    } catch (e) {
+      console.error('Failed to parse sheet data:', e);
+      return [];
+    }
   }
 
   function padWithZeros(input, length = 6) {
@@ -119,13 +116,17 @@
   }
 
   function formatDate(d) {
-    if (typeof d === 'string' && d.startsWith('Date(')) {
-      const parts = d.slice(5, -1).split(',').map(Number);
-      const parsed = new Date(parts[0], parts[1], parts[2]);
-      return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+    try {
+      if (typeof d === 'string' && d.startsWith('Date(')) {
+        const parts = d.slice(5, -1).split(',').map(Number);
+        const parsed = new Date(parts[0], parts[1], parts[2]);
+        return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+      const parsed = new Date(d);
+      return isNaN(parsed.getTime()) ? d : parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+    } catch {
+      return d;
     }
-    const parsed = new Date(d);
-    return isNaN(parsed.getTime()) ? d : parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
   function getStatusClass(status, expiry) {
@@ -139,9 +140,13 @@
   async function lookupVehicle() {
     const raw = document.getElementById('vehicleInput').value.trim();
     const input = raw.startsWith('SFPV-') ? raw : 'SFPV-' + padWithZeros(raw);
+    const resultEl = document.getElementById('vehicleResult');
+    resultEl.innerHTML = '<p class="text-gray-500">Searching…</p>';
+    resultEl.className = 'p-4 mt-6';
+    resultEl.classList.remove('hidden');
+
     const data = await fetchSheetData(VEHICLE_SHEET_URL);
     const match = data.find(row => row[0] === input);
-    const resultEl = document.getElementById('vehicleResult');
 
     if (match) {
       const className = getStatusClass(match[4], match[5]);
@@ -159,8 +164,6 @@
       resultEl.className = 'bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md mt-6';
       resultEl.innerText = 'Vehicle not found.';
     }
-
-    resultEl.classList.remove('hidden');
   }
 
   function startScan() {
@@ -174,7 +177,7 @@
         qrScanner.stop();
         modal.classList.add('hidden');
         const clean = decodedText.trim();
-        document.getElementById('vehicleInput').value = clean.startsWith('SFPV-') ? clean : padWithZeros(clean);
+        document.getElementById('vehicleInput').value = clean.startsWith('SFPV-') ? clean : 'SFPV-' + padWithZeros(clean);
         lookupVehicle();
       },
       (err) => {}
