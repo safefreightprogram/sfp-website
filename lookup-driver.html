@@ -10,36 +10,54 @@
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
-
 <body class="bg-gray-50 text-gray-800 font-sans">
 
   <!-- Header -->
-  <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false }">
+  <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false, showSearch: false }">
     <div class="max-w-7xl mx-auto p-4 flex justify-between items-center">
-      <h1 class="text-xl font-bold">Safe Freight Program</h1>
-      <button class="md:hidden" @click="open = !open">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
+      <a href="index.html" class="text-xl font-bold hover:underline">Safe Freight Program</a>
+      <div class="flex items-center space-x-4">
+        <!-- Search Icon -->
+        <button @click="showSearch = !showSearch" class="md:hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
+        <button class="md:hidden" @click="open = !open">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
       <nav class="hidden md:flex space-x-4">
         <a href="about.html" class="hover:underline">About</a>
         <a href="passport.html" class="hover:underline">Passport</a>
-        <a href="ail.html" class="hover:underline">AIL</a>
+        <a href="ail.html" class="hover:underline">AIL Portal Login</a>
         <a href="find-ail.html" class="hover:underline">Find AIL</a>
-        <a href="lookup.html" class="hover:underline">QR Lookup</a>
+        <a href="lookup-driver.html" class="hover:underline">Driver Lookup</a>
+        <a href="lookup-vehicle.html" class="hover:underline">Vehicle Lookup</a>
         <a href="contact.html" class="hover:underline">Contact</a>
       </nav>
     </div>
-    <div class="md:hidden px-4 pb-4" x-show="open" @click.away="open = false">
+
+    <div class="md:hidden px-4 pt-2" x-show="showSearch" x-transition>
+      <form action="search/results.html" method="GET">
+        <input type="text" name="q" placeholder="Search..." class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-500">
+      </form>
+    </div>
+
+    <div class="md:hidden px-4 pb-4 space-y-2" x-show="open" @click.away="open = false" x-transition>
       <nav class="flex flex-col space-y-2">
         <a href="about.html" @click="open = false">About</a>
         <a href="passport.html" @click="open = false">Passport</a>
-        <a href="ail.html" @click="open = false">AIL</a>
+        <a href="ail.html" @click="open = false">AIL Portal Login</a>
         <a href="find-ail.html" @click="open = false">Find AIL</a>
-        <a href="lookup.html" @click="open = false">QR Lookup</a>
-        <a href="contact.html" @click="open = false">Contact</a>
+        <a href="lookup-driver.html" @click="open = false">Driver Lookup</a>
+        <a href="lookup-vehicle.html" @click="open = false">Vehicle Lookup</a>
       </nav>
+      <div class="pt-4 border-t border-gray-200 mt-4">
+        <a href="subscribe.html" @click="open = false" class="block text-sm text-gray-300 hover:text-white">Subscribe</a>
+      </div>
     </div>
   </header>
 
@@ -58,7 +76,7 @@
       </div>
     </section>
 
-    <div class="bg-white shadow-md rounded-lg p-6 max-w-xl mx-auto animate-fadeInUp">
+    <div class="bg-white shadow-md rounded-lg p-6 max-w-xl mx-auto">
       <form onsubmit="lookupDriver(); return false;" class="space-y-4">
         <label class="block text-sm font-medium text-gray-700">Safe Freight Passport Driver Number</label>
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -84,6 +102,7 @@
     </div>
   </div>
 
+  <!-- Script -->
   <script>
     const DRIVER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json';
     let qrScanner;
@@ -100,13 +119,6 @@
     }
 
     function formatDate(d) {
-      if (typeof d === 'string' && d.startsWith('Date(') && d.endsWith(')')) {
-        const parts = d.slice(5, -1).split(',').map(p => parseInt(p, 10));
-        if (parts.length === 3) {
-          const date = new Date(parts[0], parts[1], parts[2]);
-          return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
-        }
-      }
       const parsed = new Date(d);
       return isNaN(parsed.getTime()) ? d : parsed.toLocaleDateString('en-AU', {
         day: 'numeric', month: 'long', year: 'numeric'
@@ -133,22 +145,10 @@
         resultEl.className = `${className} p-4 rounded-md mt-6`;
         resultEl.innerHTML = `
           <dl class="space-y-1">
-            <div class="flex">
-              <dt class="w-24 font-semibold">Name:</dt>
-              <dd class="flex-1">${match[1]} ${match[2]}</dd>
-            </div>
-            <div class="flex">
-              <dt class="w-24 font-semibold">ID:</dt>
-              <dd class="flex-1">${match[0]}</dd>
-            </div>
-            <div class="flex">
-              <dt class="w-24 font-semibold">Status:</dt>
-              <dd class="flex-1">${match[3]}</dd>
-            </div>
-            <div class="flex">
-              <dt class="w-24 font-semibold">Expiry:</dt>
-              <dd class="flex-1">${formatDate(match[4])}</dd>
-            </div>
+            <div class="flex"><dt class="w-24 font-semibold">Name:</dt><dd class="flex-1">${match[1]} ${match[2]}</dd></div>
+            <div class="flex"><dt class="w-24 font-semibold">ID:</dt><dd class="flex-1">${match[0]}</dd></div>
+            <div class="flex"><dt class="w-24 font-semibold">Status:</dt><dd class="flex-1">${match[3]}</dd></div>
+            <div class="flex"><dt class="w-24 font-semibold">Expiry:</dt><dd class="flex-1">${formatDate(match[4])}</dd></div>
           </dl>
         `;
       } else {
@@ -162,7 +162,6 @@
     function startScan() {
       const modal = document.getElementById('qrModal');
       modal.classList.remove('hidden');
-
       qrScanner = new Html5Qrcode("qr-reader");
       qrScanner.start(
         { facingMode: "environment" },
@@ -170,13 +169,12 @@
         (decodedText) => {
           qrScanner.stop();
           modal.classList.add('hidden');
-
           const clean = decodedText.trim();
           document.getElementById('driverInput').value =
             clean.startsWith('SFPD-') ? clean : padWithZeros(clean);
           lookupDriver();
         },
-        (err) => { /* ignore scan errors */ }
+        (err) => { }
       );
     }
 
