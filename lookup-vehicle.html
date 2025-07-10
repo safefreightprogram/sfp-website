@@ -28,28 +28,27 @@
       </button>
     </div>
 
-    <!-- Compact dropdown menu -->
+    <!-- Flush dropdown menu -->
     <div
       x-show="open"
       @click.away="open = false"
       x-transition
-      class="absolute top-full right-4 mt-2 bg-blue-900 text-white text-sm rounded-md shadow-lg z-50"
+      class="absolute top-full right-0 bg-blue-900 text-white text-sm z-50 shadow-md"
     >
-      <nav class="flex flex-col py-2">
-        <a href="about.html" class="px-4 py-1 hover:bg-blue-800">About</a>
-        <a href="passport.html" class="px-4 py-1 hover:bg-blue-800">Passport</a>
-        <a href="training.html" class="px-4 py-1 hover:bg-blue-800">Find SFP Training</a>
-        <a href="trainer-login.html" class="px-4 py-1 hover:bg-blue-800">Trainer Login</a>
-        <a href="ail-login.html" class="px-4 py-1 hover:bg-blue-800">AIL Login</a>
-        <a href="find-ail.html" class="px-4 py-1 hover:bg-blue-800">Find AIL</a>
-        <a href="lookup-driver.html" class="px-4 py-1 hover:bg-blue-800">Driver Lookup</a>
-        <a href="lookup-vehicle.html" class="px-4 py-1 bg-blue-800 font-bold">Vehicle Lookup</a>
-        <a href="contact.html" class="px-4 py-1 hover:bg-blue-800">Contact</a>
+      <nav class="flex flex-col">
+        <a href="about.html" class="block px-4 py-2 hover:bg-blue-800">About</a>
+        <a href="passport.html" class="block px-4 py-2 hover:bg-blue-800">Passport</a>
+        <a href="training.html" class="block px-4 py-2 hover:bg-blue-800">Find SFP Training</a>
+        <a href="trainer-login.html" class="block px-4 py-2 hover:bg-blue-800">Trainer Login</a>
+        <a href="ail-login.html" class="block px-4 py-2 hover:bg-blue-800">AIL Login</a>
+        <a href="find-ail.html" class="block px-4 py-2 hover:bg-blue-800">Find AIL</a>
+        <a href="lookup-driver.html" class="block px-4 py-2 hover:bg-blue-800">Driver Lookup</a>
+        <a href="lookup-vehicle.html" class="block px-4 py-2 bg-blue-800 font-bold">Vehicle Lookup</a>
+        <a href="contact.html" class="block px-4 py-2 hover:bg-blue-800">Contact</a>
       </nav>
     </div>
   </div>
 
-  <!-- Optional search box -->
   <div class="px-4 pt-2" x-show="showSearch" x-transition>
     <form action="search.html" method="GET">
       <input type="search" name="q" placeholder="Type a word"
