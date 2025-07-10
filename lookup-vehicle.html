@@ -1,152 +1,392 @@
 <!DOCTYPE html>
-<html lang="en-AU">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Safe Freight Program</title>
-
-  <!-- Favicon -->
-  <link rel="icon" href="favicon.ico" type="image/x-icon" />
-
-  <!-- Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-
-  <!-- SEO Meta Tags -->
-  <meta name="description" content="The Safe Freight Program sets the new standard for compliant, safety-driven road freight operations in Australia." />
-  <meta name="author" content="Safe Freight Program" />
-  <meta property="og:title" content="Safe Freight Program" />
-  <meta property="og:description" content="Professional. Compliant. Safe. Check driver and vehicle credentials quickly and easily." />
-  <meta property="og:image" content="/images/social-preview.jpg" />
-  <meta property="og:type" content="website" />
-
-  <!-- Structured Data -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Safe Freight Program",
-    "url": "https://safefreightprogram.com.au",
-    "logo": "https://safefreightprogram.com.au/logo.png",
-    "sameAs": [],
-    "description": "Australia’s standard for safe and compliant freight operations."
-  }
-  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safe Freight Program Lookup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 2rem;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #1c3d5a;
+    }
+    .lookup-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    @media (min-width: 768px) {
+      .lookup-container {
+        flex-direction: row;
+        justify-content: center;
+      }
+    }
+    .lookup-box {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .lookup-box input {
+      width: 80%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      text-align: center;
+      transition: border-color 0.3s ease;
+    }
+    .lookup-box input:focus {
+      outline: none;
+      border-color: #1c3d5a;
+      box-shadow: 0 0 0 3px rgba(28, 61, 90, 0.1);
+    }
+    .lookup-box input::placeholder {
+      color: #888;
+      font-size: 0.9rem;
+    }
+    .lookup-box button {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background-color: #1c3d5a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+    .lookup-box button:hover {
+      background-color: #285a7f;
+      transform: translateY(-1px);
+    }
+    .lookup-box button:active {
+      transform: translateY(0);
+    }
+    .result {
+      margin-top: 1rem;
+      text-align: left;
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 5px solid #1c3d5a;
+      font-size: 0.95rem;
+      color: #1c3d5a;
+      position: relative;
+    }
+    .result.active {
+      background-color: #e8f5e8;
+      border-left-color: #28a745;
+    }
+    .result.expired, .result.non-compliant {
+      background-color: #fdeaea;
+      border-left-color: #dc3545;
+    }
+    .result.warning {
+      background-color: #fff3cd;
+      border-left-color: #ffc107;
+    }
+    .result span.copyable {
+      cursor: pointer;
+      color: #1c3d5a;
+      font-weight: 500;
+    }
+    .result span.copyable:hover {
+      background-color: #f0f8ff;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    .copied-msg {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      font-size: 0.85rem;
+      color: #28a745;
+      background-color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: none;
+    }
+    .input-group {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 0.5rem;
+    }
+    .prefix-label {
+      font-weight: bold;
+      margin-right: 5px;
+      color: #1c3d5a;
+      font-size: 1rem;
+    }
+  </style>
 </head>
-
-<body class="bg-gray-50 text-gray-800 font-sans">
-  <!-- SVG Icon Definitions -->
-  <svg style="display: none;">
-    <symbol id="icon-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17h6M9 5h11l3 6v6a2 2 0 01-2 2h-1a3 3 0 11-6 0H9a3 3 0 11-6 0H2a2 2 0 01-2-2V7a2 2 0 012-2h7z" />
-    </symbol>
-    <symbol id="icon-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M16 8l-4-4m0 0L8 8m4-4v12" />
-    </symbol>
-    <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4 4m0 0l4-4m-4 4V4" />
-    </symbol>
-    <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19a8 8 0 100-16 8 8 0 000 16zm6.5-1.5L21 21" />
-    </symbol>
-    <symbol id="icon-cap" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6" />
-    </symbol>
-  </svg>
-
-  <header class="bg-blue-900 text-white p-4">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <a href="index.html" class="text-xl font-bold hover:underline">
-        <h1>Safe Freight Program</h1>
-      </a>
-      <nav class="hidden md:flex space-x-4" aria-label="Main navigation">
-        <a href="about.html" class="hover:underline">About</a>
-        <a href="passport.html" class="hover:underline">Passport</a>
-        <a href="ail.html" class="hover:underline">AIL</a>
-        <a href="find-ail.html" class="hover:underline">Find AIL</a>
-        <a href="lookup-driver.html" class="hover:underline">Driver Lookup</a>
-        <a href="lookup-vehicle.html" class="hover:underline">Vehicle Lookup</a>
-        <a href="contact.html" class="hover:underline">Contact</a>
-      </nav>
+<body>
+  <h1>Safe Freight Program Lookup</h1>
+  <div class="lookup-container">
+    <!-- Driver Lookup -->
+    <div class="lookup-box">
+      <h3>Driver Lookup</h3>
+      <div class="input-group">
+        <span class="prefix-label">SFPD-</span>
+        <input type="text" id="driverInput" placeholder="e.g. 001234 (Safe Freight Passport Number)" onkeydown="if(event.key==='Enter'){lookupDriver()}" />
+      </div>
+      <button onclick="lookupDriver()">Search</button>
+      <div id="driverResult" class="result"><span class="copied-msg" id="copiedDriver"></span></div>
     </div>
-  </header>
 
-  <main class="max-w-5xl mx-auto p-6">
-    <section class="text-center py-12">
-      <h2 class="text-3xl font-bold text-blue-800 mb-4">Safer Freight Starts Here</h2>
-      <p class="text-lg mb-6">The Safe Freight Program (SFP) is the new industry standard for professional, compliant, and safety-driven road freight operations.</p>
-      <div class="flex flex-col sm:flex-row justify-center gap-4">
-        <a href="lookup-driver.html" class="flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-full shadow-lg transition transform hover:scale-105">
-          <!-- Icon: ID Badge -->
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A9 9 0 1117.803 5.121 9 9 0 015.121 17.804zM12 12v.01M12 16h.01M8 12h.01M16 12h.01" />
-          </svg>
-          Check Driver Credentials
-        </a>
-        <a href="lookup-vehicle.html" class="flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-full shadow-lg transition transform hover:scale-105">
-          <!-- Icon: Truck -->
-          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <use href="#icon-truck" />
-          </svg>
-          Check Vehicle Credentials
-        </a>
+    <!-- Vehicle Lookup -->
+    <div class="lookup-box">
+      <h3>Vehicle Lookup</h3>
+      <div class="input-group">
+        <span class="prefix-label">SFPV-</span>
+        <input type="text" id="vehicleInput" placeholder="e.g. 123456 (Safe Freight Program Vehicle ID)" onkeydown="if(event.key==='Enter'){performVehicleSearch()}" />
       </div>
-    </section>
-
-    <!-- Operational Roles -->
-    <section class="py-12">
-      <h3 class="text-2xl font-semibold text-gray-700 mb-6">Operational Roles</h3>
-      <div class="grid md:grid-cols-3 gap-6">
-        <a href="drivers.html" class="block bg-white rounded shadow hover:shadow-lg hover:bg-blue-50 transition p-6">
-          <div class="flex items-center mb-4">
-            <svg class="w-6 h-6 text-blue-700 mr-2"><use href="#icon-truck" /></svg>
-            <h4 class="text-xl font-semibold text-blue-700">Drivers</h4>
-          </div>
-          <p>Complete the free online course, get verified, and carry your Safe Freight Passport on the road.</p>
-        </a>
-
-        <a href="loading.html" class="block bg-white rounded shadow hover:shadow-lg hover:bg-blue-50 transition p-6">
-          <div class="flex items-center mb-4">
-            <svg class="w-6 h-6 text-blue-700 mr-2"><use href="#icon-upload" /></svg>
-            <h4 class="text-xl font-semibold text-blue-700">Loading Site</h4>
-          </div>
-          <p>Ensure that freight is loaded safely and that all drivers are verified before departure.</p>
-        </a>
-
-        <a href="receiving.html" class="block bg-white rounded shadow hover:shadow-lg hover:bg-blue-50 transition p-6">
-          <div class="flex items-center mb-4">
-            <svg class="w-6 h-6 text-blue-700 mr-2"><use href="#icon-download" /></svg>
-            <h4 class="text-xl font-semibold text-blue-700">Receiving Site</h4>
-          </div>
-          <p>Search QR codes and check credentials with confidence. Reduce time on site and improve safety.</p>
-        </a>
+      <div class="input-group" style="margin-top: 1rem;">
+        <span class="prefix-label">Rego:</span>
+        <input type="text" id="regoInput" placeholder="e.g. ABC123" onkeydown="if(event.key==='Enter'){performVehicleSearch()}" />
       </div>
-    </section>
+      <button onclick="performVehicleSearch()">Search Vehicle</button>
+      <div id="vehicleResult" class="result"><span class="copied-msg" id="copiedVehicle"></span></div>
+    </div>
+  </div>
 
-    <!-- Verification & Training -->
-    <section class="py-12">
-      <h3 class="text-2xl font-semibold text-gray-700 mb-6">Verification & Training</h3>
-      <div class="grid md:grid-cols-3 gap-6">
-        <a href="ail.html" class="block bg-white rounded shadow hover:shadow-lg hover:bg-blue-50 transition p-6">
-          <div class="flex items-center mb-4">
-            <svg class="w-6 h-6 text-blue-700 mr-2"><use href="#icon-search" /></svg>
-            <h4 class="text-xl font-semibold text-blue-700">Inspection Locations (AILs)</h4>
-          </div>
-          <p>Become an Authorised Inspection Location to help maintain standards and keep freight moving safely.</p>
-        </a>
+  <script>
+    const DRIVER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json';
+    const VEHICLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFCekJjBtJNTP8/gviz/tq?tqx=out:json';
 
-        <a href="training.html" class="block bg-white rounded shadow hover:shadow-lg hover:bg-blue-50 transition p-6">
-          <div class="flex items-center mb-4">
-            <svg class="w-6 h-6 text-blue-700 mr-2"><use href="#icon-cap" /></svg>
-            <h4 class="text-xl font-semibold text-blue-700">Training Providers</h4>
-          </div>
-          <p>Partner with SFP to deliver accredited training and assessment for Safe Freight Passports.</p>
-        </a>
-      </div>
-    </section>
-  </main>
+    async function fetchSheetData(url) {
+      const response = await fetch(url);
+      const text = await response.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
+    }
 
-  <footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
-    &copy; 2025 Safe Freight Program. All rights reserved.
-  </footer>
+    function padWithZeros(input, length = 6) {
+      return input.padStart(length, '0');
+    }
+
+    function formatDate(d) {
+      if (!d) return '';
+      
+      let parsedDate;
+      
+      // Add debugging
+      console.log('formatDate input:', d, 'type:', typeof d);
+      
+      // Handle different date formats that Google Sheets might return
+      if (typeof d === 'string') {
+        // Handle Google Sheets Date constructor format like "Date(2026,2,27)"
+        if (d.startsWith('Date(') && d.endsWith(')')) {
+          const dateStr = d.slice(5, -1); // Remove "Date(" and ")"
+          const parts = dateStr.split(',').map(p => parseInt(p.trim()));
+          console.log('Date constructor parts:', parts);
+          if (parts.length >= 3) {
+            // Google Sheets uses 0-based months, so we don't need to subtract 1
+            parsedDate = new Date(parts[0], parts[1], parts[2]);
+            console.log('Parsed date from constructor:', parsedDate);
+          }
+        } else if (d.includes('/')) {
+          // Handle formats like "12/31/2024" or "31/12/2024"
+          const parts = d.split('/');
+          if (parts.length === 3) {
+            // Try MM/DD/YYYY format first
+            parsedDate = new Date(parts[2], parts[0] - 1, parts[1]);
+            if (isNaN(parsedDate.getTime())) {
+              // Try DD/MM/YYYY format
+              parsedDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+          }
+        } else if (d.includes('-')) {
+          // Handle formats like "2024-12-31" or "31-12-2024"
+          const parts = d.split('-');
+          if (parts.length === 3) {
+            if (parts[0].length === 4) {
+              // YYYY-MM-DD format
+              parsedDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            } else {
+              // DD-MM-YYYY format
+              parsedDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+          }
+        } else {
+          // Try to parse as is
+          parsedDate = new Date(d);
+        }
+      } else if (typeof d === 'number') {
+        // Google Sheets sometimes returns dates as numbers (Excel serial dates)
+        // Excel epoch starts on January 1, 1900, but JavaScript Date starts on January 1, 1970
+        // Excel serial date 1 = January 1, 1900
+        // Convert Excel serial date to JavaScript date
+        parsedDate = new Date((d - 25569) * 86400 * 1000);
+      } else if (Object.prototype.toString.call(d) === '[object Date]') {
+        parsedDate = d;
+      } else {
+        return 'Invalid Date';
+      }
+      
+      // Check if the parsed date is valid
+      if (isNaN(parsedDate.getTime())) {
+        console.log('Failed to parse date:', d);
+        return 'Invalid Date';
+      }
+      
+      return parsedDate.toLocaleDateString('en-AU', { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      });
+    }
+
+    function getStatusClass(status, expiryRaw) {
+      const statusLC = status.toLowerCase();
+      if (statusLC === 'expired' || statusLC === 'non-compliant') return 'non-compliant';
+      
+      const today = new Date();
+      let expiryDate;
+      
+      // Parse the expiry date using the same logic as formatDate
+              if (typeof expiryRaw === 'string') {
+        // Handle Google Sheets Date constructor format like "Date(2026,2,27)"
+        if (expiryRaw.startsWith('Date(') && expiryRaw.endsWith(')')) {
+          const dateStr = expiryRaw.slice(5, -1);
+          const parts = dateStr.split(',').map(p => parseInt(p.trim()));
+          console.log('Status check - Date constructor parts:', parts);
+          if (parts.length >= 3) {
+            expiryDate = new Date(parts[0], parts[1], parts[2]);
+          }
+        } else if (expiryRaw.includes('/')) {
+          const parts = expiryRaw.split('/');
+          if (parts.length === 3) {
+            expiryDate = new Date(parts[2], parts[0] - 1, parts[1]);
+            if (isNaN(expiryDate.getTime())) {
+              expiryDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+          }
+        } else if (expiryRaw.includes('-')) {
+          const parts = expiryRaw.split('-');
+          if (parts.length === 3) {
+            if (parts[0].length === 4) {
+              expiryDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            } else {
+              expiryDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+          }
+        } else {
+          expiryDate = new Date(expiryRaw);
+        }
+      } else if (typeof expiryRaw === 'number') {
+        expiryDate = new Date((expiryRaw - 25569) * 86400 * 1000);
+      } else {
+        return 'active';
+      }
+      
+      if (isNaN(expiryDate.getTime())) {
+        return 'active';
+      }
+      
+      const diffTime = expiryDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays <= 30 && diffDays >= 0) return 'warning';
+      return 'active';
+    }
+
+    function makeCopyable(label, value, msgEl) {
+      return `<strong>${label}</strong> <span class="copyable" onclick="copyWithMessage('${value}', '${msgEl}')">${value}</span><br>`;
+    }
+
+    function copyWithMessage(value, targetId) {
+      navigator.clipboard.writeText(value);
+      const msg = document.getElementById(targetId);
+      if (msg) {
+        msg.textContent = 'Copied!';
+        msg.style.display = 'inline';
+        setTimeout(() => msg.style.display = 'none', 1200);
+      }
+    }
+
+    // New unified vehicle search function
+    function performVehicleSearch() {
+      const sfpvInput = document.getElementById('vehicleInput').value.trim();
+      const regoInput = document.getElementById('regoInput').value.trim();
+      
+      if (sfpvInput) {
+        lookupVehicle();
+      } else if (regoInput) {
+        lookupVehicleByRego();
+      } else {
+        const resultEl = document.getElementById('vehicleResult');
+        resultEl.className = 'result';
+        resultEl.textContent = 'Please enter either an SFPV number or a registration number';
+      }
+    }
+
+    async function lookupDriver() {
+      const raw = document.getElementById('driverInput').value.trim();
+      const input = 'SFPD-' + padWithZeros(raw);
+      const data = await fetchSheetData(DRIVER_SHEET_URL);
+      const match = data.find(row => row[0] === input);
+      const resultEl = document.getElementById('driverResult');
+      if (match) {
+        const statusClass = getStatusClass(match[3], match[4]);
+        resultEl.className = 'result ' + statusClass;
+        const warningNote = statusClass === 'warning' ? '<br><em>Note: Expiry within 30 days</em>' : '';
+        resultEl.innerHTML = `
+          ${makeCopyable('Name:', match[1] + ' ' + match[2], 'copiedDriver')}
+          ${makeCopyable('SFP ID:', match[0], 'copiedDriver')}
+          ${makeCopyable('Status:', match[3], 'copiedDriver')}
+          ${makeCopyable('Expiry Date:', formatDate(match[4]), 'copiedDriver')}${warningNote}
+        `;
+      } else {
+        resultEl.className = 'result';
+        resultEl.textContent = 'Driver not found';
+      }
+    }
+
+    async function lookupVehicle() {
+      const raw = document.getElementById('vehicleInput').value.trim();
+      const paddedInput = 'SFPV-' + padWithZeros(raw);
+      const data = await fetchSheetData(VEHICLE_SHEET_URL);
+      const match = data.find(row => row[0] === paddedInput);
+      showVehicleResult(match);
+    }
+
+    async function lookupVehicleByRego() {
+      const raw = document.getElementById('regoInput').value.trim().toUpperCase();
+      const data = await fetchSheetData(VEHICLE_SHEET_URL);
+      const match = data.find(row => row[2].toUpperCase() === raw);
+      showVehicleResult(match);
+    }
+
+    function showVehicleResult(match) {
+      const resultEl = document.getElementById('vehicleResult');
+      if (match) {
+        const statusClass = getStatusClass(match[4], match[5]);
+        resultEl.className = 'result ' + statusClass;
+        const warningNote = statusClass === 'warning' ? '<br><em>Note: Expiry within 30 days</em>' : '';
+        resultEl.innerHTML = `
+          ${makeCopyable('Type:', match[1], 'copiedVehicle')}
+          ${makeCopyable('Plate:', match[2], 'copiedVehicle')}
+          ${makeCopyable('VIN:', match[3], 'copiedVehicle')}
+          ${makeCopyable('Status:', match[4], 'copiedVehicle')}
+          ${makeCopyable('Expiry Date:', formatDate(match[5]), 'copiedVehicle')}${warningNote}
+        `;
+      } else {
+        resultEl.className = 'result';
+        resultEl.textContent = 'Vehicle not found';
+      }
+    }
+  </script>
 </body>
 </html>
