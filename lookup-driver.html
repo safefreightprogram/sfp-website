@@ -122,6 +122,13 @@
   }
 
   function formatDate(d) {
+    if (typeof d === 'string' && d.startsWith('Date(')) {
+      const parts = d.slice(5, -1).split(',').map(Number);
+      const parsed = new Date(parts[0], parts[1], parts[2]);
+      return parsed.toLocaleDateString('en-AU', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      });
+    }
     const parsed = new Date(d);
     return isNaN(parsed.getTime()) ? d : parsed.toLocaleDateString('en-AU', {
       day: 'numeric', month: 'long', year: 'numeric'
