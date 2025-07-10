@@ -4,12 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Driver Lookup – Safe Freight Program</title>
+
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+  <style>
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-fadeInUp {
+      animation: fadeInUp 0.6s ease-out both;
+    }
+  </style>
 </head>
+
 <body class="bg-gray-50 text-gray-800 font-sans">
 
+  <!-- Header -->
   <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false }">
     <div class="max-w-7xl mx-auto p-4 flex justify-between items-center">
       <h1 class="text-xl font-bold">Safe Freight Program</h1>
@@ -19,29 +38,30 @@
         </svg>
       </button>
       <nav class="hidden md:flex space-x-4">
-        <a href="index.html" class="hover:underline">Home</a>
         <a href="about.html" class="hover:underline">About</a>
         <a href="passport.html" class="hover:underline">Passport</a>
         <a href="ail.html" class="hover:underline">AIL</a>
         <a href="find-ail.html" class="hover:underline">Find AIL</a>
+        <a href="lookup.html" class="hover:underline">QR Lookup</a>
         <a href="contact.html" class="hover:underline">Contact</a>
       </nav>
     </div>
     <div class="md:hidden px-4 pb-4" x-show="open" @click.away="open = false">
       <nav class="flex flex-col space-y-2">
-        <a href="index.html" @click="open = false">Home</a>
         <a href="about.html" @click="open = false">About</a>
         <a href="passport.html" @click="open = false">Passport</a>
         <a href="ail.html" @click="open = false">AIL</a>
         <a href="find-ail.html" @click="open = false">Find AIL</a>
+        <a href="lookup.html" @click="open = false">QR Lookup</a>
         <a href="contact.html" @click="open = false">Contact</a>
       </nav>
     </div>
   </header>
 
+  <!-- Main Content -->
   <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <section class="text-center">
-      <h2 class="text-3xl font-bold text-blue-800 mb-6">Driver Credential Lookup</h2>
+      <h2 class="text-3xl font-bold text-blue-800 mb-4">Driver Credential Lookup</h2>
       <p class="mb-8 text-gray-600">Enter a Safe Freight Passport Number to check driver credentials.</p>
     </section>
 
@@ -54,14 +74,16 @@
         </div>
         <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-md shadow">Search</button>
       </form>
-      <div id="driverResult" class="mt-6 text-sm text-left hidden"></div>
+      <div id="driverResult" class="mt-6 hidden"></div>
     </div>
   </main>
 
+  <!-- Footer -->
   <footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
     &copy; 2025 Safe Freight Program. All rights reserved.
   </footer>
 
+  <!-- Script -->
   <script>
     const DRIVER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json';
 
@@ -77,8 +99,15 @@
     }
 
     function formatDate(d) {
-      const date = new Date(d);
-      return isNaN(date.getTime()) ? d : date.toLocaleDateString('en-AU', {
+      if (typeof d === 'string' && d.startsWith('Date(') && d.endsWith(')')) {
+        const parts = d.slice(5, -1).split(',').map(p => parseInt(p, 10));
+        if (parts.length === 3) {
+          const date = new Date(parts[0], parts[1], parts[2]);
+          return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+      }
+      const parsed = new Date(d);
+      return isNaN(parsed.getTime()) ? d : parsed.toLocaleDateString('en-AU', {
         day: 'numeric', month: 'long', year: 'numeric'
       });
     }
@@ -100,36 +129,34 @@
 
       if (match) {
         const className = getStatusClass(match[3], match[4]);
-        resultEl.className = `${className} p-4 rounded-md`;
+        resultEl.className = `${className} p-4 rounded-md mt-6`;
         resultEl.innerHTML = `
-          <strong>Name:</strong> ${match[1]} ${match[2]}<br>
-          <strong>ID:</strong> ${match[0]}<br>
-          <strong>Status:</strong> ${match[3]}<br>
-          <strong>Expiry:</strong> ${formatDate(match[4])}
+          <dl class="space-y-1">
+            <div class="flex">
+              <dt class="w-24 font-semibold">Name:</dt>
+              <dd class="flex-1">${match[1]} ${match[2]}</dd>
+            </div>
+            <div class="flex">
+              <dt class="w-24 font-semibold">ID:</dt>
+              <dd class="flex-1">${match[0]}</dd>
+            </div>
+            <div class="flex">
+              <dt class="w-24 font-semibold">Status:</dt>
+              <dd class="flex-1">${match[3]}</dd>
+            </div>
+            <div class="flex">
+              <dt class="w-24 font-semibold">Expiry:</dt>
+              <dd class="flex-1">${formatDate(match[4])}</dd>
+            </div>
+          </dl>
         `;
       } else {
-        resultEl.className = 'bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md';
+        resultEl.className = 'bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md mt-6';
         resultEl.innerText = 'Driver not found.';
       }
 
       resultEl.classList.remove('hidden');
     }
   </script>
-
-  <style>
-    @keyframes fadeInUp {
-      0% {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    .animate-fadeInUp {
-      animation: fadeInUp 0.6s ease-out both;
-    }
-  </style>
 </body>
 </html>
