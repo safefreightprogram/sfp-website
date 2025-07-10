@@ -8,6 +8,7 @@
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
     @keyframes fadeInUp {
@@ -58,11 +59,10 @@
     </div>
   </header>
 
-  <!-- Main Content -->
   <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <section class="text-center">
       <h2 class="text-3xl font-bold text-blue-800 mb-4">Driver Credential Lookup</h2>
-      <p class="mb-8 text-gray-600">Enter a Safe Freight Passport Number to check driver credentials.</p>
+      <p class="mb-8 text-gray-600">Enter or scan a Safe Freight Passport Number to check driver credentials.</p>
     </section>
 
     <div class="bg-white shadow-md rounded-lg p-6 max-w-xl mx-auto animate-fadeInUp">
@@ -70,6 +70,7 @@
         <label class="block text-sm font-medium text-gray-700">Safe Freight Passport Number</label>
         <div class="flex items-center space-x-2">
           <span class="text-blue-700 font-semibold">SFPD-</span>
+          <button type="button" onclick="startScan()" class="text-blue-700 hover:text-blue-900 text-sm border border-blue-700 px-2 py-1 rounded">Scan QR</button>
           <input type="text" id="driverInput" class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. 001234" />
         </div>
         <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-md shadow">Search</button>
@@ -78,14 +79,21 @@
     </div>
   </main>
 
-  <!-- Footer -->
   <footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
     &copy; 2025 Safe Freight Program. All rights reserved.
   </footer>
 
-  <!-- Script -->
+  <!-- QR Modal -->
+  <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-4 rounded-md shadow-md max-w-sm w-full relative">
+      <div id="qr-reader" style="width: 100%;"></div>
+      <button onclick="stopScan()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">&times;</button>
+    </div>
+  </div>
+
   <script>
     const DRIVER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json';
+    let qrScanner;
 
     async function fetchSheetData(url) {
       const response = await fetch(url);
@@ -122,7 +130,7 @@
 
     async function lookupDriver() {
       const raw = document.getElementById('driverInput').value.trim();
-      const input = 'SFPD-' + padWithZeros(raw);
+      const input = raw.startsWith('SFPD-') ? raw : 'SFPD-' + padWithZeros(raw);
       const data = await fetchSheetData(DRIVER_SHEET_URL);
       const match = data.find(row => row[0] === input);
       const resultEl = document.getElementById('driverResult');
@@ -156,6 +164,35 @@
       }
 
       resultEl.classList.remove('hidden');
+    }
+
+    function startScan() {
+      const modal = document.getElementById('qrModal');
+      modal.classList.remove('hidden');
+
+      qrScanner = new Html5Qrcode("qr-reader");
+      qrScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+          qrScanner.stop();
+          modal.classList.add('hidden');
+
+          const clean = decodedText.trim();
+          document.getElementById('driverInput').value =
+            clean.startsWith('SFPD-') ? clean : padWithZeros(clean);
+          lookupDriver();
+        },
+        (err) => { /* ignore scan errors */ }
+      );
+    }
+
+    function stopScan() {
+      if (qrScanner) {
+        qrScanner.stop().then(() => {
+          document.getElementById('qrModal').classList.add('hidden');
+        });
+      }
     }
   </script>
 </body>
