@@ -105,8 +105,7 @@
     return input.padStart(length, '0');
   }
 
-  
-function formatDate(d) {
+  function formatDate(d) {
   if (!isNaN(d)) {
     const serialDate = Number(d);
     const baseDate = new Date(Date.UTC(1899, 11, 30));
@@ -132,15 +131,6 @@ function formatDate(d) {
 
   return d;
 }
-
-
-    if (typeof d === 'string' && d.includes('/')) {
-      const [day, month, year] = d.split('/');
-      const parsed = new Date(`${year}-${month}-${day}`);
-      if (!isNaN(parsed.getTime())) {
-        return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
-      }
-    }
 
     return d;
   }
@@ -226,5 +216,10 @@ function formatDate(d) {
     }
   }
 </script>
+
+<footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
+  &copy; 2025 Safe Freight Program. All rights reserved.
+</footer>
+
 </body>
 </html>
