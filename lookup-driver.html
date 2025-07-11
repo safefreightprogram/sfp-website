@@ -48,6 +48,69 @@
 </div>
 
 <script>
+  function formatDate(d) {
+    try {
+      if (typeof d === 'string' && d.startsWith('Date(')) {
+        const parts = d.slice(5, -1).split(',').map(Number);
+        const parsed = new Date(parts[0], parts[1], parts[2]);
+        return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+      const parsed = new Date(d);
+      return isNaN(parsed.getTime()) ? d : parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+    } catch {
+      return d;
+    }
+  }
+
+  function getDriveImageURL(link) {
+    if (!link) return 'default-driver.png';
+    const idMatch = link.match(/\/d\/([^\/]+)/);
+    return idMatch ? `https://drive.google.com/uc?export=view&id=${idMatch[1]}` : 'default-driver.png';
+  }
+
+  async function lookupDriver() {
+    const raw = document.getElementById('driverInput').value.trim();
+    const input = raw.startsWith('SFPD-') ? raw : 'SFPD-' + padWithZeros(raw);
+    const resultEl = document.getElementById('driverResult');
+    resultEl.innerHTML = '<p class="text-gray-500">Searching…</p>';
+    resultEl.className = 'p-4 mt-6';
+    resultEl.classList.remove('hidden');
+
+    const data = await fetchSheetData(DRIVER_SHEET_URL);
+    const match = data.find(row => row[0] === input);
+
+    if (match) {
+      const fullName = match[1] + ' ' + match[2];
+      const passportId = match[0];
+      const status = match[3];
+      const expiry = formatDate(match[4]);
+      const photoUrl = getDriveImageURL(match[6]);
+
+      const visaCols = { 'SLP': match[7], 'SUP': match[8], 'SDP': match[9] };
+      const visaColours = { 'SLP': 'bg-yellow-500', 'SUP': 'bg-orange-500', 'SDP': 'bg-violet-600' };
+      const visaBands = Object.entries(visaCols).map(([visa, val]) =>
+        val.toLowerCase() === 'y' ? `<div class="${visaColours[visa]} text-white font-semibold py-2 text-center rounded">${visa}</div>` : ''
+      ).join('');
+
+      resultEl.className = 'bg-green-100 border-l-4 border-green-500 text-green-800 p-4 rounded-md mt-6';
+      resultEl.innerHTML = `
+        <div class="flex gap-4 items-start">
+          <img src="${photoUrl}" alt="Driver photo" class="w-20 h-20 rounded-full border border-gray-300 object-cover" onerror="this.src='default-driver.png'" />
+          <dl class="space-y-2 flex-1">
+            <div class="flex"><dt class="w-28 font-semibold">Name:</dt><dd class="flex-1">${fullName}</dd></div>
+            <div class="flex"><dt class="w-28 font-semibold">Passport ID:</dt><dd class="flex-1">${passportId}</dd></div>
+            <div class="flex"><dt class="w-28 font-semibold">Status:</dt><dd class="flex-1">${status}</dd></div>
+            <div class="flex"><dt class="w-28 font-semibold">Expiry:</dt><dd class="flex-1">${expiry}</dd></div>
+          </dl>
+        </div>
+        <div class="mt-4 space-y-2">${visaBands || '<p class="text-sm text-gray-600">No active visas</p>'}</div>
+      `;
+    } else {
+      resultEl.className = 'bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md mt-6';
+      resultEl.innerText = 'Driver not found. Please check the number and try again.';
+    }
+  }
+</script>
   const DRIVER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json';
   let qrScanner;
 
