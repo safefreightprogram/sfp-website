@@ -105,13 +105,34 @@
     return input.padStart(length, '0');
   }
 
-  function formatDate(d) {
-    if (!isNaN(d)) {
-      const serialDate = Number(d);
-      const baseDate = new Date(Date.UTC(1899, 11, 30));
-      baseDate.setUTCDate(baseDate.getUTCDate() + serialDate);
-      return baseDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+  
+function formatDate(d) {
+  if (!isNaN(d)) {
+    const serialDate = Number(d);
+    const baseDate = new Date(Date.UTC(1899, 11, 30));
+    baseDate.setUTCDate(baseDate.getUTCDate() + serialDate);
+    return baseDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  if (typeof d === 'string') {
+    if (d.startsWith('Date(')) {
+      const parts = d.slice(5, -1).split(',').map(Number);
+      const parsed = new Date(parts[0], parts[1], parts[2]);
+      return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
     }
+
+    if (d.includes('/')) {
+      const [day, month, year] = d.split('/');
+      const parsed = new Date(`${year}-${month}-${day}`);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+    }
+  }
+
+  return d;
+}
+
 
     if (typeof d === 'string' && d.includes('/')) {
       const [day, month, year] = d.split('/');
