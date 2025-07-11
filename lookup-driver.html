@@ -77,7 +77,6 @@
   </div>
 </main>
 
-<!-- QR Modal -->
 <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden overflow-hidden">
   <div class="bg-white p-4 rounded-md shadow-md max-w-sm w-full relative">
     <div id="qr-reader" style="width: 100%;"></div>
@@ -106,31 +105,32 @@
   }
 
   function formatDate(d) {
-  if (!isNaN(d)) {
-    const serialDate = Number(d);
-    const baseDate = new Date(Date.UTC(1899, 11, 30));
-    baseDate.setUTCDate(baseDate.getUTCDate() + serialDate);
-    return baseDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
-  }
-
-  if (typeof d === 'string') {
-    if (d.startsWith('Date(')) {
-      const parts = d.slice(5, -1).split(',').map(Number);
-      const parsed = new Date(parts[0], parts[1], parts[2]);
-      return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+    if (!isNaN(d)) {
+      const serialDate = Number(d);
+      const baseDate = new Date(Date.UTC(1899, 11, 30));
+      baseDate.setUTCDate(baseDate.getUTCDate() + serialDate);
+      return baseDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
-    if (d.includes('/')) {
-      const [day, month, year] = d.split('/');
-      const parsed = new Date(`${year}-${month}-${day}`);
-      if (!isNaN(parsed.getTime())) {
+    if (typeof d === 'string') {
+      if (d.startsWith('Date(')) {
+        const parts = d.slice(5, -1).split(',').map(Number);
+        // Google Sheets Date(year, monthIndex, day) - monthIndex is 0-based
+        const parsed = new Date(parts[0], parts[1], parts[2]);
         return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
       }
-    }
-  }
 
-  return d;
-}
+      if (d.includes('/')) {
+        const [day, month, year] = d.split('/');
+        const parsed = new Date(`${year}-${month}-${day}`);
+        if (!isNaN(parsed.getTime())) { // Check for valid date
+          return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+      }
+    }
+
+    return d; // Return original if unable to parse
+  }
 
   async function lookupDriver() {
     const raw = document.getElementById('driverInput').value.trim();
@@ -141,6 +141,7 @@
     resultEl.classList.remove('hidden');
 
     const data = await fetchSheetData(DRIVER_SHEET_URL);
+    // Assuming column 0 is Passport ID, 1 is First Name, 2 is Last Name, 3 is Status, 4 is Expiry, 6 is Photo URL, 7-9 are Visa types
     const match = data.find(row => row[0] === input);
 
     if (match) {
@@ -150,9 +151,16 @@
       const expiry = formatDate(match[4]);
 
       const rawPhoto = match[6] || '';
-      const photoUrl = rawPhoto.includes('drive.google.com/file/d/')
-        ? 'https://drive.google.com/uc?export=view&id=' + rawPhoto.split('/d/')[1].split('/')[0]
-        : (rawPhoto || 'default-driver.png');
+      let photoUrl = 'default-driver.png'; // Default photo
+      if (rawPhoto.includes('drive.google.com/file/d/')) {
+        const id = rawPhoto.split('/d/')[1].split('/')[0];
+        photoUrl = `https://drive.google.com/uc?export=view&id=${id}`;
+      } else if (rawPhoto.includes('drive.google.com/open?id=')) {
+        const id = rawPhoto.split('open?id=')[1].split('&')[0];
+        photoUrl = `https://drive.google.com/uc?export=view&id=${id}`;
+      } else if (rawPhoto.trim().length > 5) { // If it's another direct URL
+        photoUrl = rawPhoto.trim();
+      }
 
       const visaCols = { 'SLP': match[7], 'SUP': match[8], 'SDP': match[9] };
       const visaColours = { 'SLP': 'bg-yellow-500', 'SUP': 'bg-orange-500', 'SDP': 'bg-violet-600' };
@@ -164,7 +172,9 @@
       resultEl.className = 'bg-green-100 border-l-4 border-green-500 text-green-800 p-4 rounded-md mt-6';
       resultEl.innerHTML = `
         <div class="flex gap-4 items-start">
-          <img src="${photoUrl}" alt="Driver photo" class="w-20 h-20 rounded-full border border-gray-300 object-cover" onerror="this.src='default-driver.png'" />
+          <div class="relative w-24 h-32 rounded-md overflow-hidden border border-gray-300 flex-shrink-0">
+            <img src="${photoUrl}" alt="Driver photo" class="absolute inset-0 w-full h-full object-cover" onerror="this.src='default-driver.png'; this.classList.add('opacity-50');" onload="this.style.borderColor='green'" />
+          </div>
           <dl class="space-y-2 flex-1">
             <div class="flex"><dt class="w-28 font-semibold">Name:</dt><dd class="flex-1">${fullName}</dd></div>
             <div class="flex"><dt class="w-28 font-semibold">Passport ID:</dt><dd class="flex-1">${passportId}</dd></div>
@@ -194,7 +204,7 @@
         document.getElementById('driverInput').value = clean.startsWith('SFPD-') ? clean : 'SFPD-' + padWithZeros(clean);
         lookupDriver();
       },
-      (err) => {}
+      (err) => {} // Handle errors silently for now or log them: console.error(err);
     );
   }
 
@@ -202,6 +212,9 @@
     if (qrScanner) {
       qrScanner.stop().then(() => {
         document.getElementById('qrModal').classList.add('hidden');
+      }).catch(err => {
+        console.error("Error stopping QR scanner:", err);
+        document.getElementById('qrModal').classList.add('hidden'); // Ensure modal closes even on error
       });
     }
   }
