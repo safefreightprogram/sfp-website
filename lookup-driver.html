@@ -68,12 +68,19 @@
     return input.padStart(length, '0');
   }
 
-  function formatDate(d) {
+  function formatDate(raw) {
     try {
-      const parsed = new Date(d);
-      return isNaN(parsed.getTime()) ? d : parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+      if (typeof raw === 'string') return raw;
+      if (typeof raw === 'object' && raw instanceof Date) return raw.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+      if (typeof raw === 'object' && raw.toString().startsWith('Date(')) {
+        const parts = raw.toString().match(/\d+/g);
+        const date = new Date(Number(parts[0]), Number(parts[1]), Number(parts[2]));
+        return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+      const date = new Date(raw);
+      return isNaN(date.getTime()) ? raw : date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
     } catch {
-      return d;
+      return raw;
     }
   }
 
@@ -93,8 +100,9 @@
       const passportId = match[0];
       const status = match[3];
       const expiry = formatDate(match[4]);
+      const photo = match[6] || 'default-driver.png';
       const visaCols = { 'SLP': match[7], 'SUP': match[8], 'SDP': match[9] };
-      const visaColours = { 'SLP': 'bg-blue-600', 'SUP': 'bg-green-600', 'SDP': 'bg-yellow-600' };
+      const visaColours = { 'SLP': 'bg-yellow-500', 'SUP': 'bg-orange-500', 'SDP': 'bg-violet-600' };
 
       const visaBands = Object.entries(visaCols).map(([visa, val]) =>
         val.toLowerCase() === 'y' ? `<div class="${visaColours[visa]} text-white font-semibold py-2 text-center rounded">${visa}</div>` : ''
@@ -102,12 +110,15 @@
 
       resultEl.className = 'bg-green-100 border-l-4 border-green-500 text-green-800 p-4 rounded-md mt-6';
       resultEl.innerHTML = `
-        <dl class="space-y-2">
-          <div class="flex"><dt class="w-28 font-semibold">Name:</dt><dd class="flex-1">${fullName}</dd></div>
-          <div class="flex"><dt class="w-28 font-semibold">Passport ID:</dt><dd class="flex-1">${passportId}</dd></div>
-          <div class="flex"><dt class="w-28 font-semibold">Status:</dt><dd class="flex-1">${status}</dd></div>
-          <div class="flex"><dt class="w-28 font-semibold">Expiry:</dt><dd class="flex-1">${expiry}</dd></div>
-        </dl>
+        <div class="flex gap-4 items-start">
+          <img src="${photo}" alt="Driver photo" class="w-20 h-20 rounded-full border border-gray-300 object-cover" onerror="this.src='default-driver.png'" />
+          <dl class="space-y-2 flex-1">
+            <div class="flex"><dt class="w-28 font-semibold">Name:</dt><dd class="flex-1">${fullName}</dd></div>
+            <div class="flex"><dt class="w-28 font-semibold">Passport ID:</dt><dd class="flex-1">${passportId}</dd></div>
+            <div class="flex"><dt class="w-28 font-semibold">Status:</dt><dd class="flex-1">${status}</dd></div>
+            <div class="flex"><dt class="w-28 font-semibold">Expiry:</dt><dd class="flex-1">${expiry}</dd></div>
+          </dl>
+        </div>
         <div class="mt-4 space-y-2">${visaBands || '<p class="text-sm text-gray-600">No active visas</p>'}</div>
       `;
     } else {
