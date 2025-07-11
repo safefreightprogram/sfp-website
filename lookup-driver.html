@@ -1,178 +1,142 @@
 <!DOCTYPE html>
-<html lang="en-AU">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vehicle Lookup – Safe Freight Program</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Driver Lookup | Safe Freight Program</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 2rem;
+    }
+    .lookup-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .lookup-container h1 {
+      margin-bottom: 0.5rem;
+    }
+    .lookup-container p {
+      margin-bottom: 1.5rem;
+      color: #555;
+    }
+    .lookup-container input {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .lookup-container button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .lookup-container button:hover {
+      background-color: #0056b3;
+    }
+    .result-box {
+      margin-top: 2rem;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #f1f1f1;
+    }
+    .result-box img {
+      max-width: 100px;
+      border-radius: 50%;
+      margin-bottom: 1rem;
+    }
+    .visa-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      margin: 0.25rem;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+    .visa-SLP { background-color: #007bff; }
+    .visa-SUP { background-color: #28a745; }
+    .visa-SDP { background-color: #ffc107; }
+    .error-message {
+      margin-top: 1rem;
+      color: #dc3545;
+    }
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans">
-
-<header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false, showSearch: false }">
-  <div class="max-w-7xl mx-auto p-4 flex justify-between items-center">
-    <a href="index.html" class="text-xl font-bold transition-transform transform hover:scale-[1.015]">Safe Freight Program</a>
-    <div class="flex items-center space-x-4">
-      <button @click="showSearch = !showSearch" class="inline-flex transition-transform transform hover:scale-105">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </button>
-      <button @click="open = !open" class="inline-flex transition-transform transform hover:scale-105">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-    </div>
+<body>
+  <div class="lookup-container">
+    <h1>Driver Lookup</h1>
+    <p>Enter the Safe Freight Passport ID to view current credentials.</p>
+    <input type="text" id="driverIdInput" placeholder="Enter SFPD-XXXXX" />
+    <button id="lookupButton">Search</button>
+    <div id="result" class="result-box" style="display: none;"></div>
+    <div id="error" class="error-message"></div>
   </div>
 
-  <div class="px-4 pt-2" x-show="showSearch" x-transition>
-    <form action="search.html" method="GET">
-      <input type="search" name="q" placeholder="Type a word" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-500 text-black">
-    </form>
-  </div>
+  <script>
+    document.getElementById('lookupButton').addEventListener('click', function() {
+      const driverId = document.getElementById('driverIdInput').value.trim();
+      const resultBox = document.getElementById('result');
+      const errorBox = document.getElementById('error');
+      resultBox.style.display = 'none';
+      errorBox.textContent = '';
 
-  <div class="px-4 pb-4 space-y-2" x-show="open" @click.away="open = false" x-transition>
-    <nav class="flex flex-col space-y-2">
-      <a href="about.html" class="inline-flex transition-transform transform hover:scale-[1.015]">About</a>
-      <a href="passport.html" class="inline-flex transition-transform transform hover:scale-[1.015]">Passport</a>
-      <a href="training.html" class="inline-flex transition-transform transform hover:scale-[1.015]">Find SFP Training</a>
-      <a href="trainer-login.html" class="inline-flex transition-transform transform hover:scale-[1.015]">Trainer Login</a>
-      <a href="ail-login.html" class="inline-flex transition-transform transform hover:scale-[1.015]">AIL Login</a>
-      <a href="find-ail.html" class="inline-flex transition-transform transform hover:scale-[1.015]">Find AIL</a>
-      <a href="lookup-driver.html" class="inline-flex transition-transform transform hover:scale-[1.015]">Driver Lookup</a>
-      <a href="lookup-vehicle.html" class="inline-flex transition-transform transform hover:scale-[1.015] font-bold">Vehicle Lookup</a>
-      <a href="contact.html" class="inline-flex transition-transform transform hover:scale-[1.015]">Contact</a>
-    </nav>
-  </div>
-</header>
+      if (!driverId) {
+        errorBox.textContent = 'Please enter a Driver ID to begin.';
+        return;
+      }
 
-<main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-  <section class="text-center">
-    <h2 class="text-3xl font-bold text-blue-800 mb-4">Vehicle Credential Lookup</h2>
-    <p class="mb-4 text-gray-600">Scan or enter a Safe Freight Program Vehicle Number to check vehicle credentials.</p>
-    <div class="mb-4 text-center">
-      <button type="button" onclick="startScan()" class="text-blue-700 hover:text-blue-900 text-sm border border-blue-700 px-2 py-1 rounded inline-flex items-center space-x-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h2l2-3h10l2 3h2a1 1 0 011 1v11a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1zm9 3a4 4 0 100 8 4 4 0 000-8z" />
-        </svg>
-        <span>Scan QR Code</span>
-      </button>
-    </div>
-  </section>
+      // Simulate API call
+      // Replace this with actual API integration
+      fetch(`https://api.safefreightprogram.com/driver/${driverId}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Driver ID not found. Please check the number and try again.');
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Format date
+          const expiryDate = new Date(data.expiryDate);
+          const formattedDate = expiryDate.toLocaleDateString('en-AU', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          });
 
-  <div class="bg-white shadow-md rounded-lg p-6 max-w-xl mx-auto">
-    <form onsubmit="lookupVehicle(); return false;" class="space-y-4">
-      <label for="vehicleInput" class="block text-sm font-medium text-gray-700">Safe Freight Program Vehicle Number</label>
-      <div class="flex items-center border border-gray-300 rounded-md px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
-        <span class="text-blue-700 font-semibold pr-1">SFPV-</span>
-        <input type="text" id="vehicleInput" pattern="[0-9]*" inputmode="numeric" class="flex-1 border-none focus:ring-0 focus:outline-none text-sm" placeholder="001234" required />
-      </div>
-      <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-md shadow">Search</button>
-    </form>
-    <div id="vehicleResult" class="mt-6 hidden"></div>
-  </div>
-</main>
+          // Generate visa badges
+          const visas = ['SLP', 'SUP', 'SDP'];
+          let visaBadges = '';
+          visas.forEach(visa => {
+            if (data.visas[visa] === 'Y') {
+              visaBadges += `<span class="visa-badge visa-${visa}">${visa}</span>`;
+            }
+          });
 
-<footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
-  &copy; 2025 Safe Freight Program. All rights reserved.
-</footer>
-
-<div id="qrModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
-  <div class="bg-white p-4 rounded-md shadow-md max-w-sm w-full relative">
-    <div id="qr-reader" style="width: 100%;"></div>
-    <button onclick="stopScan()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">&times;</button>
-  </div>
-</div>
-
-<script>
-  const VEHICLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFCekJjBtJNTP8/gviz/tq?tqx=out:json';
-  let qrScanner;
-
-  async function fetchSheetData(url) {
-    const response = await fetch(url);
-    const text = await response.text();
-    const json = JSON.parse(text.substr(47).slice(0, -2));
-    return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
-  }
-
-  function padWithZeros(input, length = 6) {
-    return input.padStart(length, '0');
-  }
-
-  function formatDate(d) {
-    if (typeof d === 'string' && d.startsWith('Date(')) {
-      const parts = d.slice(5, -1).split(',').map(Number);
-      const parsed = new Date(parts[0], parts[1], parts[2]);
-      return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
-    }
-    const parsed = new Date(d);
-    return isNaN(parsed.getTime()) ? d : parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
-  }
-
-  function getStatusClass(status, expiry) {
-    const now = new Date();
-    const expiryDate = new Date(expiry);
-    if (status.toLowerCase() === 'expired') return 'bg-red-100 border-l-4 border-red-500 text-red-800';
-    if (expiryDate - now < 1000 * 60 * 60 * 24 * 30) return 'bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800';
-    return 'bg-green-100 border-l-4 border-green-500 text-green-800';
-  }
-
-  async function lookupVehicle() {
-    const raw = document.getElementById('vehicleInput').value.trim();
-    const input = raw.startsWith('SFPV-') ? raw : 'SFPV-' + padWithZeros(raw);
-    const data = await fetchSheetData(VEHICLE_SHEET_URL);
-    const match = data.find(row => row[0] === input);
-    const resultEl = document.getElementById('vehicleResult');
-
-    if (match) {
-      const className = getStatusClass(match[4], match[5]);
-      resultEl.className = `${className} p-4 rounded-md mt-6`;
-      resultEl.innerHTML = `
-        <dl class="space-y-1">
-          <div class="flex"><dt class="w-24 font-semibold">Type:</dt><dd class="flex-1">${match[1]}</dd></div>
-          <div class="flex"><dt class="w-24 font-semibold">Plate:</dt><dd class="flex-1">${match[2]}</dd></div>
-          <div class="flex"><dt class="w-24 font-semibold">VIN:</dt><dd class="flex-1">${match[3]}</dd></div>
-          <div class="flex"><dt class="w-24 font-semibold">Status:</dt><dd class="flex-1">${match[4]}</dd></div>
-          <div class="flex"><dt class="w-24 font-semibold">Expiry:</dt><dd class="flex-1">${formatDate(match[5])}</dd></div>
-        </dl>
-      `;
-    } else {
-      resultEl.className = 'bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md mt-6';
-      resultEl.innerText = 'Vehicle not found.';
-    }
-
-    resultEl.classList.remove('hidden');
-  }
-
-  function startScan() {
-    const modal = document.getElementById('qrModal');
-    modal.classList.remove('hidden');
-    qrScanner = new Html5Qrcode("qr-reader");
-    qrScanner.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: 250 },
-      (decodedText) => {
-        qrScanner.stop();
-        modal.classList.add('hidden');
-        const clean = decodedText.trim();
-        document.getElementById('vehicleInput').value = clean.startsWith('SFPV-') ? clean : padWithZeros(clean);
-        lookupVehicle();
-      },
-      (err) => {}
-    );
-  }
-
-  function stopScan() {
-    if (qrScanner) {
-      qrScanner.stop().then(() => {
-        document.getElementById('qrModal').classList.add('hidden');
-      });
-    }
-  }
-</script>
-
+          // Display result
+          resultBox.innerHTML = `
+            <img src="${data.photoUrl}" alt="Driver Photo" />
+            <p><strong>Name:</strong> ${data.name}</p>
+            <p><strong>Expiry Date:</strong> ${formattedDate}</p>
+            <p><strong>Active Visas:</strong> ${visaBadges}</p>
+          `;
+          resultBox.style.display = 'block';
+        })
+        .catch(error => {
+          errorBox.textContent = error.message;
+        });
+    });
+  </script>
 </body>
 </html>
