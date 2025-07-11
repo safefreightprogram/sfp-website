@@ -5,53 +5,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Driver Lookup – Safe Freight Program</title>
-
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
-
-<header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false, showSearch: false }">
-  <div class="max-w-7xl mx-auto p-4 flex justify-between items-center relative">
-    <a href="index.html" class="text-xl font-bold transition-transform transform hover:scale-[1.015]">Safe Freight Program</a>
-    <div class="flex items-center space-x-4">
-      <button @click="showSearch = !showSearch" class="inline-flex transition-transform transform hover:scale-105">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </button>
-      <button @click="open = !open" class="inline-flex transition-transform transform hover:scale-105">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-    </div>
-
-    <div x-show="open" @click.away="open = false" x-transition class="absolute top-full right-0 bg-blue-900 text-white text-sm z-50 shadow-md">
-      <nav class="flex flex-col">
-        <a href="about.html" class="block px-4 py-2 hover:bg-blue-800">About</a>
-        <a href="lookup-driver.html" class="block px-4 py-2 bg-blue-800 font-bold">Driver Lookup</a>
-        <a href="lookup-vehicle.html" class="block px-4 py-2 hover:bg-blue-800">Vehicle Lookup</a>
-        <a href="find-ail.html" class="block px-4 py-2 hover:bg-blue-800">Find AIL</a>
-        <a href="training.html" class="block px-4 py-2 hover:bg-blue-800">SFP Training</a>
-        <a href="ail-login.html" class="block px-4 py-2 hover:bg-blue-800">AIL Portal</a>
-        <a href="trainer-login.html" class="block px-4 py-2 hover:bg-blue-800">Trainer Login</a>
-        <a href="contact.html" class="block px-4 py-2 hover:bg-blue-800">Contact</a>
-        <a href="subscription.html" class="block px-4 py-2 hover:bg-blue-800">Subscribe</a>
-      </nav>
-    </div>
-  </div>
-
-  <div class="px-4 pt-2" x-show="showSearch" x-transition>
-    <form action="search.html" method="GET">
-      <input type="search" name="q" placeholder="Type a word"
-             class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-500 text-black">
-    </form>
-  </div>
-</header>
-
 <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
   <section class="text-center">
     <h2 class="text-3xl font-bold text-blue-800 mb-4">Driver Credential Lookup</h2>
@@ -65,7 +24,6 @@
       </button>
     </div>
   </section>
-
   <div class="bg-white shadow-md rounded-lg p-6 max-w-xl mx-auto">
     <form onsubmit="lookupDriver(); return false;" class="space-y-4">
       <label for="driverInput" class="block text-sm font-medium text-gray-700">Safe Freight Program Driver Number</label>
@@ -80,23 +38,15 @@
     <div id="driverResult" class="mt-6 hidden"></div>
   </div>
 </main>
-
-<footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
-  &copy; 2025 Safe Freight Program. All rights reserved.
-</footer>
-
-<!-- QR Modal -->
 <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden overflow-hidden">
   <div class="bg-white p-4 rounded-md shadow-md max-w-sm w-full relative">
     <div id="qr-reader" style="width: 100%;"></div>
     <button onclick="stopScan()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">&times;</button>
   </div>
 </div>
-
 <script>
   const DRIVER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json';
   let qrScanner;
-
   async function fetchSheetData(url) {
     const response = await fetch(url);
     const text = await response.text();
@@ -108,11 +58,9 @@
       return [];
     }
   }
-
   function padWithZeros(input, length = 6) {
     return input.padStart(length, '0');
   }
-
   function formatDate(d) {
     try {
       const parsed = new Date(d);
@@ -121,7 +69,6 @@
       return d;
     }
   }
-
   async function lookupDriver() {
     const raw = document.getElementById('driverInput').value.trim();
     const input = raw.startsWith('SFPD-') ? raw : 'SFPD-' + padWithZeros(raw);
@@ -129,27 +76,23 @@
     resultEl.innerHTML = '<p class="text-gray-500">Searching…</p>';
     resultEl.className = 'p-4 mt-6';
     resultEl.classList.remove('hidden');
-
     const data = await fetchSheetData(DRIVER_SHEET_URL);
     const match = data.find(row => row[0] === input);
-
     if (match) {
-      const name = match[1];
-      const expiry = formatDate(match[2]);
-      const photoUrl = match[3] || 'default-driver.png';
-      const visaCols = { 'SLP': match[4], 'SUP': match[5], 'SDP': match[6] };
-
+      const fullName = match[1] + ' ' + match[2];
+      const expiry = formatDate(match[3]);
+      const photoUrl = match[4] || 'default-driver.png';
+      const visaCols = { 'SLP': match[5], 'SUP': match[6], 'SDP': match[7] };
       const visaBadges = Object.entries(visaCols).map(([visa, val]) =>
         val === 'Y' ? `<span class="inline-block bg-blue-700 text-white text-xs font-semibold px-2 py-1 rounded mr-2">${visa}</span>` : ''
       ).join('');
-
       resultEl.className = 'bg-green-100 border-l-4 border-green-500 text-green-800 p-4 rounded-md mt-6';
       resultEl.innerHTML = `
         <div class="flex items-center mb-4">
           <img src="${photoUrl}" alt="Driver photo" class="w-16 h-16 rounded-full mr-4 border border-gray-300" />
           <div>
-            <p class="font-bold text-lg">${name}</p>
-            <p class="text-sm text-gray-700">Credential Expiry: ${expiry}</p>
+            <p class="font-bold text-lg">${fullName}</p>
+            <p class="text-sm text-gray-700"><strong>Expiry:</strong> ${expiry}</p>
           </div>
         </div>
         <div><strong>Active Visas:</strong><br/>${visaBadges || '<span class="text-sm text-gray-600">None</span>'}</div>
@@ -159,7 +102,6 @@
       resultEl.innerText = 'Driver not found. Please check the number and try again.';
     }
   }
-
   function startScan() {
     const modal = document.getElementById('qrModal');
     modal.classList.remove('hidden');
@@ -177,7 +119,6 @@
       (err) => {}
     );
   }
-
   function stopScan() {
     if (qrScanner) {
       qrScanner.stop().then(() => {
