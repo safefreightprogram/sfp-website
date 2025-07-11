@@ -150,11 +150,23 @@
       const expiry = formatDate(match[4]);
 
       const rawPhoto = match[6] || '';
-      const photoUrl = rawPhoto.includes('drive.google.com/file/d/')
-        ? 'https://drive.google.com/uc?export=view&id=' + rawPhoto.split('/d/')[1].split('/')[0]
-        : (rawPhoto || 'default-driver.png');
+let photoUrl = 'default-driver.png';
 
-      const visaCols = { 'SLP': match[7], 'SUP': match[8], 'SDP': match[9] };
+const extractDriveId = (url) => {
+  const fileMatch = url.match(/\/file\/d\/([^/]+)\//);
+  const openMatch = url.match(/open\?id=([^&]+)/);
+  if (fileMatch) return fileMatch[1];
+  if (openMatch) return openMatch[1];
+  return null;
+};
+
+const driveId = extractDriveId(rawPhoto);
+if (driveId) {
+  photoUrl = `https://drive.google.com/uc?export=view&id=${driveId}`;
+} else if (rawPhoto.trim().startsWith('http')) {
+  photoUrl = rawPhoto.trim();
+};
+    const visaCols = { 'SLP': match[7], 'SUP': match[8], 'SDP': match[9] };
       const visaColours = { 'SLP': 'bg-yellow-500', 'SUP': 'bg-orange-500', 'SDP': 'bg-violet-600' };
 
       const visaBands = Object.entries(visaCols).map(([visa, val]) =>
