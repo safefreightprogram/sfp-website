@@ -173,9 +173,11 @@
 
         if (pngLink && pngLink.includes('drive.google.com')) {
           console.log('Displaying PNG card image');
-          // Convert Google Drive link to thumbnail URL for immediate display
+          // Try multiple Google Drive URL formats for better compatibility
           const fileId = pngLink.match(/id=([a-zA-Z0-9-_]+)/)[1];
-          const thumbnailUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+          const imageUrl1 = `https://lh3.googleusercontent.com/d/${fileId}`;
+          const imageUrl2 = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+          const imageUrl3 = pngLink; // Original URL as final fallback
           
           resultEl.className = 'mt-6';
           resultEl.innerHTML = `
@@ -185,12 +187,12 @@
                 <p class="text-sm text-gray-600">${passportId} • Status: ${status}</p>
               </div>
               <div class="inline-block bg-white rounded-lg shadow-lg p-4">
-                <img src="${thumbnailUrl}" 
+                <img src="${imageUrl1}" 
                      alt="Driver Card for ${passportId}" 
                      class="max-w-full h-auto rounded-md border"
                      style="max-height: 600px; width: auto;"
-                     onload="console.log('Driver card image loaded successfully')"
-                     onerror="console.log('Driver card image failed, trying fallback'); this.src='${pngLink}'; this.onerror=function(){console.log('Both image sources failed'); handleImageError(this, '${passportId}', '${fullName}', '${status}', '${expiry}', ${JSON.stringify(activeCerts).replace(/"/g, '&quot;')});}">
+                     onload="console.log('Driver card loaded with googleusercontent URL')"
+                     onerror="console.log('Googleusercontent failed, trying thumbnail API'); this.src='${imageUrl2}'; this.onerror=function(){console.log('Thumbnail API failed, trying original URL'); this.src='${imageUrl3}'; this.onerror=function(){console.log('All image sources failed'); handleImageError(this, '${passportId}', '${fullName}', '${status}', '${expiry}', ${JSON.stringify(activeCerts).replace(/"/g, '&quot;')});};}">
               </div>
               <div class="mt-4">
                 <a href="${pngLink}" target="_blank" 
