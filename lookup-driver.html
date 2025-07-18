@@ -48,10 +48,10 @@
   </div>
 </header>
 
-<main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
   <section class="text-center">
     <h2 class="text-3xl font-bold text-blue-800 mb-4">Driver Credential Lookup</h2>
-    <p class="mb-4 text-gray-600">Scan a SFP Passport QR Code or enter a Safe Freight Program Driver ID Number to check vehicle credentials.</p>
+    <p class="mb-4 text-gray-600">Scan a SFP Passport QR Code or enter a Safe Freight Program Driver ID Number to check driver credentials.</p>
     <div class="mb-4 text-center">
       <button type="button" onclick="startScan()" class="text-blue-700 hover:text-blue-900 text-sm border border-blue-700 px-3 py-2 rounded inline-flex items-center gap-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -115,7 +115,6 @@
     if (typeof d === 'string') {
       if (d.startsWith('Date(')) {
         const parts = d.slice(5, -1).split(',').map(Number);
-        // Google Sheets Date(year, monthIndex, day) - monthIndex is 0-based
         const parsed = new Date(parts[0], parts[1], parts[2]);
         return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
       }
@@ -123,71 +122,153 @@
       if (d.includes('/')) {
         const [day, month, year] = d.split('/');
         const parsed = new Date(`${year}-${month}-${day}`);
-        if (!isNaN(parsed.getTime())) { // Check for valid date
+        if (!isNaN(parsed.getTime())) {
           return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
         }
       }
     }
 
-    return d; // Return original if unable to parse
+    return d;
+  }
+
+  function extractFileIdFromUrl(url) {
+    if (!url) return null;
+    
+    // Handle different Google Drive URL formats
+    const patterns = [
+      /\/file\/d\/([a-zA-Z0-9-_]+)/,
+      /id=([a-zA-Z0-9-_]+)/,
+      /\/d\/([a-zA-Z0-9-_]+)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    
+    return null;
   }
 
   async function lookupDriver() {
     const raw = document.getElementById('driverInput').value.trim();
     const input = raw.startsWith('SFPD-') ? raw : 'SFPD-' + padWithZeros(raw);
     const resultEl = document.getElementById('driverResult');
-    resultEl.innerHTML = '<p class="text-gray-500">Searching…</p>';
+    
+    resultEl.innerHTML = '<p class="text-gray-500 text-center">Searching…</p>';
     resultEl.className = 'p-4 mt-6';
     resultEl.classList.remove('hidden');
 
-    const data = await fetchSheetData(DRIVER_SHEET_URL);
-    // Assuming column 0 is Passport ID, 1 is First Name, 2 is Last Name, 3 is Status, 4 is Expiry, 6 is Photo URL, 7-9 are Visa types
-    const match = data.find(row => row[0] === input);
+    try {
+      const data = await fetchSheetData(DRIVER_SHEET_URL);
+      
+      // Updated column mapping based on your sheet structure:
+      // ID, First Name, Surname, Status, Expiry Date, QR Code URL, Photo, Slide File ID, Card PNG Link, SLP (Fuels), SUP (Fuels), SDP, Dangerous Goods
+      const match = data.find(row => row[0] === input);
 
-    if (match) {
-      const fullName = match[1] + ' ' + match[2];
-      const passportId = match[0];
-      const status = match[3];
-      const expiry = formatDate(match[4]);
+      if (match) {
+        const fullName = `${match[1]} ${match[2]}`;
+        const passportId = match[0];
+        const status = match[3];
+        const expiry = formatDate(match[4]);
+        
+        // Get the PNG card link (column 8)
+        const pngLink = match[8];
+        let pngUrl = null;
+        
+        if (pngLink) {
+          const fileId = extractFileIdFromUrl(pngLink);
+          if (fileId) {
+            pngUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+          }
+        }
 
-      const rawPhoto = match[6] || '';
-      let photoUrl = 'default-driver.png'; // Default photo
-      if (rawPhoto.includes('drive.google.com/file/d/')) {
-        const id = rawPhoto.split('/d/')[1].split('/')[0];
-        photoUrl = `https://drive.google.com/uc?export=view&id=${id}`;
-      } else if (rawPhoto.includes('drive.google.com/open?id=')) {
-        const id = rawPhoto.split('open?id=')[1].split('&')[0];
-        photoUrl = `https://drive.google.com/uc?export=view&id=${id}`;
-      } else if (rawPhoto.trim().length > 5) { // If it's another direct URL
-        photoUrl = rawPhoto.trim();
+        // Get certifications (columns 9-12)
+        const certifications = {
+          'SLP (Fuels)': match[9] === 'y',
+          'SUP (Fuels)': match[10] === 'y',  
+          'SDP': match[11] === 'y',
+          'Dangerous Goods': match[12] === 'y'
+        };
+
+        const activeCerts = Object.entries(certifications)
+          .filter(([cert, active]) => active)
+          .map(([cert]) => cert);
+
+        if (pngUrl) {
+          // Display the PNG card image
+          resultEl.className = 'mt-6';
+          resultEl.innerHTML = `
+            <div class="text-center">
+              <div class="mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Driver Card for ${fullName}</h3>
+                <p class="text-sm text-gray-600">${passportId} • Status: ${status}</p>
+              </div>
+              <div class="inline-block bg-white rounded-lg shadow-lg p-4">
+                <img src="${pngUrl}" alt="Driver Card for ${passportId}" 
+                     class="max-w-full h-auto rounded-md"
+                     style="max-height: 600px; width: auto;"
+                     onerror="handleImageError(this, '${passportId}', '${fullName}', '${status}', '${expiry}', ${JSON.stringify(activeCerts).replace(/"/g, '&quot;')})">
+              </div>
+            </div>
+          `;
+        } else {
+          // Fallback to text display if no PNG available
+          displayTextCard(resultEl, fullName, passportId, status, expiry, activeCerts);
+        }
+        
+        // Update URL for direct linking
+        const url = new URL(window.location);
+        url.searchParams.set('id', input);
+        window.history.pushState({}, '', url);
+        
+      } else {
+        resultEl.className = 'bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md mt-6';
+        resultEl.innerHTML = '<p class="font-semibold">Driver not found</p><p class="text-sm">Please check the number and try again.</p>';
       }
-
-      const visaCols = { 'SLP': match[7], 'SUP': match[8], 'SDP': match[9] };
-      const visaColours = { 'SLP': 'bg-yellow-500', 'SUP': 'bg-orange-500', 'SDP': 'bg-violet-600' };
-
-      const visaBands = Object.entries(visaCols).map(([visa, val]) =>
-        val.toLowerCase() === 'y' ? `<div class="${visaColours[visa]} text-white font-semibold py-2 text-center rounded">${visa}</div>` : ''
-      ).join('');
-
-      resultEl.className = 'bg-green-100 border-l-4 border-green-500 text-green-800 p-4 rounded-md mt-6';
-      resultEl.innerHTML = `
-        <div class="flex gap-4 items-start">
-          <div class="relative w-24 h-32 rounded-md overflow-hidden border border-gray-300 flex-shrink-0">
-            <img src="${photoUrl}" alt="Driver photo" class="absolute inset-0 w-full h-full object-cover" onerror="this.src='default-driver.png'; this.classList.add('opacity-50');" onload="this.style.borderColor='green'" />
-          </div>
-          <dl class="space-y-2 flex-1">
-            <div class="flex"><dt class="w-28 font-semibold">Name:</dt><dd class="flex-1">${fullName}</dd></div>
-            <div class="flex"><dt class="w-28 font-semibold">Passport ID:</dt><dd class="flex-1">${passportId}</dd></div>
-            <div class="flex"><dt class="w-28 font-semibold">Status:</dt><dd class="flex-1">${status}</dd></div>
-            <div class="flex"><dt class="w-28 font-semibold">Expiry:</dt><dd class="flex-1">${expiry}</dd></div>
-          </dl>
-        </div>
-        <div class="mt-4 space-y-2">${visaBands || '<p class="text-sm text-gray-600">No active visas</p>'}</div>
-      `;
-    } else {
+    } catch (error) {
+      console.error('Error looking up driver:', error);
       resultEl.className = 'bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md mt-6';
-      resultEl.innerText = 'Driver not found. Please check the number and try again.';
+      resultEl.innerHTML = '<p class="font-semibold">Error</p><p class="text-sm">Unable to search for driver. Please try again.</p>';
     }
+  }
+
+  function handleImageError(img, passportId, fullName, status, expiry, activeCerts) {
+    console.log('Image failed to load, falling back to text display');
+    const resultEl = document.getElementById('driverResult');
+    displayTextCard(resultEl, fullName, passportId, status, expiry, activeCerts);
+  }
+
+  function displayTextCard(resultEl, fullName, passportId, status, expiry, activeCerts) {
+    const certBadges = activeCerts.map(cert => {
+      const colors = {
+        'SLP (Fuels)': 'bg-blue-500',
+        'SUP (Fuels)': 'bg-green-500', 
+        'SDP': 'bg-purple-500',
+        'Dangerous Goods': 'bg-orange-500'
+      };
+      return `<span class="${colors[cert] || 'bg-gray-500'} text-white px-3 py-1 rounded-full text-sm font-medium">${cert}</span>`;
+    }).join(' ');
+
+    resultEl.className = 'bg-green-100 border-l-4 border-green-500 text-green-800 p-6 rounded-md mt-6';
+    resultEl.innerHTML = `
+      <div class="space-y-4">
+        <div class="text-center">
+          <h3 class="text-xl font-bold text-gray-800">${fullName}</h3>
+          <p class="text-lg font-semibold">${passportId}</p>
+        </div>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div><span class="font-semibold">Status:</span> ${status}</div>
+          <div><span class="font-semibold">Expiry:</span> ${expiry}</div>
+        </div>
+        ${activeCerts.length > 0 ? `
+          <div>
+            <p class="font-semibold text-sm mb-2">Certifications:</p>
+            <div class="flex flex-wrap gap-2">${certBadges}</div>
+          </div>
+        ` : '<p class="text-sm text-gray-600">No active certifications</p>'}
+        <p class="text-xs text-gray-600 italic">Note: Driver card image could not be loaded.</p>
+      </div>
+    `;
   }
 
   function startScan() {
@@ -200,11 +281,20 @@
       (decodedText) => {
         qrScanner.stop();
         modal.classList.add('hidden');
-        const clean = decodedText.trim();
-        document.getElementById('driverInput').value = clean.startsWith('SFPD-') ? clean : 'SFPD-' + padWithZeros(clean);
+        
+        // Extract driver ID from the scanned URL
+        let driverId = decodedText.trim();
+        if (driverId.includes('/driver/')) {
+          driverId = driverId.split('/driver/')[1];
+        }
+        if (driverId.startsWith('SFPD-')) {
+          driverId = driverId.substring(5);
+        }
+        
+        document.getElementById('driverInput').value = driverId;
         lookupDriver();
       },
-      (err) => {} // Handle errors silently for now or log them: console.error(err);
+      (err) => {} // Handle errors silently
     );
   }
 
@@ -214,10 +304,21 @@
         document.getElementById('qrModal').classList.add('hidden');
       }).catch(err => {
         console.error("Error stopping QR scanner:", err);
-        document.getElementById('qrModal').classList.add('hidden'); // Ensure modal closes even on error
+        document.getElementById('qrModal').classList.add('hidden');
       });
     }
   }
+
+  // Check for driver ID in URL on page load
+  window.addEventListener('load', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const driverId = urlParams.get('id');
+    if (driverId) {
+      const cleanId = driverId.startsWith('SFPD-') ? driverId.substring(5) : driverId;
+      document.getElementById('driverInput').value = cleanId;
+      lookupDriver();
+    }
+  });
 </script>
 
 <footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
