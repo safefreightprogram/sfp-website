@@ -305,16 +305,10 @@
     }
   }
 
-  // Check for driver ID in URL on page load - Handle both formats
+  // Check for driver ID in URL on page load
   window.addEventListener('load', function() {
     const urlParams = new URLSearchParams(window.location.search);
-    let driverId = urlParams.get('id');
-    
-    // Also check for /driver/ format in the URL path
-    if (!driverId && window.location.pathname.includes('/driver/')) {
-      driverId = window.location.pathname.split('/driver/')[1];
-    }
-    
+    const driverId = urlParams.get('id');
     if (driverId) {
       const cleanId = driverId.startsWith('SFPD-') ? driverId.substring(5) : driverId;
       document.getElementById('driverInput').value = cleanId;
