@@ -280,13 +280,28 @@
         
         // Extract driver ID from the scanned URL
         let driverId = decodedText.trim();
-        if (driverId.includes('/driver/')) {
+        console.log('Scanned QR code:', driverId);
+
+        // Handle the lookup-driver?id= format
+        if (driverId.includes('?id=')) {
+          driverId = driverId.split('?id=')[1];
+        }
+        // Handle the old /driver/ format (backup)
+        else if (driverId.includes('/driver/')) {
           driverId = driverId.split('/driver/')[1];
         }
+
+        // Remove any URL parameters after the ID
+        if (driverId.includes('&')) {
+          driverId = driverId.split('&')[0];
+        }
+
+        // Remove SFPD- prefix if present
         if (driverId.startsWith('SFPD-')) {
           driverId = driverId.substring(5);
         }
-        
+
+        console.log('Extracted driver ID:', driverId);
         document.getElementById('driverInput').value = driverId;
         lookupDriver();
       },
@@ -305,10 +320,16 @@
     }
   }
 
-  // Check for driver ID in URL on page load
+  // Check for driver ID in URL on page load - Handle both formats
   window.addEventListener('load', function() {
     const urlParams = new URLSearchParams(window.location.search);
-    const driverId = urlParams.get('id');
+    let driverId = urlParams.get('id');
+    
+    // Also check for /driver/ format in the URL path
+    if (!driverId && window.location.pathname.includes('/driver/')) {
+      driverId = window.location.pathname.split('/driver/')[1];
+    }
+    
     if (driverId) {
       const cleanId = driverId.startsWith('SFPD-') ? driverId.substring(5) : driverId;
       document.getElementById('driverInput').value = cleanId;
