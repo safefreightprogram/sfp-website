@@ -184,7 +184,7 @@
             <div class="text-center">
               <div class="mb-4">
                 <h3 class="text-lg font-semibold text-gray-800">Driver Card for ${fullName}</h3>
-                <p class="text-sm text-gray-600">${passportId} • Status: ${status}</p>
+                <p class="text-sm text-gray-600">${passportId} • Status: <span class="${status.toLowerCase() === 'active' ? 'bg-green-100 text-green-800 px-2 py-1 rounded' : status.toLowerCase() === 'expired' ? 'bg-red-100 text-red-800 px-2 py-1 rounded' : 'bg-gray-100 text-gray-800 px-2 py-1 rounded'}">${status}</span></p>
               </div>
               <div class="inline-block bg-white rounded-lg shadow-lg p-4">
                 <img src="${imageUrl1}" 
