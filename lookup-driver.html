@@ -1,325 +1,306 @@
-<!DOCTYPE html>
-<html lang="en-AU">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Driver Lookup – Safe Freight Program</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-</head>
-<body class="bg-gray-50 text-gray-800 font-sans">
+function exportAllSlidesAsPNGs() {
+  console.log('Starting PNG export process...');
+  
+  const sheet = SpreadsheetApp.openById('1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ').getSheetByName('Sheet 1');
+  const data = sheet.getDataRange().getValues();
 
-<header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false, showSearch: false }">
-  <div class="max-w-7xl mx-auto p-4 flex justify-between items-center relative">
-    <a href="index.html" class="text-xl font-bold transition-transform transform hover:scale-[1.015]">Safe Freight Program</a>
-    <div class="flex items-center space-x-4">
-      <button @click="showSearch = !showSearch" class="inline-flex transition-transform transform hover:scale-105">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </button>
-      <button @click="open = !open" class="inline-flex transition-transform transform hover:scale-105">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-    </div>
-    <div x-show="open" @click.away="open = false" x-transition class="absolute top-full right-0 bg-blue-900 text-white text-sm z-50 shadow-md">
-      <nav class="flex flex-col">
-        <a href="about.html" class="block px-4 py-2 hover:bg-blue-800">About</a>
-        <a href="lookup-driver.html" class="block px-4 py-2 bg-blue-800 font-bold">Driver Lookup</a>
-        <a href="lookup-vehicle.html" class="block px-4 py-2 hover:bg-blue-800">Vehicle Lookup</a>
-        <a href="find-ail.html" class="block px-4 py-2 hover:bg-blue-800">Find AIL</a>
-        <a href="training.html" class="block px-4 py-2 hover:bg-blue-800">SFP Training</a>
-        <a href="ail-login.html" class="block px-4 py-2 hover:bg-blue-800">AIL Portal</a>
-        <a href="trainer-login.html" class="block px-4 py-2 hover:bg-blue-800">Trainer Login</a>
-        <a href="contact.html" class="block px-4 py-2 hover:bg-blue-800">Contact</a>
-        <a href="subscription.html" class="block px-4 py-2 hover:bg-blue-800">Subscribe</a>
-      </nav>
-    </div>
-  </div>
-  <div class="px-4 pt-2" x-show="showSearch" x-transition>
-    <form action="search.html" method="GET">
-      <input type="search" name="q" placeholder="Type a word"
-             class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-500 text-black">
-    </form>
-  </div>
-</header>
+  // Updated to use your correct Cards folder
+  const cardsFolder = DriveApp.getFolderById('1-xjVXOzWwWAF8BvQ3HzPF79X2JYeXWWa');
 
-<main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-  <section class="text-center">
-    <h2 class="text-3xl font-bold text-blue-800 mb-4">Driver Credential Lookup</h2>
-    <p class="mb-4 text-gray-600">Scan a SFP Passport QR Code or enter a Safe Freight Program Driver ID Number to check driver credentials.</p>
-    <div class="mb-4 text-center">
-      <button type="button" onclick="startScan()" class="text-blue-700 hover:text-blue-900 text-sm border border-blue-700 px-3 py-2 rounded inline-flex items-center gap-1">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h2l2-3h10l2 3h2a1 1 0 011 1v11a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1zm9 3a4 4 0 100 8 4 4 0 000-8z" />
-        </svg>
-        <span>Scan QR Code</span>
-      </button>
-    </div>
-  </section>
+  let successCount = 0;
+  let errorCount = 0;
 
-  <div class="bg-white shadow-md rounded-lg p-6 max-w-xl mx-auto">
-    <form onsubmit="lookupDriver(); return false;" class="space-y-4">
-      <label for="driverInput" class="block text-sm font-medium text-gray-700">Safe Freight Program Driver Number</label>
-      <div class="flex items-center border border-gray-300 rounded-md px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
-        <span class="text-blue-700 font-semibold pr-1">SFPD-</span>
-        <input type="text" id="driverInput" pattern="[0-9]*" inputmode="numeric" autocomplete="off"
-               class="flex-1 border-none focus:ring-0 focus:outline-none text-sm"
-               placeholder="001234" required />
-      </div>
-      <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-md shadow">Search</button>
-    </form>
-    <div id="driverResult" class="mt-6 hidden"></div>
-  </div>
-</main>
-
-<div id="qrModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden overflow-hidden">
-  <div class="bg-white p-4 rounded-md shadow-md max-w-sm w-full relative">
-    <div id="qr-reader" style="width: 100%;"></div>
-    <button onclick="stopScan()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">&times;</button>
-  </div>
-</div>
-
-<script>
-  const DRIVER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json';
-  let qrScanner;
-
-  async function fetchSheetData(url) {
-    const response = await fetch(url);
-    const text = await response.text();
-    try {
-      const json = JSON.parse(text.substr(47).slice(0, -2));
-      return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
-    } catch (e) {
-      console.error('Failed to parse sheet data:', e);
-      return [];
-    }
-  }
-
-  function padWithZeros(input, length = 6) {
-    return input.padStart(length, '0');
-  }
-
-  function formatDate(d) {
-    if (!isNaN(d)) {
-      const serialDate = Number(d);
-      const baseDate = new Date(Date.UTC(1899, 11, 30));
-      baseDate.setUTCDate(baseDate.getUTCDate() + serialDate);
-      return baseDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
-    }
-
-    if (typeof d === 'string') {
-      if (d.startsWith('Date(')) {
-        const parts = d.slice(5, -1).split(',').map(Number);
-        const parsed = new Date(parts[0], parts[1], parts[2]);
-        return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
-      }
-
-      if (d.includes('/')) {
-        const [day, month, year] = d.split('/');
-        const parsed = new Date(`${year}-${month}-${day}`);
-        if (!isNaN(parsed.getTime())) {
-          return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
-        }
-      }
-    }
-
-    return d;
-  }
-
-  async function lookupDriver() {
-    const raw = document.getElementById('driverInput').value.trim();
-    const input = raw.startsWith('SFPD-') ? raw : 'SFPD-' + padWithZeros(raw);
-    const resultEl = document.getElementById('driverResult');
+  // Process each row (skip header row)
+  for (let i = 1; i < data.length; i++) {
+    const driverId = data[i][0];              // Column A - ID
+    const presentationId = data[i][7];        // Column H - Slide File ID
     
-    resultEl.innerHTML = '<p class="text-gray-500 text-center">Searching…</p>';
-    resultEl.className = 'p-4 mt-6';
-    resultEl.classList.remove('hidden');
+    // Skip if no presentation ID
+    if (!presentationId || presentationId === '') {
+      console.log(`Skipping row ${i + 1}: No presentation ID for ${driverId}`);
+      continue;
+    }
 
     try {
-      const data = await fetchSheetData(DRIVER_SHEET_URL);
-      console.log('Sheet data loaded:', data.length, 'rows');
+      // Add delay to avoid rate limiting
+      if (i > 1) Utilities.sleep(500);
       
-      // Column mapping: ID(0), First Name(1), Surname(2), Status(3), Expiry Date(4), QR Code URL(5), Photo(6), Slide File ID(7), Card PNG Link(8), SLP (Fuels)(9), SUP (Fuels)(10), SDP(11), Dangerous Goods(12)
-      const match = data.find(row => row[0] === input);
-      console.log('Looking for:', input);
-      console.log('Match found:', match);
-
-      if (match) {
-        const fullName = `${match[1]} ${match[2]}`;
-        const passportId = match[0];
-        const status = match[3];
-        const expiry = formatDate(match[4]);
-        
-        // Get the PNG card link from column 8 (Card PNG Link)
-        const pngLink = match[8];
-        console.log('PNG Link from sheet:', pngLink);
-        
-        // Get certifications (columns 9-12)
-        const certifications = {
-          'SLP (Fuels)': match[9] === 'y',
-          'SUP (Fuels)': match[10] === 'y',  
-          'SDP': match[11] === 'y',
-          'Dangerous Goods': match[12] === 'y'
-        };
-
-        const activeCerts = Object.entries(certifications)
-          .filter(([cert, active]) => active)
-          .map(([cert]) => cert);
-
-        if (pngLink && pngLink.includes('drive.google.com')) {
-          console.log('Displaying PNG card image');
-          // Try multiple Google Drive URL formats for better compatibility
-          const fileId = pngLink.match(/id=([a-zA-Z0-9-_]+)/)[1];
-          const imageUrl1 = `https://lh3.googleusercontent.com/d/${fileId}`;
-          const imageUrl2 = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-          const imageUrl3 = pngLink; // Original URL as final fallback
-          
-          resultEl.className = 'mt-6';
-          resultEl.innerHTML = `
-            <div class="text-center">
-              <div class="mb-4">
-                <h3 class="text-lg font-semibold text-gray-800">Driver Card for ${fullName}</h3>
-                <p class="text-sm text-gray-600">${passportId} • Status: ${status}</p>
-              </div>
-              <div class="inline-block bg-white rounded-lg shadow-lg p-4">
-                <img src="${imageUrl1}" 
-                     alt="Driver Card for ${passportId}" 
-                     class="max-w-full h-auto rounded-md border"
-                     style="max-height: 600px; width: auto;"
-                     onload="console.log('Driver card loaded with googleusercontent URL')"
-                     onerror="console.log('Googleusercontent failed, trying thumbnail API'); this.src='${imageUrl2}'; this.onerror=function(){console.log('Thumbnail API failed, trying original URL'); this.src='${imageUrl3}'; this.onerror=function(){console.log('All image sources failed'); handleImageError(this, '${passportId}', '${fullName}', '${status}', '${expiry}', ${JSON.stringify(activeCerts).replace(/"/g, '&quot;')});};}">
-              </div>
-              <div class="mt-4">
-                <a href="${pngLink}" target="_blank" 
-                   class="inline-flex items-center px-4 py-2 text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition-colors">
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                  </svg>
-                  View Full Size
-                </a>
-              </div>
-            </div>
-          `;
-        } else {
-          console.log('No PNG link found, showing text card');
-          // Fallback to text display if no PNG available
-          displayTextCard(resultEl, fullName, passportId, status, expiry, activeCerts);
-        }
-        
-        // Update URL for direct linking
-        const url = new URL(window.location);
-        url.searchParams.set('id', input);
-        window.history.pushState({}, '', url);
-        
-      } else {
-        console.log('No match found for:', input);
-        resultEl.className = 'bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md mt-6';
-        resultEl.innerHTML = '<p class="font-semibold">Driver not found</p><p class="text-sm">Please check the number and try again.</p>';
+      console.log(`Processing ${driverId} (row ${i + 1})...`);
+      
+      // Get the presentation
+      const presentation = Slides.Presentations.get(presentationId);
+      
+      // Check if slides exist
+      if (!presentation.slides || presentation.slides.length === 0) {
+        console.log(`No slides found for presentation ${presentationId}`);
+        errorCount++;
+        continue;
       }
-    } catch (error) {
-      console.error('Error looking up driver:', error);
-      resultEl.className = 'bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md mt-6';
-      resultEl.innerHTML = '<p class="font-semibold">Error</p><p class="text-sm">Unable to search for driver. Please try again.</p>';
+      
+      const slideId = presentation.slides[0].objectId;
+
+      // Get thumbnail
+      const thumbnail = Slides.Presentations.Pages.getThumbnail(
+        presentationId,
+        slideId,
+        {
+          'thumbnailProperties.thumbnailSize': 'LARGE',
+          'thumbnailProperties.mimeType': 'PNG'
+        }
+      );
+
+      // Fetch the image and create file
+      const imageBlob = UrlFetchApp.fetch(thumbnail.contentUrl)
+        .getBlob()
+        .setName(`${driverId}-card.png`);
+      
+      // Delete existing file if it exists
+      const existingFiles = cardsFolder.getFilesByName(`${driverId}-card.png`);
+      while (existingFiles.hasNext()) {
+        existingFiles.next().setTrashed(true);
+      }
+      
+      // Create new file
+      const file = cardsFolder.createFile(imageBlob);
+      
+      // Make file publicly viewable
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      
+      // Update spreadsheet with direct access URL in Column I (Card PNG Link)
+      const directAccessUrl = `https://drive.google.com/uc?export=view&id=${file.getId()}`;
+      sheet.getRange(i + 1, 9).setValue(directAccessUrl);
+      
+      successCount++;
+      console.log(`Successfully exported ${driverId}-card.png with direct access URL`);
+
+    } catch (e) {
+      errorCount++;
+      console.error(`Error on row ${i + 1} (Driver: ${driverId}, Presentation: ${presentationId}): ${e.message}`);
+      
+      // Optional: Write error status to a status column
+      // sheet.getRange(i + 1, 12).setValue(`Error: ${e.message}`);
     }
   }
+  
+  console.log(`PNG export completed. Success: ${successCount}, Errors: ${errorCount}`);
+}
 
-  function handleImageError(img, passportId, fullName, status, expiry, activeCerts) {
-    console.log('Image failed to load, falling back to text display');
-    const resultEl = document.getElementById('driverResult');
-    displayTextCard(resultEl, fullName, passportId, status, expiry, activeCerts);
+// Test function for a single row
+function testSingleExport() {
+  console.log('Testing single PNG export...');
+  
+  const sheet = SpreadsheetApp.openById('1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ').getSheetByName('Sheet 1');
+  const data = sheet.getDataRange().getValues();
+  
+  // Test with first data row (row 2 in sheet, index 1 in array)
+  const driverId = data[1][0];
+  const presentationId = data[1][7];
+  
+  console.log(`Testing with Driver ID: ${driverId}, Presentation ID: ${presentationId}`);
+  
+  if (!presentationId) {
+    console.log('No presentation ID found in test row');
+    return;
   }
-
-  function displayTextCard(resultEl, fullName, passportId, status, expiry, activeCerts) {
-    const certBadges = activeCerts.map(cert => {
-      const colors = {
-        'SLP (Fuels)': 'bg-blue-500',
-        'SUP (Fuels)': 'bg-green-500', 
-        'SDP': 'bg-purple-500',
-        'Dangerous Goods': 'bg-orange-500'
-      };
-      return `<span class="${colors[cert] || 'bg-gray-500'} text-white px-3 py-1 rounded-full text-sm font-medium">${cert}</span>`;
-    }).join(' ');
-
-    resultEl.className = 'bg-green-100 border-l-4 border-green-500 text-green-800 p-6 rounded-md mt-6';
-    resultEl.innerHTML = `
-      <div class="space-y-4">
-        <div class="text-center">
-          <h3 class="text-xl font-bold text-gray-800">${fullName}</h3>
-          <p class="text-lg font-semibold">${passportId}</p>
-        </div>
-        <div class="grid grid-cols-2 gap-4 text-sm">
-          <div><span class="font-semibold">Status:</span> ${status}</div>
-          <div><span class="font-semibold">Expiry:</span> ${expiry}</div>
-        </div>
-        ${activeCerts.length > 0 ? `
-          <div>
-            <p class="font-semibold text-sm mb-2">Certifications:</p>
-            <div class="flex flex-wrap gap-2">${certBadges}</div>
-          </div>
-        ` : '<p class="text-sm text-gray-600">No active certifications</p>'}
-        <p class="text-xs text-gray-600 italic">Note: Driver card image could not be loaded.</p>
-      </div>
-    `;
-  }
-
-  function startScan() {
-    const modal = document.getElementById('qrModal');
-    modal.classList.remove('hidden');
-    qrScanner = new Html5Qrcode("qr-reader");
-    qrScanner.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: 250 },
-      (decodedText) => {
-        qrScanner.stop();
-        modal.classList.add('hidden');
-        
-        // Extract driver ID from the scanned URL
-        let driverId = decodedText.trim();
-        if (driverId.includes('/driver/')) {
-          driverId = driverId.split('/driver/')[1];
-        }
-        if (driverId.startsWith('SFPD-')) {
-          driverId = driverId.substring(5);
-        }
-        
-        document.getElementById('driverInput').value = driverId;
-        lookupDriver();
-      },
-      (err) => {} // Handle errors silently
+  
+  // Updated to use your correct Cards folder
+  const cardsFolder = DriveApp.getFolderById('1-xjVXOzWwWAF8BvQ3HzPF79X2JYeXWWa');
+  
+  try {
+    const presentation = Slides.Presentations.get(presentationId);
+    const slideId = presentation.slides[0].objectId;
+    
+    const thumbnail = Slides.Presentations.Pages.getThumbnail(
+      presentationId,
+      slideId,
+      {
+        'thumbnailProperties.thumbnailSize': 'LARGE',
+        'thumbnailProperties.mimeType': 'PNG'
+      }
     );
+    
+    const imageBlob = UrlFetchApp.fetch(thumbnail.contentUrl)
+      .getBlob()
+      .setName(`${driverId}-card-test.png`);
+    
+    const file = cardsFolder.createFile(imageBlob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    
+    const directAccessUrl = `https://drive.google.com/uc?export=view&id=${file.getId()}`;
+    console.log(`Test successful! Direct access URL: ${directAccessUrl}`);
+    
+  } catch (e) {
+    console.error(`Test failed: ${e.message}`);
   }
+}
 
-  function stopScan() {
-    if (qrScanner) {
-      qrScanner.stop().then(() => {
-        document.getElementById('qrModal').classList.add('hidden');
-      }).catch(err => {
-        console.error("Error stopping QR scanner:", err);
-        document.getElementById('qrModal').classList.add('hidden');
-      });
+// Function to update QR codes to point to lookup page
+function updateQRCodeURLs() {
+  console.log('Updating QR codes to point to lookup page...');
+  
+  const sheet = SpreadsheetApp.openById('1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ').getSheetByName('Sheet 1');
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  
+  const idCol = headers.indexOf("ID");
+  const qrUrlCol = headers.indexOf("QR Code URL");
+  
+  if (idCol === -1 || qrUrlCol === -1) {
+    console.log("Could not find ID or QR Code URL columns");
+    return;
+  }
+  
+  let updateCount = 0;
+  
+  for (let i = 1; i < data.length; i++) {
+    const driverId = data[i][idCol];
+    if (driverId) {
+      // Create the lookup URL that will show the driver card
+      const lookupUrl = `https://safefreightprogram.com/lookup-driver?id=${driverId}`;
+      
+      // Generate QR code URL pointing to the lookup page
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(lookupUrl)}&size=150x150`;
+      
+      // Update the QR Code URL column
+      sheet.getRange(i + 1, qrUrlCol + 1).setValue(qrCodeUrl);
+      
+      updateCount++;
+      console.log(`Updated QR code for ${driverId}: ${lookupUrl}`);
     }
   }
+  
+  console.log(`✅ Updated ${updateCount} QR code URLs to point to lookup page`);
+}
 
-  // Check for driver ID in URL on page load
-  window.addEventListener('load', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const driverId = urlParams.get('id');
-    if (driverId) {
-      const cleanId = driverId.startsWith('SFPD-') ? driverId.substring(5) : driverId;
-      document.getElementById('driverInput').value = cleanId;
-      lookupDriver();
+// Alternative: Point QR codes directly to PNG files
+function updateQRCodesToPNGs() {
+  console.log('Updating QR codes to point directly to PNG files...');
+  
+  const sheet = SpreadsheetApp.openById('1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ').getSheetByName('Sheet 1');
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  
+  const idCol = headers.indexOf("ID");
+  const qrUrlCol = headers.indexOf("QR Code URL");
+  const pngLinkCol = headers.indexOf("Card PNG Link");
+  
+  if (idCol === -1 || qrUrlCol === -1 || pngLinkCol === -1) {
+    console.log("Could not find required columns");
+    return;
+  }
+  
+  let updateCount = 0;
+  
+  for (let i = 1; i < data.length; i++) {
+    const driverId = data[i][idCol];
+    const pngLink = data[i][pngLinkCol];
+    
+    if (driverId && pngLink) {
+      // Generate QR code URL pointing directly to the PNG file
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(pngLink)}&size=150x150`;
+      
+      // Update the QR Code URL column
+      sheet.getRange(i + 1, qrUrlCol + 1).setValue(qrCodeUrl);
+      
+      updateCount++;
+      console.log(`Updated QR code for ${driverId} to point to PNG`);
+    }
+  }
+  
+  console.log(`✅ Updated ${updateCount} QR code URLs to point to PNG files`);
+}
+
+// Function to update existing PNG links to direct access format
+function updateExistingPNGLinks() {
+  console.log('Updating existing PNG links to direct access format...');
+  
+  const sheet = SpreadsheetApp.openById('1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ').getSheetByName('Sheet 1');
+  const data = sheet.getDataRange().getValues();
+  
+  let updateCount = 0;
+  
+  for (let i = 1; i < data.length; i++) {
+    const pngLink = data[i][8]; // Column I (Card PNG Link)
+    
+    if (pngLink && pngLink.includes('drive.google.com/file/d/')) {
+      const match = pngLink.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+      if (match) {
+        const fileId = match[1];
+        const newUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+        sheet.getRange(i + 1, 9).setValue(newUrl);
+        updateCount++;
+        console.log(`Updated link for row ${i + 1}: ${newUrl}`);
+      }
+    }
+  }
+  
+  console.log(`Updated ${updateCount} PNG links to direct access format`);
+}
+
+// Test function to check current QR code URLs
+function checkCurrentQRCodes() {
+  console.log('Checking current QR code URLs...');
+  
+  const sheet = SpreadsheetApp.openById('1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ').getSheetByName('Sheet 1');
+  const data = sheet.getDataRange().getValues();
+  
+  console.log("Current QR code URLs:");
+  for (let i = 1; i < Math.min(5, data.length); i++) {
+    const driverId = data[i][0];
+    const qrUrl = data[i][5]; // QR Code URL column
+    console.log(`${driverId}: ${qrUrl}`);
+  }
+}
+
+// Function to set up daily automation
+function setupDailyAutomation() {
+  // Delete existing triggers for this function
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() === 'exportAllSlidesAsPNGs') {
+      ScriptApp.deleteTrigger(trigger);
     }
   });
-</script>
+  
+  // Create new daily trigger at 9 AM
+  ScriptApp.newTrigger('exportAllSlidesAsPNGs')
+    .timeBased()
+    .everyDays(1)
+    .atHour(9)
+    .create();
+    
+  console.log('Daily trigger created for 9 AM');
+}
 
-<footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
-  &copy; 2025 Safe Freight Program. All rights reserved.
-</footer>
+// Function to set up weekly automation
+function setupWeeklyAutomation() {
+  // Delete existing triggers
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() === 'exportAllSlidesAsPNGs') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+  
+  // Create weekly trigger (Mondays at 9 AM)
+  ScriptApp.newTrigger('exportAllSlidesAsPNGs')
+    .timeBased()
+    .everyWeeks(1)
+    .onWeekDay(ScriptApp.WeekDay.MONDAY)
+    .atHour(9)
+    .create();
+    
+  console.log('Weekly trigger created for Mondays at 9 AM');
+}
 
-</body>
-</html>
+// Function to clear all PNG links (useful for testing)
+function clearPNGLinks() {
+  const sheet = SpreadsheetApp.openById('1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ').getSheetByName('Sheet 1');
+  const data = sheet.getDataRange().getValues();
+  
+  for (let i = 1; i < data.length; i++) {
+    sheet.getRange(i + 1, 9).setValue(''); // Clear Column I
+  }
+  
+  console.log('PNG links cleared');
+}
