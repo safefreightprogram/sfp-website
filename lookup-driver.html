@@ -173,7 +173,7 @@
 
         if (pngLink && pngLink.includes('drive.google.com')) {
           console.log('Displaying PNG card image');
-          // Display the PNG card image
+          // Display the PNG card image with iframe fallback
           resultEl.className = 'mt-6';
           resultEl.innerHTML = `
             <div class="text-center">
@@ -182,16 +182,21 @@
                 <p class="text-sm text-gray-600">${passportId} • Status: ${status}</p>
               </div>
               <div class="inline-block bg-white rounded-lg shadow-lg p-4">
-                <img src="${pngLink}" alt="Driver Card for ${passportId}" 
-                     class="max-w-full h-auto rounded-md border"
-                     style="max-height: 600px; width: auto;"
-                     onload="console.log('Image loaded successfully')"
-                     onerror="console.log('Image failed to load:', this.src); handleImageError(this, '${passportId}', '${fullName}', '${status}', '${expiry}', ${JSON.stringify(activeCerts).replace(/"/g, '&quot;')})">
+                <iframe src="${pngLink}" 
+                        style="width: 400px; height: 600px; border: none; border-radius: 8px;"
+                        title="Driver Card for ${passportId}"
+                        onload="console.log('Driver card loaded successfully')"
+                        onerror="console.log('Driver card failed to load'); handleImageError(this, '${passportId}', '${fullName}', '${status}', '${expiry}', ${JSON.stringify(activeCerts).replace(/"/g, '&quot;')})">
+                </iframe>
               </div>
               <div class="mt-4">
-                <p class="text-xs text-gray-500">
-                  <a href="${pngLink}" target="_blank" class="text-blue-600 hover:underline">View full size</a>
-                </p>
+                <a href="${pngLink}" target="_blank" 
+                   class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                  </svg>
+                  View Driver Card
+                </a>
               </div>
             </div>
           `;
