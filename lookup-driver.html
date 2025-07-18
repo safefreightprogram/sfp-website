@@ -131,24 +131,6 @@
     return d;
   }
 
-  function extractFileIdFromUrl(url) {
-    if (!url) return null;
-    
-    // Handle different Google Drive URL formats
-    const patterns = [
-      /\/file\/d\/([a-zA-Z0-9-_]+)/,
-      /id=([a-zA-Z0-9-_]+)/,
-      /\/d\/([a-zA-Z0-9-_]+)/
-    ];
-    
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match) return match[1];
-    }
-    
-    return null;
-  }
-
   async function lookupDriver() {
     const raw = document.getElementById('driverInput').value.trim();
     const input = raw.startsWith('SFPD-') ? raw : 'SFPD-' + padWithZeros(raw);
@@ -160,10 +142,12 @@
 
     try {
       const data = await fetchSheetData(DRIVER_SHEET_URL);
+      console.log('Sheet data loaded:', data.length, 'rows');
       
-      // Updated column mapping based on your sheet structure:
-      // ID, First Name, Surname, Status, Expiry Date, QR Code URL, Photo, Slide File ID, Card PNG Link, SLP (Fuels), SUP (Fuels), SDP, Dangerous Goods
+      // Column mapping: ID(0), First Name(1), Surname(2), Status(3), Expiry Date(4), QR Code URL(5), Photo(6), Slide File ID(7), Card PNG Link(8), SLP (Fuels)(9), SUP (Fuels)(10), SDP(11), Dangerous Goods(12)
       const match = data.find(row => row[0] === input);
+      console.log('Looking for:', input);
+      console.log('Match found:', match);
 
       if (match) {
         const fullName = `${match[1]} ${match[2]}`;
@@ -171,17 +155,10 @@
         const status = match[3];
         const expiry = formatDate(match[4]);
         
-        // Get the PNG card link (column 8)
+        // Get the PNG card link from column 8 (Card PNG Link)
         const pngLink = match[8];
-        let pngUrl = null;
+        console.log('PNG Link from sheet:', pngLink);
         
-        if (pngLink) {
-          const fileId = extractFileIdFromUrl(pngLink);
-          if (fileId) {
-            pngUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
-          }
-        }
-
         // Get certifications (columns 9-12)
         const certifications = {
           'SLP (Fuels)': match[9] === 'y',
@@ -194,7 +171,8 @@
           .filter(([cert, active]) => active)
           .map(([cert]) => cert);
 
-        if (pngUrl) {
+        if (pngLink && pngLink.includes('drive.google.com')) {
+          console.log('Displaying PNG card image');
           // Display the PNG card image
           resultEl.className = 'mt-6';
           resultEl.innerHTML = `
@@ -204,14 +182,21 @@
                 <p class="text-sm text-gray-600">${passportId} • Status: ${status}</p>
               </div>
               <div class="inline-block bg-white rounded-lg shadow-lg p-4">
-                <img src="${pngUrl}" alt="Driver Card for ${passportId}" 
-                     class="max-w-full h-auto rounded-md"
+                <img src="${pngLink}" alt="Driver Card for ${passportId}" 
+                     class="max-w-full h-auto rounded-md border"
                      style="max-height: 600px; width: auto;"
-                     onerror="handleImageError(this, '${passportId}', '${fullName}', '${status}', '${expiry}', ${JSON.stringify(activeCerts).replace(/"/g, '&quot;')})">
+                     onload="console.log('Image loaded successfully')"
+                     onerror="console.log('Image failed to load:', this.src); handleImageError(this, '${passportId}', '${fullName}', '${status}', '${expiry}', ${JSON.stringify(activeCerts).replace(/"/g, '&quot;')})">
+              </div>
+              <div class="mt-4">
+                <p class="text-xs text-gray-500">
+                  <a href="${pngLink}" target="_blank" class="text-blue-600 hover:underline">View full size</a>
+                </p>
               </div>
             </div>
           `;
         } else {
+          console.log('No PNG link found, showing text card');
           // Fallback to text display if no PNG available
           displayTextCard(resultEl, fullName, passportId, status, expiry, activeCerts);
         }
@@ -222,6 +207,7 @@
         window.history.pushState({}, '', url);
         
       } else {
+        console.log('No match found for:', input);
         resultEl.className = 'bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md mt-6';
         resultEl.innerHTML = '<p class="font-semibold">Driver not found</p><p class="text-sm">Please check the number and try again.</p>';
       }
