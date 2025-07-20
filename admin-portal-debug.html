@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Portal – Safe Freight Program</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+  <!-- 🔐 Fixed Firebase Auth -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBURlJUicOTobRLghN2RyEZfXEZvU_uiYU",
+      authDomain: "safe-freight-program.firebaseapp.com",
+      projectId: "safe-freight-program",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // 🔄 Fixed authentication with detailed email checking
+    onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed:', user);
+      
+      if (!user) {
+        console.log('No user, redirecting to login');
+        window.location.href = "/login.html";
+      } else {
+        console.log('User found:', user.email);
+        
+        // Debug email comparison
+        const userEmail = user.email;
+        const adminEmail = 'safreightprogram@gmail.com';
+        
+        console.log('=== EMAIL COMPARISON DEBUG ===');
+        console.log('User email:', `"${userEmail}"`);
+        console.log('Admin email:', `"${adminEmail}"`);
+        console.log('Emails match:', userEmail === adminEmail);
+        console.log('User email length:', userEmail.length);
+        console.log('Admin email length:', adminEmail.length);
+        
+        // Check for admin email (with trimming to handle any whitespace)
+        const normalizedUserEmail = userEmail.trim().toLowerCase();
+        const normalizedAdminEmail = adminEmail.trim().toLowerCase();
+        
+        console.log('Normalized user email:', `"${normalizedUserEmail}"`);
+        console.log('Normalized admin email:', `"${normalizedAdminEmail}"`);
+        console.log('Normalized emails match:', normalizedUserEmail === normalizedAdminEmail);
+        
+        if (normalizedUserEmail === normalizedAdminEmail) {
+          console.log('✅ Admin access granted!');
+          initializeAdminInterface(user);
+          hideAuthLoader();
+        } else {
+          console.log('❌ Not admin email, redirecting to driver lookup');
+          console.log('If this seems wrong, check the email comparison above');
+          
+          // Show debug info for 5 seconds before redirect
+          showDebugInfo(userEmail, adminEmail);
+          setTimeout(() => {
+            window.location.href = "/lookup-driver.html";
+          }, 5000);
+        }
+      }
+    });
+
+    // 🐛 Show debug info on screen
+    function showDebugInfo(userEmail, adminEmail) {
+      const debugEl = document.getElementById('debugInfo');
+      if (debugEl) {
+        debugEl.innerHTML = `
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+            <h3 class="font-medium text-yellow-800 mb-2">🐛 Email Debug Info</h3>
+            <div class="text-sm text-yellow-700 space-y-1">
+              <div><strong>Your email:</strong> "${userEmail}"</div>
+              <div><strong>Expected:</strong> "safreightprogram@gmail.com"</div>
+              <div><strong>Match:</strong> ${userEmail.trim().toLowerCase() === 'safreightprogram@gmail.com'}</div>
+              <div class="mt-2 text-xs">Redirecting in 5 seconds... Check console for more details.</div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // 🎯 Initialize admin interface
+    function initializeAdminInterface(user) {
+      const logoutLink = document.getElementById("logoutLink");
+      const userInfo = document.getElementById("userInfo");
+      const roleDisplay = document.getElementById("roleDisplay");
+      
+      if (logoutLink) logoutLink.classList.remove("hidden");
+      
+      if (userInfo && user.email) {
+        userInfo.textContent = user.email;
+        userInfo.classList.remove("hidden");
+      }
+
+      if (roleDisplay) {
+        roleDisplay.textContent = 'Super Admin';
+        roleDisplay.classList.remove("hidden");
+      }
+
+      // Show user info container
+      const container = document.getElementById('userInfoContainer');
+      if (container) container.classList.remove('hidden');
+
+      // Store user info globally
+      window.currentUser = { uid: user.uid, email: user.email, role: 'super_admin' };
+      
+      console.log('✅ Admin interface initialized successfully');
+    }
+
+    // 🔄 Hide auth loader
+    function hideAuthLoader() {
+      const loader = document.getElementById('authLoader');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 300);
+      }
+    }
+
+    // 🚪 Logout function
+    window.signOutUser = () => {
+      const logoutBtn = document.getElementById("logoutLink");
+      const originalText = logoutBtn.textContent;
+      
+      logoutBtn.textContent = "Signing out...";
+      logoutBtn.style.pointerEvents = "none";
+      
+      signOut(auth)
+        .then(() => window.location.href = "/login.html")
+        .catch(err => {
+          console.error("Logout failed:", err);
+          alert("Logout failed: " + err.message);
+          logoutBtn.textContent = originalText;
+          logoutBtn.style.pointerEvents = "auto";
+        });
+    };
+  </script>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans">
+<!-- 🔄 Loading overlay with debug -->
+<div id="authLoader" class="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50 transition-opacity duration-300">
+  <div class="text-center max-w-lg">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto mb-4"></div>
+    <p class="text-gray-600 text-lg mb-4">Checking admin access...</p>
+    <div id="debugInfo"></div>
+  </div>
+</div>
+
+<header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false, showSearch: false }">
+  <div class="max-w-7xl mx-auto p-4 flex justify-between items-center relative">
+    <a href="index.html" class="text-xl font-bold transition-transform transform hover:scale-[1.015]">Safe Freight Program</a>
+    
+    <!-- User info and controls -->
+    <div class="flex items-center space-x-4">
+      <div class="text-right hidden" id="userInfoContainer">
+        <div id="userInfo" class="text-sm text-blue-200"></div>
+        <div id="roleDisplay" class="text-xs text-blue-300 font-medium"></div>
+      </div>
+      
+      <button @click="showSearch = !showSearch" class="inline-flex transition-transform transform hover:scale-105">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </button>
+      
+      <button @click="open = !open" class="inline-flex transition-transform transform hover:scale-105">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Enhanced Admin Navigation -->
+    <div x-show="open" @click.away="open = false" x-transition class="absolute top-full right-0 bg-blue-900 text-white text-sm z-50 shadow-md">
+      <nav class="flex flex-col">
+        <a href="lookup-driver.html" class="block px-4 py-2 hover:bg-blue-800">Driver Lookup</a>
+        <a href="lookup-vehicle.html" class="block px-4 py-2 hover:bg-blue-800">Vehicle Lookup</a>
+        <div class="border-t border-blue-700 my-1"></div>
+        <a href="admin-portal.html" class="block px-4 py-2 bg-blue-800 font-bold">Admin Portal</a>
+        <div class="border-t border-blue-700 my-1"></div>
+        <a href="find-ail.html" class="block px-4 py-2 hover:bg-blue-800">Find AIL</a>
+        <a href="training.html" class="block px-4 py-2 hover:bg-blue-800">SFP Training</a>
+        <a href="contact.html" class="block px-4 py-2 hover:bg-blue-800">Contact</a>
+        <a id="logoutLink" href="#" onclick="signOutUser()" class="block px-4 py-2 text-red-300 hover:bg-red-800 hidden">Logout</a>
+      </nav>
+    </div>
+  </div>
+  
+  <!-- Search bar -->
+  <div class="px-4 pt-2" x-show="showSearch" x-transition>
+    <form onsubmit="searchAllRecords(event)">
+      <input type="search" name="q" id="globalSearch" placeholder="Search drivers, vehicles, users..."
+             class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-500 text-black">
+    </form>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Page Title -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-blue-800">🎉 Admin Portal</h1>
+    <p class="text-gray-600 mt-2">Welcome to the Safe Freight Program administration system</p>
+  </div>
+
+  <!-- Success Message -->
+  <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
+    <div class="flex items-center">
+      <div class="p-2 bg-green-100 rounded-full">
+        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+      <div class="ml-4">
+        <h3 class="text-lg font-medium text-green-800">🎉 Admin Access Confirmed!</h3>
+        <p class="text-green-700">You have successfully accessed the Safe Freight Program admin portal. All authentication systems are working correctly.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Features Overview -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center mb-4">
+        <div class="p-3 bg-blue-100 rounded-full">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 ml-3">Driver Management</h3>
+      </div>
+      <p class="text-gray-600">Add new drivers, manage certifications, generate QR codes and driver cards.</p>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center mb-4">
+        <div class="p-3 bg-green-100 rounded-full">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z M19 17l2 2 4-4"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 ml-3">Vehicle Management</h3>
+      </div>
+      <p class="text-gray-600">Track equipment inspections, generate vehicle QR codes, manage compliance.</p>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center mb-4">
+        <div class="p-3 bg-purple-100 rounded-full">
+          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 5.25v13.5A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V5.25z"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 ml-3">User Management</h3>
+      </div>
+      <p class="text-gray-600">Create AIL accounts, manage permissions, track user activity and roles.</p>
+    </div>
+  </div>
+</main>
+
+<footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
+  &copy; 2025 Safe Freight Program. All rights reserved.
+</footer>
+
+<script>
+  function searchAllRecords(event) {
+    event.preventDefault();
+    alert('Global search functionality ready to implement!');
+  }
+</script>
+
+</body>
+</html>
