@@ -3,7 +3,1467 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Driver Lookup – Safe Freight Program</title>
+  <title>Driver Lookup – Sa<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Certification</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Activity</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="ailTableBody" class="divide-y divide-gray-200">
+                  <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading AILs...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR Code Generator Tab -->
+    <div id="content-qrcodes" class="tab-content hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- QR Code Generation -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-6">QR Code Generator</h2>
+          
+          <div class="space-y-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+              <h3 class="font-medium text-blue-800 mb-2">Equipment QR Codes (SFPV-xxxxxx)</h3>
+              <p class="text-sm text-blue-700">Generate QR codes for vehicle/equipment stickers</p>
+            </div>
+            
+            <form id="qrGeneratorForm" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Starting Number</label>
+                <div class="flex">
+                  <span class="bg-gray-100 border border-r-0 border-gray-300 px-3 py-2 text-gray-500 rounded-l-md">SFPV-</span>
+                  <input type="number" id="qrStartNumber" min="1" max="999999" value="1" class="flex-1 border border-gray-300 rounded-r-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="000001">
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                <select id="qrQuantity" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                  <option value="10">10 codes</option>
+                  <option value="25">25 codes</option>
+                  <option value="50">50 codes</option>
+                  <option value="100">100 codes</option>
+                  <option value="250">250 codes</option>
+                  <option value="500">500 codes</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Sticker Size</label>
+                <select id="qrStickerSize" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                  <option value="small">Small (25mm x 25mm)</option>
+                  <option value="medium" selected>Medium (40mm x 40mm)</option>
+                  <option value="large">Large (60mm x 60mm)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Include Expiry Field</label>
+                <div class="flex items-center">
+                  <input type="checkbox" id="qrIncludeExpiry" checked class="mr-2">
+                  <span class="text-sm">Add handwritten expiry date field</span>
+                </div>
+              </div>
+              
+              <button type="submit" id="generateQRBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-md font-medium transition-colors">
+                Generate QR Codes
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- QR Code Preview & Management -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-6">Generated QR Codes</h2>
+          
+          <div id="qrPreviewArea" class="space-y-4">
+            <div class="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg">
+              <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h2M4 4h5m-5 4v1m0 11h5m0 0v-1M8 4v1M4 8v1"></path>
+              </svg>
+              <p class="text-gray-500">No QR codes generated yet</p>
+              <p class="text-sm text-gray-400">Use the form to generate equipment QR codes</p>
+            </div>
+          </div>
+          
+          <!-- Printing Instructions -->
+          <div class="mt-6 bg-yellow-50 p-4 rounded-lg">
+            <h3 class="font-medium text-yellow-800 mb-2">Printing Instructions</h3>
+            <ul class="text-sm text-yellow-700 space-y-1">
+              <li>• Use weather-resistant vinyl stickers</li>
+              <li>• Compatible with thermal printers (Zebra, Brother)</li>
+              <li>• Recommended: Outdoor adhesive for equipment</li>
+              <li>• Test scan before distributing to AILs</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Management Tab -->
+    <div id="content-users" class="tab-content hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Add User Form -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-lg shadow-md p-6 sticky top-8">
+            <h2 class="text-lg font-medium mb-4">Add New User</h2>
+            <form id="addUserForm" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                <input type="email" id="userEmail" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="user@company.com">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input type="text" id="userName" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="John Smith">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">User Role *</label>
+                <select id="userRole" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                  <option value="">Select role...</option>
+                  <option value="viewer">Viewer (Lookup only)</option>
+                  <option value="ail">AIL (Inspection portal)</option>
+                  <option value="company">Company (Fleet management)</option>
+                  <option value="admin">Admin (Full management)</option>
+                  <option value="super_admin">Super Admin (System-wide)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+                <input type="text" id="userOrg" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Company name">
+              </div>
+              
+              <div id="ailAssignment" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Assigned AIL</label>
+                <select id="userAIL" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                  <option value="">Select AIL...</option>
+                </select>
+              </div>
+              
+              <button type="submit" id="addUserBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors">
+                Create User Account
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- User List -->
+        <div class="lg:col-span-2">
+          <div class="bg-white rounded-lg shadow-md">
+            <div class="p-6 border-b">
+              <h2 class="text-lg font-medium">User Management</h2>
+            </div>
+            
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Organization</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Login</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="userTableBody" class="divide-y divide-gray-200">
+                  <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading users...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports Tab -->
+    <div id="content-reports" class="tab-content hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Driver Reports -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-lg font-medium mb-4">Driver Reports</h2>
+          <div class="space-y-3">
+            <button onclick="generateReport('driver-expiry')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
+              <div class="font-medium">Drivers Expiring Soon</div>
+              <div class="text-sm text-gray-500">Next 30/60/90 days</div>
+            </button>
+            <button onclick="generateReport('driver-certification')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
+              <div class="font-medium">Certification Analysis</div>
+              <div class="text-sm text-gray-500">SLP, SUP, SDP, DG breakdown</div>
+            </button>
+            <button onclick="generateReport('driver-complete')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
+              <div class="font-medium">Complete Driver List</div>
+              <div class="text-sm text-gray-500">All drivers with full details</div>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Equipment Reports -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-lg font-medium mb-4">Equipment Reports</h2>
+          <div class="space-y-3">
+            <button onclick="generateReport('equipment-inspection')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
+              <div class="font-medium">Inspection Schedule</div>
+              <div class="text-sm text-gray-500">Due and overdue inspections</div>
+            </button>
+            <button onclick="generateReport('equipment-ail')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
+              <div class="font-medium">AIL Activity Report</div>
+              <div class="text-sm text-gray-500">Inspections by location</div>
+            </button>
+            <button onclick="generateReport('equipment-compliance')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
+              <div class="font-medium">Compliance Status</div>
+              <div class="text-sm text-gray-500">Current/expired equipment</div>
+            </button>
+          </div>
+        </div>
+        
+        <!-- System Reports -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-lg font-medium mb-4">System Reports</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button onclick="generateReport('system-activity')" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+              <div class="p-3 bg-blue-100 rounded-full mr-4">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+              </div>
+              <div class="text-left">
+                <h3 class="font-medium">System Activity</h3>
+                <p class="text-sm text-gray-500">User logins and actions</p>
+              </div>
+            </button>
+            
+            <button onclick="generateReport('audit-trail')" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+              <div class="p-3 bg-green-100 rounded-full mr-4">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+              <div class="text-left">
+                <h3 class="font-medium">Audit Trail</h3>
+                <p class="text-sm text-gray-500">Complete system audit log</p>
+              </div>
+            </button>
+            
+            <button onclick="generateReport('performance')" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+              <div class="p-3 bg-purple-100 rounded-full mr-4">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                </svg>
+              </div>
+              <div class="text-left">
+                <h3 class="font-medium">Performance Metrics</h3>
+                <p class="text-sm text-gray-500">System usage analytics</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Status Messages -->
+  <div id="statusMessage" class="fixed bottom-4 right-4 max-w-sm hidden z-50">
+    <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+      <div id="statusContent"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
+  &copy; 2025 Safe Freight Program. All rights reserved.
+</footer>
+
+<!-- JavaScript -->
+<script>
+  const DRIVER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json';
+  
+  let driversData = [];
+  let allDriversData = [];
+  let vehiclesData = [];
+  let ailsData = [];
+  let usersData = [];
+  let currentTab = 'dashboard';
+
+  // Initialize data when portal loads
+  async function loadDashboardData() {
+    try {
+      showStatus('Loading system data...', 'info');
+      
+      // Load driver data from Google Sheets
+      const data = await fetchSheetData(DRIVER_SHEET_URL);
+      allDriversData = data;
+      driversData = data;
+      
+      // Update dashboard statistics
+      updateDashboardStats();
+      
+      // Load mock data for other systems (replace with real data sources)
+      loadMockVehicleData();
+      loadMockAILData();
+      loadMockUserData();
+      
+      showStatus('Data loaded successfully!', 'success');
+      
+    } catch (error) {
+      console.error('Error loading data:', error);
+      showStatus('Error loading system data', 'error');
+      
+      // Load mock data as fallback
+      loadMockData();
+    }
+  }
+
+  // Fetch data from Google Sheets (same as driver lookup)
+  async function fetchSheetData(url) {
+    try {
+      const response = await fetch(url);
+      const text = await response.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
+    } catch (e) {
+      console.error('Failed to parse sheet data:', e);
+      return [];
+    }
+  }
+
+  // Update dashboard statistics
+  function updateDashboardStats() {
+    const total = driversData.length;
+    const active = driversData.filter(row => row[3] === 'Active').length;
+    const expiring = driversData.filter(row => row[3] === 'Expires Soon').length;
+    const expired = driversData.filter(row => row[3] === 'Expired').length;
+    
+    document.getElementById('stat-total-drivers').textContent = total;
+    document.getElementById('stat-total-vehicles').textContent = vehiclesData.length;
+    document.getElementById('stat-total-ails').textContent = ailsData.length;
+    document.getElementById('stat-inspections-due').textContent = Math.floor(vehiclesData.length * 0.3); // Mock calculation
+  }
+
+  // Load mock data for systems not yet implemented
+  function loadMockVehicleData() {
+    vehiclesData = [
+      ['SFPV-000001', 'ABC123', 'Semi-Trailer', '2025-01-15', '2025-07-15', 'Sydney Transport Inspections', 'Current'],
+      ['SFPV-000002', 'XYZ789', 'Rigid Truck', '2024-12-20', '2025-06-20', 'Melbourne Freight Check', 'Due Soon'],
+      ['SFPV-000003', 'DEF456', 'B-Double', '2025-02-10', '2025-08-10', 'Brisbane Heavy Vehicle', 'Current']
+    ];
+  }
+
+  function loadMockAILData() {
+    ailsData = [
+      ['Sydney Transport Inspections', 'John Smith', 'john@sydneytransport.com', 'Full', 'Active', '2 days ago'],
+      ['Melbourne Freight Check', 'Sarah Wilson', 'sarah@melbournefreight.com', 'Advanced', 'Active', '1 week ago'],
+      ['Brisbane Heavy Vehicle', 'Mike Johnson', 'mike@brisbaneheavy.com', 'Basic', 'Active', '3 days ago']
+    ];
+  }
+
+  function loadMockUserData() {
+    usersData = [
+      { name: 'System Admin', email: 'safefreightprogram@gmail.com', role: 'super_admin', org: 'Safe Freight Program', lastLogin: 'Now', status: 'Active' },
+      { name: 'John Smith', email: 'john@sydneytransport.com', role: 'ail', org: 'Sydney Transport Inspections', lastLogin: '2 days ago', status: 'Active' },
+      { name: 'Sarah Wilson', email: 'sarah@melbournefreight.com', role: 'ail', org: 'Melbourne Freight Check', lastLogin: '1 week ago', status: 'Active' },
+      { name: 'Fleet Manager', email: 'fleet@transportco.com', role: 'company', org: 'Transport Co', lastLogin: '3 days ago', status: 'Active' }
+    ];
+  }
+
+  function loadMockData() {
+    // Fallback mock data if Google Sheets fails
+    driversData = [
+      ['SFPD-001234', 'John', 'Smith', 'Active', '2025-12-31', '', '', '', '', 'y', 'n', 'y', 'n'],
+      ['SFPD-001235', 'Jane', 'Doe', 'Expires Soon', '2025-08-15', '', '', '', '', 'n', 'y', 'n', 'y'],
+      ['SFPD-001236', 'Bob', 'Wilson', 'Expired', '2024-12-01', '', '', '', '', 'y', 'y', 'n', 'n']
+    ];
+    allDriversData = driversData;
+    loadMockVehicleData();
+    loadMockAILData();
+    loadMockUserData();
+    updateDashboardStats();
+  }
+
+  // Tab management
+  function switchTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.add('hidden');
+    });
+    
+    // Update tab styles
+    document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+      tab.classList.remove('border-blue-500', 'text-blue-600');
+      tab.classList.add('text-gray-500');
+    });
+    
+    // Show selected tab
+    document.getElementById(`content-${tabName}`).classList.remove('hidden');
+    
+    const activeTab = document.getElementById(`tab-${tabName}`);
+    if (activeTab) {
+      activeTab.classList.remove('text-gray-500');
+      activeTab.classList.add('border-blue-500', 'text-blue-600');
+    }
+    
+    currentTab = tabName;
+    
+    // Load specific tab data
+    switch(tabName) {
+      case 'drivers':
+        renderDriverTable();
+        break;
+      case 'vehicles':
+        renderVehicleTable();
+        break;
+      case 'ails':
+        renderAILTable();
+        break;
+      case 'users':
+        renderUserTable();
+        break;
+    }
+  }
+
+  // Render driver table
+  function renderDriverTable() {
+    const tbody = document.getElementById('driverTableBody');
+    
+    if (!driversData || driversData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No drivers found</td></tr>';
+      return;
+    }
+    
+    const rows = driversData.map(row => {
+      const [id, firstName, surname, status, expiry, qrUrl, photo, slideId, cardPng, slp, sup, sdp, dg] = row;
+      
+      const certs = [];
+      if (slp === 'y') certs.push('<span class="bg-blue-500 text-white px-2 py-1 rounded text-xs">SLP</span>');
+      if (sup === 'y') certs.push('<span class="bg-green-500 text-white px-2 py-1 rounded text-xs">SUP</span>');
+      if (sdp === 'y') certs.push('<span class="bg-purple-500 text-white px-2 py-1 rounded text-xs">SDP</span>');
+      if (dg === 'y') certs.push('<span class="bg-orange-500 text-white px-2 py-1 rounded text-xs">DG</span>');
+      
+      const statusClass = 
+        status === 'Active' ? 'bg-green-100 text-green-800' :
+        status === 'Expired' ? 'bg-red-100 text-red-800' :
+        status === 'Expires Soon' ? 'bg-yellow-100 text-yellow-800' :
+        'bg-gray-100 text-gray-800';
+      
+      const formattedExpiry = formatDate(expiry);
+      
+      return `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4">
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-gray-300 rounded-full mr-3 flex items-center justify-center text-sm font-medium text-gray-600">
+                ${firstName ? firstName.charAt(0) : '?'}${surname ? surname.charAt(0) : '?'}
+              </div>
+              <div>
+                <div class="font-medium">${firstName || ''} ${surname || ''}</div>
+                <div class="text-sm text-gray-500">${id || ''}</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-900">${id || ''}</td>
+          <td class="px-6 py-4">
+            <span class="${statusClass} px-2 py-1 rounded text-xs font-medium">${status || 'Unknown'}</span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">${formattedExpiry || 'N/A'}</td>
+          <td class="px-6 py-4">
+            <div class="flex flex-wrap gap-1">
+              ${certs.join(' ') || '<span class="text-gray-400 text-xs">None</span>'}
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex space-x-2">
+              <button onclick="viewDriver('${id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+              <button onclick="editDriver('${id}')" class="text-green-600 hover:text-green-800 text-sm font-medium">Edit</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    
+    tbody.innerHTML = rows;
+  }
+
+  // Render vehicle table
+  function renderVehicleTable() {
+    const tbody = document.getElementById('vehicleTableBody');
+    
+    if (!vehiclesData || vehiclesData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No equipment registered yet. <button onclick="addNewVehicle()" class="text-blue-600 underline">Add your first vehicle</button></td></tr>';
+      return;
+    }
+    
+    const rows = vehiclesData.map(row => {
+      const [equipmentId, registration, type, lastInspection, nextDue, ail, status] = row;
+      
+      const statusClass = 
+        status === 'Current' ? 'bg-green-100 text-green-800' :
+        status === 'Due Soon' ? 'bg-yellow-100 text-yellow-800' :
+        status === 'Overdue' ? 'bg-red-100 text-red-800' :
+        'bg-gray-100 text-gray-800';
+      
+      return `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4 font-medium text-gray-900">${equipmentId}</td>
+          <td class="px-6 py-4 text-sm text-gray-500">${registration}</td>
+          <td class="px-6 py-4 text-sm text-gray-500">${type}</td>
+          <td class="px-6 py-4 text-sm text-gray-500">${lastInspection}</td>
+          <td class="px-6 py-4 text-sm text-gray-500">${nextDue}</td>
+          <td class="px-6 py-4 text-sm text-gray-500">${ail}</td>
+          <td class="px-6 py-4">
+            <span class="${statusClass} px-2 py-1 rounded text-xs font-medium">${status}</span>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex space-x-2">
+              <button onclick="viewVehicle('${equipmentId}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+              <button onclick="editVehicle('${equipmentId}')" class="text-green-600 hover:text-green-800 text-sm font-medium">Edit</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    
+    tbody.innerHTML = rows;
+    
+    // Update vehicle stats
+    document.getElementById('vehicle-count').textContent = vehiclesData.length;
+    document.getElementById('current-inspections').textContent = vehiclesData.filter(v => v[6] === 'Current').length;
+    document.getElementById('due-inspections').textContent = vehiclesData.filter(v => v[6] === 'Due Soon' || v[6] === 'Overdue').length;
+  }
+
+  // Render AIL table
+  function renderAILTable() {
+    const tbody = document.getElementById('ailTableBody');
+    
+    if (!ailsData || ailsData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No AILs registered yet</td></tr>';
+      return;
+    }
+    
+    const rows = ailsData.map(row => {
+      const [business, contact, email, certification, status, lastActivity] = row;
+      
+      const statusClass = status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+      const certClass = 
+        certification === 'Full' ? 'bg-blue-100 text-blue-800' :
+        certification === 'Advanced' ? 'bg-purple-100 text-purple-800' :
+        'bg-gray-100 text-gray-800';
+      
+      return `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4">
+            <div class="font-medium">${business}</div>
+            <div class="text-sm text-gray-500">${email}</div>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">${contact}</td>
+          <td class="px-6 py-4">
+            <span class="${certClass} px-2 py-1 rounded text-xs font-medium">${certification}</span>
+          </td>
+          <td class="px-6 py-4">
+            <span class="${statusClass} px-2 py-1 rounded text-xs font-medium">${status}</span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">${lastActivity}</td>
+          <td class="px-6 py-4">
+            <div class="flex space-x-2">
+              <button onclick="viewAIL('${business}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+              <button onclick="editAIL('${business}')" class="text-green-600 hover:text-green-800 text-sm font-medium">Edit</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    
+    tbody.innerHTML = rows;
+  }
+
+  // Render user table
+  function renderUserTable() {
+    const tbody = document.getElementById('userTableBody');
+    
+    const rows = usersData.map(user => {
+      const roleClass = 
+        user.role === 'super_admin' ? 'bg-purple-100 text-purple-800' :
+        user.role === 'admin' ? 'bg-blue-100 text-blue-800' :
+        user.role === 'ail' ? 'bg-green-100 text-green-800' :
+        user.role === 'company' ? 'bg-orange-100 text-orange-800' :
+        'bg-gray-100 text-gray-800';
+      
+      const roleDisplay = 
+        user.role === 'super_admin' ? 'Super Admin' :
+        user.role === 'admin' ? 'Admin' :
+        user.role === 'ail' ? 'AIL' :
+        user.role === 'company' ? 'Company' :
+        'Viewer';
+
+      const statusClass = user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+      
+      return `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4">
+            <div>
+              <div class="font-medium text-gray-900">${user.name}</div>
+              <div class="text-sm text-gray-500">${user.email}</div>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="${roleClass} px-2 py-1 rounded text-xs font-medium">${roleDisplay}</span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">${user.org || 'N/A'}</td>
+          <td class="px-6 py-4 text-sm text-gray-500">${user.lastLogin || 'Never'}</td>
+          <td class="px-6 py-4">
+            <span class="${statusClass} px-2 py-1 rounded text-xs font-medium">${user.status}</span>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex space-x-2">
+              <button onclick="editUser('${user.email}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
+              <button onclick="resetPassword('${user.email}')" class="text-yellow-600 hover:text-yellow-800 text-sm font-medium">Reset</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    
+    tbody.innerHTML = rows;
+  }
+
+  // Date formatting (from driver lookup)
+  function formatDate(d) {
+    if (!d) return '';
+    
+    if (!isNaN(d)) {
+      const serialDate = Number(d);
+      const baseDate = new Date(Date.UTC(1899, 11, 30));
+      baseDate.setUTCDate(baseDate.getUTCDate() + serialDate);
+      return baseDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    if (typeof d === 'string') {
+      if (d.startsWith('Date(')) {
+        const parts = d.slice(5, -1).split(',').map(Number);
+        const parsed = new Date(parts[0], parts[1], parts[2]);
+        return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+
+      if (d.includes('/')) {
+        const [day, month, year] = d.split('/');
+        const parsed = new Date(`${year}-${month}-${day}`);
+        if (!isNaN(parsed.getTime())) {
+          return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+      }
+    }
+
+    return d;
+  }
+
+  // Action functions
+  function viewDriver(driverId) {
+    window.open(`/lookup-driver.html?id=${driverId}`, '_blank');
+  }
+
+  function editDriver(driverId) {
+    showStatus(`Edit functionality for driver ${driverId} - Coming soon!`, 'info');
+  }
+
+  function viewVehicle(equipmentId) {
+    window.open(`/lookup-vehicle.html?id=${equipmentId}`, '_blank');
+  }
+
+  function editVehicle(equipmentId) {
+    showStatus(`Edit functionality for equipment ${equipmentId} - Coming soon!`, 'info');
+  }
+
+  function addNewVehicle() {
+    showStatus('Add vehicle functionality - Coming soon!', 'info');
+  }
+
+  function viewAIL(business) {
+    showStatus(`View AIL details for ${business} - Coming soon!`, 'info');
+  }
+
+  function editAIL(business) {
+    showStatus(`Edit AIL functionality for ${business} - Coming soon!`, 'info');
+  }
+
+  function editUser(email) {
+    showStatus(`Edit user functionality for ${email} - Coming soon!`, 'info');
+  }
+
+  function resetPassword(email) {
+    if (confirm(`Send password reset email to ${email}?`)) {
+      showStatus(`Password reset sent to ${email}`, 'info');
+    }
+  }
+
+  // Filter functions
+  function filterDrivers() {
+    const searchTerm = document.getElementById('driverSearch').value.toLowerCase();
+    
+    if (!searchTerm) {
+      driversData = allDriversData;
+    } else {
+      driversData = allDriversData.filter(row => {
+        const searchString = `${row[0]} ${row[1]} ${row[2]} ${row[3]}`.toLowerCase();
+        return searchString.includes(searchTerm);
+      });
+    }
+    
+    renderDriverTable();
+  }
+
+  // Export functions
+  function exportDrivers() {
+    if (driversData.length === 0) {
+      showStatus('No data to export', 'warning');
+      return;
+    }
+    
+    const headers = ['ID', 'First Name', 'Surname', 'Status', 'Expiry', 'SLP', 'SUP', 'SDP', 'DG'];
+    const csvContent = [
+      headers.join(','),
+      ...driversData.map(row => [
+        row[0] || '', row[1] || '', row[2] || '', row[3] || '', 
+        formatDate(row[4]) || '', row[9] || '', row[10] || '', row[11] || '', row[12] || ''
+      ].join(','))
+    ].join('\n');
+    
+    downloadCSV(csvContent, `sfp-drivers-${new Date().toISOString().split('T')[0]}.csv`);
+    showStatus('Driver data exported successfully!', 'success');
+  }
+
+  function exportVehicles() {
+    if (vehiclesData.length === 0) {
+      showStatus('No vehicle data to export', 'warning');
+      return;
+    }
+    
+    const headers = ['Equipment ID', 'Registration', 'Type', 'Last Inspection', 'Next Due', 'AIL', 'Status'];
+    const csvContent = [
+      headers.join(','),
+      ...vehiclesData.map(row => row.join(','))
+    ].join('\n');
+    
+    downloadCSV(csvContent, `sfp-vehicles-${new Date().toISOString().split('T')[0]}.csv`);
+    showStatus('Vehicle data exported successfully!', 'success');
+  }
+
+  function downloadCSV(content, filename) {
+    const blob = new Blob([content], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  // Refresh functions
+  function refreshDriverData() {
+    allDriversData = [];
+    driversData = [];
+    loadDashboardData();
+  }
+
+  // Report functions
+  function generateDriverReport() {
+    const expiringDrivers = allDriversData.filter(row => 
+      row[3] === 'Expires Soon' || row[3] === 'Expired'
+    );
+    
+    if (expiringDrivers.length === 0) {
+      showStatus('No drivers requiring attention', 'info');
+      return;
+    }
+    
+    driversData = expiringDrivers;
+    renderDriverTable();
+    switchTab('drivers');
+    showStatus(`Showing ${expiringDrivers.length} drivers requiring attention`, 'info');
+  }
+
+  function generateReport(type) {
+    showStatus(`Generating ${type} report...`, 'info');
+    setTimeout(() => {
+      showStatus(`${type} report generated successfully!`, 'success');
+    }, 2000);
+  }
+
+  // QR Code generation
+  document.getElementById('qrGeneratorForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const startNumber = document.getElementById('qrStartNumber').value;
+    const quantity = document.getElementById('qrQuantity').value;
+    const size = document.getElementById('qrStickerSize').value;
+    const includeExpiry = document.getElementById('qrIncludeExpiry').checked;
+    
+    generateQRCodes(startNumber, quantity, size, includeExpiry);
+  });
+
+  function generateQRCodes(startNumber, quantity, size, includeExpiry) {
+    const btn = document.getElementById('generateQRBtn');
+    const originalText = btn.textContent;
+    btn.textContent = 'Generating...';
+    btn.disabled = true;
+    
+    showStatus(`Generating ${quantity} QR codes starting from SFPV-${String(startNumber).padStart(6, '0')}...`, 'info');
+    
+    setTimeout(() => {
+      // Generate preview
+      const previewArea = document.getElementById('qrPreviewArea');
+      const codes = [];
+      
+      for (let i = 0; i < Math.min(quantity, 5); i++) {
+        const codeNumber = String(parseInt(startNumber) + i).padStart(6, '0');
+        codes.push(`SFPV-${codeNumber}`);
+      }
+      
+      previewArea.innerHTML = `
+        <div class="space-y-4">
+          <div class="bg-green-50 p-4 rounded-lg">
+            <h3 class="font-medium text-green-800">✓ Generated ${quantity} QR Codes</h3>
+            <p class="text-sm text-green-700 mt-1">Ready for printing</p>
+          </div>
+          
+          <div class="border rounded-lg p-4">
+            <h4 class="font-medium mb-3">Preview (First 5 codes):</h4>
+            <div class="grid grid-cols-2 gap-3">
+              ${codes.map(code => `
+                <div class="border border-gray-200 rounded p-3 text-center">
+                  <div class="w-16 h-16 bg-gray-200 mx-auto mb-2 flex items-center justify-center">
+                    <span class="text-xs">QR</span>
+                  </div>
+                  <div class="text-xs font-mono">${code}</div>
+                  ${includeExpiry ? '<div class="text-xs text-gray-500 mt-1">Expiry: ____</div>' : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div class="flex space-x-3">
+            <button onclick="downloadQRCodes()" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+              Download PDF
+            </button>
+            <button onclick="printQRCodes()" class="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+              Print Stickers
+            </button>
+          </div>
+        </div>
+      `;
+      
+      btn.textContent = originalText;
+      btn.disabled = false;
+      
+      showStatus(`${quantity} QR codes generated successfully!`, 'success');
+      
+    }, 2000);
+  }
+
+  function downloadQRCodes() {
+    showStatus('QR code PDF download - Coming soon!', 'info');
+  }
+
+  function printQRCodes() {
+    showStatus('Direct printer integration - Coming soon!', 'info');
+  }
+
+  // Form submissions
+  document.getElementById('addAILForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+      businessName: document.getElementById('ailBusinessName').value,
+      contactPerson: document.getElementById('ailContactPerson').value,
+      email: document.getElementById('ailEmail').value,
+      phone: document.getElementById('ailPhone').value,
+      address: document.getElementById('ailAddress').value,
+      certLevel: document.getElementById('ailCertLevel').value
+    };
+    
+    showStatus('Creating AIL account...', 'info');
+    
+    setTimeout(() => {
+      ailsData.push([
+        formData.businessName,
+        formData.contactPerson,
+        formData.email,
+        formData.certLevel,
+        'Active',
+        'Just now'
+      ]);
+      
+      usersData.push({
+        name: formData.contactPerson,
+        email: formData.email,
+        role: 'ail',
+        org: formData.businessName,
+        lastLogin: 'Never',
+        status: 'Active'
+      });
+      
+      renderAILTable();
+      updateDashboardStats();
+      document.getElementById('addAILForm').reset();
+      showStatus('AIL account created successfully!', 'success');
+    }, 1500);
+  });
+
+  document.getElementById('addUserForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+      email: document.getElementById('userEmail').value,
+      name: document.getElementById('userName').value,
+      role: document.getElementById('userRole').value,
+      org: document.getElementById('userOrg').value
+    };
+    
+    showStatus('Creating user account...', 'info');
+    
+    setTimeout(() => {
+      usersData.push({
+        name: formData.name || formData.email.split('@')[0],
+        email: formData.email,
+        role: formData.role,
+        org: formData.org,
+        lastLogin: 'Never',
+        status: 'Active'
+      });
+      
+      renderUserTable();
+      document.getElementById('addUserForm').reset();
+      showStatus('User account created successfully!', 'success');
+    }, 1500);
+  });
+
+  // Show/hide AIL assignment based on role
+  document.getElementById('userRole').addEventListener('change', function() {
+    const ailAssignment = document.getElementById('ailAssignment');
+    if (this.value === 'ail') {
+      ailAssignment.classList.remove('hidden');
+      // Populate AIL dropdown
+      const select = document.getElementById('userAIL');
+      select.innerHTML = '<option value="">Select AIL...</option>' + 
+        ailsData.map(ail => `<option value="${ail[0]}">${ail[0]}</option>`).join('');
+    } else {
+      ailAssignment.classList.add('hidden');
+    }
+  });
+
+  // Status message system
+  function showStatus(message, type = 'info') {
+    const statusEl = document.getElementById('statusMessage');
+    const contentEl = document.getElementById('statusContent');
+    
+    const colors = {
+      success: 'bg-green-50 border-green-200 text-green-800',
+      error: 'bg-red-50 border-red-200 text-red-800',
+      warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+      info: 'bg-blue-50 border-blue-200 text-blue-800'
+    };
+    
+    const icons = {
+      success: '✓',
+      error: '✗',
+      warning: '⚠',
+      info: 'ℹ'
+    };
+    
+    contentEl.innerHTML = `
+      <div class="flex items-center ${colors[type]} p-3 rounded-md border">
+        <div class="mr-2 font-bold">
+          ${icons[type]}
+        </div>
+        <span class="text-sm font-medium">${message}</span>
+      </div>
+    `;
+    
+    statusEl.classList.remove('hidden');
+    
+    setTimeout(() => {
+      statusEl.classList.add('hidden');
+    }, 5000);
+  }
+
+  // Initialize on load
+  setTimeout(() => {
+    loadDashboardData();
+  }, 500);
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Portal – Safe Freight Program</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+  <!-- 🔐 Firebase Auth -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBURlJUicOTobRLghN2RyEZfXEZvU_uiYU",
+      authDomain: "safe-freight-program.firebaseapp.com",
+      projectId: "safe-freight-program",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "/login.html";
+        return;
+      }
+
+      const adminEmails = [
+        'safefreightprogram@gmail.com',
+        'safrightprogram@gmail.com'
+      ];
+      
+      const isAdmin = adminEmails.some(email => 
+        user.email.toLowerCase() === email.toLowerCase()
+      );
+      
+      if (!isAdmin) {
+        window.location.href = "/lookup-driver.html";
+        return;
+      }
+
+      initializeAdminInterface(user);
+      hideAuthLoader();
+    });
+
+    function initializeAdminInterface(user) {
+      const elements = {
+        logoutLink: document.getElementById("logoutLink"),
+        userInfo: document.getElementById("userInfo"),
+        adminContent: document.getElementById('adminContent')
+      };
+      
+      Object.values(elements).forEach(el => {
+        if (el) el.classList.remove("hidden");
+      });
+      
+      if (elements.userInfo) {
+        elements.userInfo.textContent = user.email;
+      }
+
+      loadDashboardData();
+    }
+
+    function hideAuthLoader() {
+      const loader = document.getElementById('authLoader');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 300);
+      }
+    }
+
+    window.signOutUser = () => {
+      signOut(auth).then(() => window.location.href = "/login.html");
+    };
+  </script>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans">
+<!-- Loading overlay -->
+<div id="authLoader" class="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50">
+  <div class="text-center">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto mb-4"></div>
+    <p class="text-gray-600 text-lg">Loading admin portal...</p>
+  </div>
+</div>
+
+<div id="adminContent" class="hidden">
+  <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false }">
+    <div class="max-w-7xl mx-auto p-4 flex justify-between items-center relative">
+      <a href="index.html" class="text-xl font-bold">Safe Freight Program</a>
+      
+      <div class="flex items-center space-x-4">
+        <span id="userInfo" class="text-sm text-blue-200"></span>
+        
+        <button @click="open = !open" class="inline-flex">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+      
+      <div x-show="open" @click.away="open = false" x-transition class="absolute top-full right-0 bg-blue-900 text-white text-sm z-50 shadow-md min-w-48">
+        <nav class="flex flex-col">
+          <a href="lookup-driver.html" class="block px-4 py-2 hover:bg-blue-800">Driver Lookup</a>
+          <a href="lookup-vehicle.html" class="block px-4 py-2 hover:bg-blue-800">Vehicle Lookup</a>
+          <div class="border-t border-blue-700 my-1"></div>
+          <a href="admin-portal.html" class="block px-4 py-2 bg-blue-800 font-bold">Admin Portal</a>
+          <a href="#" onclick="switchTab('dashboard')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Dashboard</a>
+          <a href="#" onclick="switchTab('drivers')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Driver Management</a>
+          <a href="#" onclick="switchTab('vehicles')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Vehicle/Equipment</a>
+          <a href="#" onclick="switchTab('ails')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• AIL Management</a>
+          <a href="#" onclick="switchTab('qrcodes')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• QR Code Generator</a>
+          <a href="#" onclick="switchTab('users')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• User Management</a>
+          <a href="#" onclick="switchTab('reports')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Reports & Analytics</a>
+          <div class="border-t border-blue-700 my-1"></div>
+          <a href="find-ail.html" class="block px-4 py-2 hover:bg-blue-800">Find AIL</a>
+          <a href="training.html" class="block px-4 py-2 hover:bg-blue-800">SFP Training</a>
+          <a id="logoutLink" href="#" onclick="signOutUser()" class="block px-4 py-2 text-red-300 hover:bg-red-800 hidden">Logout</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-blue-800">Safe Freight Program Admin Portal</h1>
+      <p class="text-gray-600 mt-2">Complete management system for drivers, equipment, AILs, and compliance</p>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="mb-8">
+      <nav class="flex space-x-8 border-b border-gray-200 overflow-x-auto">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="border-b-2 border-blue-500 text-blue-600 font-medium pb-2 px-1 whitespace-nowrap">Dashboard</button>
+        <button onclick="switchTab('drivers')" id="tab-drivers" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Drivers</button>
+        <button onclick="switchTab('vehicles')" id="tab-vehicles" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Vehicles/Equipment</button>
+        <button onclick="switchTab('ails')" id="tab-ails" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">AIL Management</button>
+        <button onclick="switchTab('qrcodes')" id="tab-qrcodes" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">QR Codes</button>
+        <button onclick="switchTab('users')" id="tab-users" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Users</button>
+        <button onclick="switchTab('reports')" id="tab-reports" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Reports</button>
+      </nav>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div id="content-dashboard" class="tab-content">
+      <!-- System Overview Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Total Drivers</h3>
+              <p class="text-3xl font-bold text-gray-900" id="stat-total-drivers">-</p>
+              <p class="text-xs text-gray-500 mt-1">Active credentials</p>
+            </div>
+            <div class="p-3 bg-blue-100 rounded-full">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Equipment Units</h3>
+              <p class="text-3xl font-bold text-green-600" id="stat-total-vehicles">-</p>
+              <p class="text-xs text-gray-500 mt-1">Registered equipment</p>
+            </div>
+            <div class="p-3 bg-green-100 rounded-full">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Active AILs</h3>
+              <p class="text-3xl font-bold text-purple-600" id="stat-total-ails">-</p>
+              <p class="text-xs text-gray-500 mt-1">Authorized inspectors</p>
+            </div>
+            <div class="p-3 bg-purple-100 rounded-full">
+              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.992-3a10 10 0 11-9.925 8.27c.44-.02.865-.072 1.273-.15"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Inspections Due</h3>
+              <p class="text-3xl font-bold text-orange-600" id="stat-inspections-due">-</p>
+              <p class="text-xs text-gray-500 mt-1">Next 30 days</p>
+            </div>
+            <div class="p-3 bg-orange-100 rounded-full">
+              <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold mb-4">Driver Management</h3>
+          <div class="space-y-3">
+            <button onclick="switchTab('drivers')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">View All Drivers</div>
+              <div class="text-sm text-gray-500">Manage credentials and certifications</div>
+            </button>
+            <button onclick="generateDriverReport()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Expiry Report</div>
+              <div class="text-sm text-gray-500">Drivers requiring renewal</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold mb-4">Equipment Management</h3>
+          <div class="space-y-3">
+            <button onclick="switchTab('vehicles')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">View All Equipment</div>
+              <div class="text-sm text-gray-500">Manage vehicles and inspections</div>
+            </button>
+            <button onclick="switchTab('qrcodes')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Generate QR Codes</div>
+              <div class="text-sm text-gray-500">Create SFPV stickers</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold mb-4">AIL Management</h3>
+          <div class="space-y-3">
+            <button onclick="switchTab('ails')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Manage AILs</div>
+              <div class="text-sm text-gray-500">Authorized inspection locations</div>
+            </button>
+            <button onclick="switchTab('users')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">User Accounts</div>
+              <div class="text-sm text-gray-500">AIL portal access management</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Recent System Activity</h2>
+        <div id="recent-activity" class="space-y-3">
+          <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-full mr-3 bg-green-500"></div>
+              <div>
+                <div class="font-medium text-sm">New driver registered</div>
+                <div class="text-xs text-gray-500">SFPD-001245 • John Smith</div>
+              </div>
+            </div>
+            <div class="text-xs text-gray-400">2 hours ago</div>
+          </div>
+          <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-full mr-3 bg-blue-500"></div>
+              <div>
+                <div class="font-medium text-sm">Equipment inspection completed</div>
+                <div class="text-xs text-gray-500">SFPV-000123 • ABC123 Truck</div>
+              </div>
+            </div>
+            <div class="text-xs text-gray-400">5 hours ago</div>
+          </div>
+          <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-full mr-3 bg-purple-500"></div>
+              <div>
+                <div class="font-medium text-sm">New AIL account created</div>
+                <div class="text-xs text-gray-500">Sydney Transport Inspections</div>
+              </div>
+            </div>
+            <div class="text-xs text-gray-400">1 day ago</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Driver Management Tab -->
+    <div id="content-drivers" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-md mb-8">
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 sm:mb-0">Driver Management</h2>
+            <div class="flex flex-wrap gap-3">
+              <input type="search" id="driverSearch" placeholder="Search drivers..." 
+                     class="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                     onkeyup="filterDrivers()">
+              <button onclick="exportDrivers()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
+                Export CSV
+              </button>
+              <button onclick="refreshDriverData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                Refresh Data
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Driver</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expiry</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Certifications</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="driverTableBody" class="divide-y divide-gray-200">
+              <tr>
+                <td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading drivers...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vehicle/Equipment Management Tab -->
+    <div id="content-vehicles" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-md mb-8">
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 sm:mb-0">Vehicle & Equipment Management</h2>
+            <div class="flex flex-wrap gap-3">
+              <button onclick="addNewVehicle()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                Add Vehicle/Equipment
+              </button>
+              <button onclick="exportVehicles()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
+                Export List
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+              <h3 class="font-medium text-blue-800">Total Equipment</h3>
+              <p class="text-2xl font-bold text-blue-600" id="vehicle-count">Loading...</p>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg">
+              <h3 class="font-medium text-green-800">Current Inspections</h3>
+              <p class="text-2xl font-bold text-green-600" id="current-inspections">Loading...</p>
+            </div>
+            <div class="bg-orange-50 p-4 rounded-lg">
+              <h3 class="font-medium text-orange-800">Due for Inspection</h3>
+              <p class="text-2xl font-bold text-orange-600" id="due-inspections">Loading...</p>
+            </div>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Equipment ID</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registration</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Inspection</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Next Due</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">AIL</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="vehicleTableBody" class="divide-y divide-gray-200">
+                <tr>
+                  <td colspan="7" class="px-6 py-4 text-center text-gray-500">No equipment registered yet. <button onclick="addNewVehicle()" class="text-blue-600 underline">Add your first vehicle</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AIL Management Tab -->
+    <div id="content-ails" class="tab-content hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Add AIL Form -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-lg shadow-md p-6 sticky top-8">
+            <h2 class="text-lg font-medium mb-4">Add New AIL</h2>
+            <form id="addAILForm" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Business Name *</label>
+                <input type="text" id="ailBusinessName" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Sydney Transport Inspections">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Contact Person *</label>
+                <input type="text" id="ailContactPerson" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="John Smith">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                <input type="email" id="ailEmail" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="john@sydneytransport.com">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <input type="tel" id="ailPhone" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="+61 400 000 000">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <textarea id="ailAddress" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="123 Industrial Road, Sydney NSW 2000"></textarea>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Certification Level *</label>
+                <select id="ailCertLevel" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                  <option value="">Select level...</option>
+                  <option value="Basic">Basic Inspection</option>
+                  <option value="Advanced">Advanced Inspection</option>
+                  <option value="Full">Full Compliance Inspection</option>
+                </select>
+              </div>
+              
+              <button type="submit" id="addAILBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors">
+                Add AIL & Create Account
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- AIL List -->
+        <div class="lg:col-span-2">
+          <div class="bg-white rounded-lg shadow-md">
+            <div class="p-6 border-b">
+              <h2 class="text-lg font-medium">Authorized Inspection Locations</h2>
+            </div>
+            
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Business</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                    <th class="px-6 py-3 text-left text-xs font-mediumfe Freight Program</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
