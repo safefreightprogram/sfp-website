@@ -8,7 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-  <!-- 🔐 Enhanced Firebase Auth with Debug -->
+  <!-- 🔐 Firebase Auth -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
@@ -16,21 +16,6 @@
       onAuthStateChanged,
       signOut
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      setDoc,
-      collection,
-      addDoc,
-      updateDoc,
-      deleteDoc,
-      query,
-      where,
-      orderBy,
-      limit,
-      getDocs
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBURlJUicOTobRLghN2RyEZfXEZvU_uiYU",
@@ -40,119 +25,47 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
 
-    // 🐛 Debug logging with both console and UI
-    function debugLog(message, data = null) {
-      console.log(`🔍 DEBUG: ${message}`, data);
-      
-      const debugDiv = document.getElementById('debugOutput');
-      if (debugDiv) {
-        const time = new Date().toLocaleTimeString();
-        const logEntry = document.createElement('div');
-        logEntry.className = 'mb-1 p-1 bg-gray-100 rounded text-xs font-mono';
-        logEntry.innerHTML = `<span class="text-blue-600">[${time}]</span> ${message}`;
-        debugDiv.appendChild(logEntry);
-        debugDiv.scrollTop = debugDiv.scrollHeight;
-      }
-    }
-
-    // 🔄 Enhanced authentication
     onAuthStateChanged(auth, async (user) => {
-      debugLog('Auth state changed', user ? { email: user.email, uid: user.uid } : null);
-      
       if (!user) {
-        debugLog('No user - redirecting to login');
-        setTimeout(() => window.location.href = "/login.html", 2000);
+        window.location.href = "/login.html";
         return;
       }
 
-      const userEmail = user.email;
       const adminEmails = [
         'safefreightprogram@gmail.com',
-        'safreightprogram@gmail.com',
-        'admin@safefreightprogram.com'
+        'safrightprogram@gmail.com'
       ];
       
       const isAdmin = adminEmails.some(email => 
-        userEmail.trim().toLowerCase() === email.trim().toLowerCase()
+        user.email.toLowerCase() === email.toLowerCase()
       );
       
-      debugLog('Admin check', { userEmail, isAdmin });
-      
-      if (isAdmin) {
-        debugLog('Admin access granted via email');
-        initializeAdminInterface(user, 'super_admin');
-        hideAuthLoader();
+      if (!isAdmin) {
+        window.location.href = "/lookup-driver.html";
         return;
       }
 
-      // Check Firestore for role
-      try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          if (userData.role === 'admin' || userData.role === 'super_admin') {
-            debugLog('Admin access granted via Firestore');
-            initializeAdminInterface(user, userData.role);
-            hideAuthLoader();
-            return;
-          }
-        }
-      } catch (error) {
-        debugLog('Firestore error', error);
-      }
-      
-      debugLog('Access denied - redirecting');
-      setTimeout(() => window.location.href = "/lookup-driver.html", 2000);
+      initializeAdminInterface(user);
+      hideAuthLoader();
     });
 
-    // 🎯 Initialize admin interface - Fast loading
-    function initializeAdminInterface(user, role) {
-      debugLog('Initializing admin interface');
-      
-      // Show interface immediately
+    function initializeAdminInterface(user) {
       const elements = {
         logoutLink: document.getElementById("logoutLink"),
         userInfo: document.getElementById("userInfo"),
-        roleDisplay: document.getElementById("roleDisplay"),
-        userInfoContainer: document.getElementById('userInfoContainer'),
         adminContent: document.getElementById('adminContent')
       };
       
-      Object.entries(elements).forEach(([key, element]) => {
-        if (element) element.classList.remove("hidden");
+      Object.values(elements).forEach(el => {
+        if (el) el.classList.remove("hidden");
       });
       
-      if (elements.userInfo) elements.userInfo.textContent = user.email;
-      if (elements.roleDisplay) elements.roleDisplay.textContent = role === 'super_admin' ? 'Super Admin' : 'Admin';
+      if (elements.userInfo) {
+        elements.userInfo.textContent = user.email;
+      }
 
-      window.currentUser = { uid: user.uid, email: user.email, role: role };
-      
-      debugLog('Admin interface shown - loading data in background');
-      
-      // Load data in background with delays to prevent blocking
-      setTimeout(() => {
-        debugLog('Loading dashboard data...');
-        loadDashboardData().catch(e => debugLog('Dashboard load failed', e));
-      }, 100);
-      
-      setTimeout(() => {
-        debugLog('Loading drivers data...');
-        loadDriversData().catch(e => debugLog('Drivers load failed', e));
-      }, 300);
-      
-      setTimeout(() => {
-        debugLog('Loading users data...');
-        loadUsersData().catch(e => debugLog('Users load failed', e));
-      }, 500);
-      
-      setTimeout(() => {
-        debugLog('Loading audit log...');
-        loadAuditLog().catch(e => debugLog('Audit load failed', e));
-      }, 700);
-      
-      debugLog('Admin interface initialized successfully');
+      loadDashboardData();
     }
 
     function hideAuthLoader() {
@@ -163,161 +76,88 @@
       }
     }
 
-    // 🚪 Enhanced logout
     window.signOutUser = () => {
-      debugLog('Signing out user');
-      signOut(auth)
-        .then(() => window.location.href = "/login.html")
-        .catch(err => {
-          debugLog('Logout failed', err);
-          alert("Logout failed: " + err.message);
-        });
+      signOut(auth).then(() => window.location.href = "/login.html");
     };
-
-    // Make Firebase available globally
-    window.db = db;
-    window.debugLog = debugLog;
   </script>
 </head>
 
 <body class="bg-gray-50 text-gray-800 font-sans">
-<!-- 🔄 Loading overlay -->
-<div id="authLoader" class="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50 transition-opacity duration-300">
+<!-- Loading overlay -->
+<div id="authLoader" class="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50">
   <div class="text-center">
     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto mb-4"></div>
-    <p class="text-gray-600 text-lg">Checking admin access...</p>
-    <div class="mt-4 max-w-md mx-auto">
-      <div class="bg-gray-100 rounded p-3 max-h-32 overflow-y-auto">
-        <div id="debugOutput" class="text-xs"></div>
-      </div>
-    </div>
+    <p class="text-gray-600 text-lg">Loading admin portal...</p>
   </div>
 </div>
 
 <div id="adminContent" class="hidden">
-  <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false, showSearch: false, notifications: 3 }">
+  <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false }">
     <div class="max-w-7xl mx-auto p-4 flex justify-between items-center relative">
-      <a href="index.html" class="text-xl font-bold transition-transform transform hover:scale-[1.015]">Safe Freight Program</a>
+      <a href="index.html" class="text-xl font-bold">Safe Freight Program</a>
       
-      <!-- User info and controls -->
       <div class="flex items-center space-x-4">
-        <!-- Notifications -->
-        <div class="relative">
-          <button @click="notifications = 0" class="inline-flex items-center transition-transform transform hover:scale-105">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-3.5-3.5a1.998 1.998 0 00-3 0L15 17z M19 12a4 4 0 00-8 0v5l-2 2h12l-2-2v-5z" />
-            </svg>
-            <span x-show="notifications > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center" x-text="notifications"></span>
-          </button>
-        </div>
+        <span id="userInfo" class="text-sm text-blue-200"></span>
         
-        <div class="text-right hidden" id="userInfoContainer">
-          <div id="userInfo" class="text-sm text-blue-200"></div>
-          <div id="roleDisplay" class="text-xs text-blue-300 font-medium"></div>
-        </div>
-        
-        <button @click="showSearch = !showSearch" class="inline-flex transition-transform transform hover:scale-105">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </button>
-        
-        <button @click="open = !open" class="inline-flex transition-transform transform hover:scale-105">
+        <button @click="open = !open" class="inline-flex">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
       </div>
       
-      <!-- Enhanced Navigation -->
       <div x-show="open" @click.away="open = false" x-transition class="absolute top-full right-0 bg-blue-900 text-white text-sm z-50 shadow-md min-w-48">
         <nav class="flex flex-col">
-          <a href="lookup-driver.html" class="block px-4 py-2 hover:bg-blue-800 flex items-center">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-            </svg>
-            Driver Lookup
-          </a>
-          <a href="lookup-vehicle.html" class="block px-4 py-2 hover:bg-blue-800 flex items-center">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-            </svg>
-            Vehicle Lookup
-          </a>
+          <a href="lookup-driver.html" class="block px-4 py-2 hover:bg-blue-800">Driver Lookup</a>
+          <a href="lookup-vehicle.html" class="block px-4 py-2 hover:bg-blue-800">Vehicle Lookup</a>
           <div class="border-t border-blue-700 my-1"></div>
-          <a href="admin-portal.html" class="block px-4 py-2 bg-blue-800 font-bold flex items-center">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.992-3a10 10 0 11-9.925 8.27c.44-.02.865-.072 1.273-.15"></path>
-            </svg>
-            Admin Portal
-          </a>
-          <a href="#" onclick="switchTab('drivers')" class="block px-4 py-2 hover:bg-blue-800 pl-8 text-blue-200">• Driver Management</a>
-          <a href="#" onclick="switchTab('vehicles')" class="block px-4 py-2 hover:bg-blue-800 pl-8 text-blue-200">• Vehicle Management</a>
-          <a href="#" onclick="switchTab('users')" class="block px-4 py-2 hover:bg-blue-800 pl-8 text-blue-200">• User Management</a>
-          <a href="#" onclick="switchTab('reports')" class="block px-4 py-2 hover:bg-blue-800 pl-8 text-blue-200">• Reports & Analytics</a>
-          <a href="#" onclick="switchTab('audit')" class="block px-4 py-2 hover:bg-blue-800 pl-8 text-blue-200">• Audit Log</a>
-          <a href="#" onclick="switchTab('settings')" class="block px-4 py-2 hover:bg-blue-800 pl-8 text-blue-200">• System Settings</a>
+          <a href="admin-portal.html" class="block px-4 py-2 bg-blue-800 font-bold">Admin Portal</a>
+          <a href="#" onclick="switchTab('dashboard')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Dashboard</a>
+          <a href="#" onclick="switchTab('drivers')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Driver Management</a>
+          <a href="#" onclick="switchTab('vehicles')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Vehicle/Equipment</a>
+          <a href="#" onclick="switchTab('ails')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• AIL Management</a>
+          <a href="#" onclick="switchTab('qrcodes')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• QR Code Generator</a>
+          <a href="#" onclick="switchTab('users')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• User Management</a>
+          <a href="#" onclick="switchTab('reports')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Reports & Analytics</a>
           <div class="border-t border-blue-700 my-1"></div>
           <a href="find-ail.html" class="block px-4 py-2 hover:bg-blue-800">Find AIL</a>
           <a href="training.html" class="block px-4 py-2 hover:bg-blue-800">SFP Training</a>
-          <a href="contact.html" class="block px-4 py-2 hover:bg-blue-800">Contact</a>
-          <div class="border-t border-blue-700 my-1"></div>
-          <a id="logoutLink" href="#" onclick="signOutUser()" class="block px-4 py-2 text-red-300 hover:bg-red-800 hidden flex items-center">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-            </svg>
-            Logout
-          </a>
+          <a id="logoutLink" href="#" onclick="signOutUser()" class="block px-4 py-2 text-red-300 hover:bg-red-800 hidden">Logout</a>
         </nav>
       </div>
-    </div>
-    
-    <!-- Enhanced Search bar -->
-    <div class="px-4 pt-2" x-show="showSearch" x-transition>
-      <form onsubmit="searchAllRecords(event)" class="flex space-x-2">
-        <input type="search" name="q" id="globalSearch" placeholder="Search drivers, vehicles, users..." 
-               class="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-500 text-black">
-        <select id="searchFilter" class="border rounded-md px-3 py-2 text-black">
-          <option value="all">All Records</option>
-          <option value="drivers">Drivers Only</option>
-          <option value="vehicles">Vehicles Only</option>
-          <option value="users">Users Only</option>
-        </select>
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Search</button>
-      </form>
     </div>
   </header>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Page Header -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-blue-800">Admin Portal</h1>
-      <p class="text-gray-600 mt-2">Comprehensive management system for Safe Freight Program</p>
+      <h1 class="text-3xl font-bold text-blue-800">Safe Freight Program Admin Portal</h1>
+      <p class="text-gray-600 mt-2">Complete management system for drivers, equipment, AILs, and compliance</p>
     </div>
 
     <!-- Tab Navigation -->
     <div class="mb-8">
       <nav class="flex space-x-8 border-b border-gray-200 overflow-x-auto">
         <button onclick="switchTab('dashboard')" id="tab-dashboard" class="border-b-2 border-blue-500 text-blue-600 font-medium pb-2 px-1 whitespace-nowrap">Dashboard</button>
-        <button onclick="switchTab('drivers')" id="tab-drivers" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Driver Management</button>
-        <button onclick="switchTab('vehicles')" id="tab-vehicles" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Vehicle Management</button>
-        <button onclick="switchTab('users')" id="tab-users" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">User Management</button>
-        <button onclick="switchTab('reports')" id="tab-reports" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Reports & Analytics</button>
-        <button onclick="switchTab('audit')" id="tab-audit" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Audit Log</button>
-        <button onclick="switchTab('settings')" id="tab-settings" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">System Settings</button>
+        <button onclick="switchTab('drivers')" id="tab-drivers" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Drivers</button>
+        <button onclick="switchTab('vehicles')" id="tab-vehicles" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Vehicles/Equipment</button>
+        <button onclick="switchTab('ails')" id="tab-ails" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">AIL Management</button>
+        <button onclick="switchTab('qrcodes')" id="tab-qrcodes" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">QR Codes</button>
+        <button onclick="switchTab('users')" id="tab-users" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Users</button>
+        <button onclick="switchTab('reports')" id="tab-reports" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Reports</button>
       </nav>
     </div>
 
     <!-- Dashboard Tab -->
     <div id="content-dashboard" class="tab-content">
-      <!-- Quick Stats Grid -->
+      <!-- System Overview Stats -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
           <div class="flex items-center justify-between">
             <div>
               <h3 class="text-sm font-medium text-gray-500">Total Drivers</h3>
-              <p class="text-3xl font-bold text-gray-900" id="stat-total-drivers">0</p>
-              <p class="text-xs text-gray-500 mt-1">All registered drivers</p>
+              <p class="text-3xl font-bold text-gray-900" id="stat-total-drivers">-</p>
+              <p class="text-xs text-gray-500 mt-1">Active credentials</p>
             </div>
             <div class="p-3 bg-blue-100 rounded-full">
               <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -330,669 +170,123 @@
         <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="text-sm font-medium text-gray-500">Active Drivers</h3>
-              <p class="text-3xl font-bold text-green-600" id="stat-active-drivers">0</p>
-              <p class="text-xs text-gray-500 mt-1">Currently valid</p>
+              <h3 class="text-sm font-medium text-gray-500">Equipment Units</h3>
+              <p class="text-3xl font-bold text-green-600" id="stat-total-vehicles">-</p>
+              <p class="text-xs text-gray-500 mt-1">Registered equipment</p>
             </div>
             <div class="p-3 bg-green-100 rounded-full">
               <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-          </div>
-        </div>
-        
-        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="text-sm font-medium text-gray-500">Expiring Soon</h3>
-              <p class="text-3xl font-bold text-yellow-600" id="stat-expiring-drivers">0</p>
-              <p class="text-xs text-gray-500 mt-1">Within 30 days</p>
-            </div>
-            <div class="p-3 bg-yellow-100 rounded-full">
-              <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-              </svg>
-            </div>
-          </div>
-        </div>
-        
-        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500">
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="text-sm font-medium text-gray-500">Expired</h3>
-              <p class="text-3xl font-bold text-red-600" id="stat-expired-drivers">0</p>
-              <p class="text-xs text-gray-500 mt-1">Requires renewal</p>
-            </div>
-            <div class="p-3 bg-red-100 rounded-full">
-              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-          <div class="grid grid-cols-2 gap-4">
-            <button onclick="switchTab('drivers'); showModal('addDriverModal')" class="flex flex-col items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-blue-700">
-              <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-              </svg>
-              <span class="font-medium">Add Driver</span>
-            </button>
-            
-            <button onclick="switchTab('vehicles')" class="flex flex-col items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors text-green-700">
-              <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
               </svg>
-              <span class="font-medium">Add Vehicle</span>
-            </button>
-            
-            <button onclick="generateReport('expiry')" class="flex flex-col items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-purple-700">
-              <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-              </svg>
-              <span class="font-medium">View Reports</span>
-            </button>
-            
-            <button onclick="exportAllData()" class="flex flex-col items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors text-orange-700">
-              <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-              </svg>
-              <span class="font-medium">Export Data</span>
-            </button>
+            </div>
           </div>
         </div>
-
-        <!-- Recent Activity -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-xl font-bold text-gray-900 mb-6">Recent Activity</h2>
-          <div id="recent-activity" class="space-y-3">
-            <p class="text-gray-500">Loading recent activity...</p>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Active AILs</h3>
+              <p class="text-3xl font-bold text-purple-600" id="stat-total-ails">-</p>
+              <p class="text-xs text-gray-500 mt-1">Authorized inspectors</p>
+            </div>
+            <div class="p-3 bg-purple-100 rounded-full">
+              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.992-3a10 10 0 11-9.925 8.27c.44-.02.865-.072 1.273-.15"></path>
+              </svg>
+            </div>
           </div>
-          <div class="mt-4">
-            <button onclick="switchTab('audit')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View Full Audit Log →</button>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Inspections Due</h3>
+              <p class="text-3xl font-bold text-orange-600" id="stat-inspections-due">-</p>
+              <p class="text-xs text-gray-500 mt-1">Next 30 days</p>
+            </div>
+            <div class="p-3 bg-orange-100 rounded-full">
+              <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- System Health -->
+      <!-- Connection Status -->
+      <div id="connectionStatus" class="mb-8">
+        <!-- This will be populated by JavaScript -->
+      </div>
+
+      <!-- Quick Actions Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold mb-4">Driver Management</h3>
+          <div class="space-y-3">
+            <button onclick="switchTab('drivers')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">View All Drivers</div>
+              <div class="text-sm text-gray-500">Manage credentials and certifications</div>
+            </button>
+            <button onclick="generateDriverReport()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Expiry Report</div>
+              <div class="text-sm text-gray-500">Drivers requiring renewal</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold mb-4">Equipment Management</h3>
+          <div class="space-y-3">
+            <button onclick="switchTab('vehicles')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">View All Equipment</div>
+              <div class="text-sm text-gray-500">Manage vehicles and inspections</div>
+            </button>
+            <button onclick="switchTab('qrcodes')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Generate QR Codes</div>
+              <div class="text-sm text-gray-500">Create SFPV stickers</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold mb-4">System Administration</h3>
+          <div class="space-y-3">
+            <button onclick="switchTab('ails')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Manage AILs</div>
+              <div class="text-sm text-gray-500">Authorized inspection locations</div>
+            </button>
+            <button onclick="manualDataLoad()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Refresh Data</div>
+              <div class="text-sm text-gray-500">Reload from Google Sheets</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
       <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-bold text-gray-900 mb-6">System Health</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="text-center">
-            <div class="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-3">
-              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-            </div>
-            <h3 class="font-medium text-gray-900">Database</h3>
-            <p class="text-sm text-green-600">Operational</p>
-          </div>
-          <div class="text-center">
-            <div class="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-3">
-              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-            <h3 class="font-medium text-gray-900">Authentication</h3>
-            <p class="text-sm text-green-600">Active</p>
-          </div>
-          <div class="text-center">
-            <div class="inline-flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mb-3">
-              <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-              </svg>
-            </div>
-            <h3 class="font-medium text-gray-900">Backups</h3>
-            <p class="text-sm text-yellow-600">2 days ago</p>
-          </div>
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Recent Driver Activity</h2>
+        <div id="recent-activity" class="space-y-3">
+          <!-- This will be populated by JavaScript -->
         </div>
       </div>
     </div>
 
     <!-- Driver Management Tab -->
     <div id="content-drivers" class="tab-content hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Add New Driver Form -->
-        <div class="lg:col-span-1">
-          <div class="bg-white rounded-lg shadow-md p-6 sticky top-8">
-            <h2 class="text-lg font-medium mb-4">Add New Driver</h2>
-            <form id="addDriverForm" class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
-                <input type="text" id="firstName" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="John">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Surname *</label>
-                <input type="text" id="surname" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Smith">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Driver ID *</label>
-                <div class="flex">
-                  <span class="bg-gray-100 border border-r-0 border-gray-300 px-3 py-2 text-gray-500 rounded-l-md">SFPD-</span>
-                  <input type="text" id="driverId" required pattern="[0-9]{6}" class="flex-1 border border-gray-300 rounded-r-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="001234">
-                </div>
-                <p class="text-xs text-gray-500 mt-1">6-digit number (auto-generated if empty)</p>
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                <input type="date" id="dateOfBirth" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Date *</label>
-                <input type="date" id="expiryDate" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Company/Organization</label>
-                <input type="text" id="company" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Transport Company Ltd">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Photo Upload</label>
-                <input type="file" id="photoUpload" accept="image/*" class="w-full border border-gray-300 rounded-md px-3 py-2">
-                <p class="text-xs text-gray-500 mt-1">Recommended: 300x400px passport-style photo</p>
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Certifications</label>
-                <div class="space-y-2">
-                  <label class="flex items-center">
-                    <input type="checkbox" id="cert-slp" class="mr-2">
-                    <span class="text-sm">SLP (Fuels) - Super Loaded Permit</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" id="cert-sup" class="mr-2">
-                    <span class="text-sm">SUP (Fuels) - Special Use Permit</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" id="cert-sdp" class="mr-2">
-                    <span class="text-sm">SDP - Special Dangerous Permit</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" id="cert-dg" class="mr-2">
-                    <span class="text-sm">DG - Dangerous Goods</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" id="cert-adr" class="mr-2">
-                    <span class="text-sm">ADR - European Agreement</span>
-                  </label>
-                </div>
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <textarea id="driverNotes" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Additional notes or comments..."></textarea>
-              </div>
-              
-              <button type="submit" id="addDriverBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors">
-                Create Driver & Generate Card
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <!-- Driver List -->
-        <div class="lg:col-span-2">
-          <div class="bg-white rounded-lg shadow-md">
-            <div class="p-6 border-b">
-              <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 space-y-3 md:space-y-0">
-                <h2 class="text-lg font-medium">Driver Management</h2>
-                <div class="flex flex-wrap gap-3">
-                  <input type="search" id="driverSearch" placeholder="Search drivers..." class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                  <select id="statusFilter" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                    <option value="">All Status</option>
-                    <option value="Active">Active</option>
-                    <option value="Expires Soon">Expires Soon</option>
-                    <option value="Expired">Expired</option>
-                    <option value="Suspended">Suspended</option>
-                  </select>
-                  <button onclick="exportDrivers()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm transition-colors">
-                    Export CSV
-                  </button>
-                  <button onclick="showModal('importModal')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition-colors">
-                    Import CSV
-                  </button>
-                  <button onclick="bulkRenewal()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm transition-colors">
-                    Bulk Renewal
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div class="overflow-x-auto">
-              <table class="w-full">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Driver</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expiry</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Certifications</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="driverTableBody" class="divide-y divide-gray-200">
-                  <tr>
-                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">Loading drivers...</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            
-            <!-- Pagination -->
-            <div class="px-6 py-3 border-t border-gray-200 flex items-center justify-between">
-              <div class="text-sm text-gray-500">
-                Showing <span id="pagination-start">1</span> to <span id="pagination-end">10</span> of <span id="pagination-total">0</span> results
-              </div>
-              <div class="flex space-x-2">
-                <button onclick="changePage(-1)" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">Previous</button>
-                <button onclick="changePage(1)" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">Next</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Vehicle Management Tab -->
-    <div id="content-vehicles" class="tab-content hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Add Vehicle Form -->
-        <div class="lg:col-span-1">
-          <div class="bg-white rounded-lg shadow-md p-6 sticky top-8">
-            <h2 class="text-lg font-medium mb-4">Add New Vehicle</h2>
-            <form id="addVehicleForm" class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Registration Number *</label>
-                <input type="text" id="vehicleRego" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="ABC123">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Type *</label>
-                <select id="vehicleType" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                  <option value="">Select type...</option>
-                  <option value="Semi-Trailer">Semi-Trailer</option>
-                  <option value="Rigid Truck">Rigid Truck</option>
-                  <option value="B-Double">B-Double</option>
-                  <option value="Road Train">Road Train</option>
-                  <option value="Prime Mover">Prime Mover</option>
-                  <option value="Trailer">Trailer</option>
-                </select>
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Make</label>
-                <input type="text" id="vehicleMake" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Kenworth">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
-                <input type="text" id="vehicleModel" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="T909">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                <input type="number" id="vehicleYear" min="1900" max="2030" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="2023">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Owner/Company *</label>
-                <input type="text" id="vehicleOwner" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Transport Company Ltd">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Last Inspection Date</label>
-                <input type="date" id="lastInspection" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Next Inspection Due</label>
-                <input type="date" id="nextInspection" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Vehicle Status</label>
-                <select id="vehicleStatus" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                  <option value="Active">Active</option>
-                  <option value="Maintenance">Under Maintenance</option>
-                  <option value="Inspection Due">Inspection Due</option>
-                  <option value="Out of Service">Out of Service</option>
-                </select>
-              </div>
-              
-              <button type="submit" id="addVehicleBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors">
-                Add Vehicle & Generate QR
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <!-- Vehicle List -->
-        <div class="lg:col-span-2">
-          <div class="bg-white rounded-lg shadow-md">
-            <div class="p-6 border-b">
-              <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 space-y-3 md:space-y-0">
-                <h2 class="text-lg font-medium">Vehicle Fleet</h2>
-                <div class="flex flex-wrap gap-3">
-                  <input type="search" id="vehicleSearch" placeholder="Search vehicles..." class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                  <select id="vehicleStatusFilter" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                    <option value="">All Status</option>
-                    <option value="Active">Active</option>
-                    <option value="Maintenance">Maintenance</option>
-                    <option value="Inspection Due">Inspection Due</option>
-                    <option value="Out of Service">Out of Service</option>
-                  </select>
-                  <button onclick="exportVehicles()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm transition-colors">
-                    Export CSV
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div class="overflow-x-auto">
-              <table class="w-full">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registration</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Make/Model</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Owner</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Next Inspection</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="vehicleTableBody" class="divide-y divide-gray-200">
-                  <tr>
-                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">Loading vehicles...</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- User Management Tab -->
-    <div id="content-users" class="tab-content hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Add User Form -->
-        <div class="lg:col-span-1">
-          <div class="bg-white rounded-lg shadow-md p-6 sticky top-8">
-            <h2 class="text-lg font-medium mb-4">Add New User</h2>
-            <form id="addUserForm" class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                <input type="email" id="userEmail" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="user@company.com">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                <input type="text" id="userName" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="John Smith">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
-                <select id="userRole" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                  <option value="">Select role...</option>
-                  <option value="viewer">Viewer (Lookup only)</option>
-                  <option value="ail">AIL (Inspection portal)</option>
-                  <option value="driver">Driver (Self-service)</option>
-                  <option value="company">Company (Fleet management)</option>
-                  <option value="admin">Admin (Full management)</option>
-                  <option value="super_admin">Super Admin (System-wide)</option>
-                </select>
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Organization</label>
-                <input type="text" id="userOrg" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Company name">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                <input type="tel" id="userPhone" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="+61 400 000 000">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Permissions</label>
-                <div class="space-y-2">
-                  <label class="flex items-center">
-                    <input type="checkbox" id="perm-read" class="mr-2" checked disabled>
-                    <span class="text-sm">Read Access (Default)</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" id="perm-write" class="mr-2">
-                    <span class="text-sm">Write Access</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" id="perm-delete" class="mr-2">
-                    <span class="text-sm">Delete Access</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" id="perm-export" class="mr-2">
-                    <span class="text-sm">Export Data</span>
-                  </label>
-                </div>
-              </div>
-              
-              <button type="submit" id="addUserBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors">
-                Create User Account
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <!-- User List -->
-        <div class="lg:col-span-2">
-          <div class="bg-white rounded-lg shadow-md">
-            <div class="p-6 border-b">
-              <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 space-y-3 md:space-y-0">
-                <h2 class="text-lg font-medium">User Management</h2>
-                <div class="flex flex-wrap gap-3">
-                  <input type="search" id="userSearch" placeholder="Search users..." class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                  <select id="roleFilter" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                    <option value="">All Roles</option>
-                    <option value="viewer">Viewer</option>
-                    <option value="ail">AIL</option>
-                    <option value="driver">Driver</option>
-                    <option value="company">Company</option>
-                    <option value="admin">Admin</option>
-                    <option value="super_admin">Super Admin</option>
-                  </select>
-                  <button onclick="exportUsers()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm transition-colors">
-                    Export CSV
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div class="overflow-x-auto">
-              <table class="w-full">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Organization</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Login</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="userTableBody" class="divide-y divide-gray-200">
-                  <tr>
-                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">Loading users...</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Reports & Analytics Tab -->
-    <div id="content-reports" class="tab-content hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Quick Reports -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-lg font-medium mb-4">Quick Reports</h2>
-          <div class="space-y-3">
-            <button onclick="generateReport('expiry')" class="w-full text-left p-4 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
-              <div class="flex items-center justify-between">
-                <div>
-                  <div class="font-medium">Drivers Expiring This Month</div>
-                  <div class="text-sm text-gray-500">Generate report of drivers requiring renewal</div>
-                </div>
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </div>
-            </button>
-            
-            <button onclick="generateReport('overdue')" class="w-full text-left p-4 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
-              <div class="flex items-center justify-between">
-                <div>
-                  <div class="font-medium">Overdue Renewals</div>
-                  <div class="text-sm text-gray-500">List of expired credentials</div>
-                </div>
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </div>
-            </button>
-            
-            <button onclick="generateReport('company')" class="w-full text-left p-4 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
-              <div class="flex items-center justify-between">
-                <div>
-                  <div class="font-medium">Company Driver Summary</div>
-                  <div class="text-sm text-gray-500">Drivers grouped by company</div>
-                </div>
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </div>
-            </button>
-            
-            <button onclick="generateReport('certification')" class="w-full text-left p-4 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
-              <div class="flex items-center justify-between">
-                <div>
-                  <div class="font-medium">Certification Analysis</div>
-                  <div class="text-sm text-gray-500">Breakdown by certification type</div>
-                </div>
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </div>
-            </button>
-          </div>
-        </div>
-        
-        <!-- Analytics -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-lg font-medium mb-4">System Analytics</h2>
-          <div class="space-y-4">
-            <div class="border border-gray-200 rounded p-4">
-              <h3 class="font-medium mb-2">Usage Statistics</h3>
-              <div class="space-y-2">
-                <div class="flex justify-between">
-                  <span class="text-sm text-gray-600">Daily Lookups</span>
-                  <span class="text-sm font-medium">142</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-sm text-gray-600">Weekly Registrations</span>
-                  <span class="text-sm font-medium">28</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-sm text-gray-600">Monthly Active Users</span>
-                  <span class="text-sm font-medium">89</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Custom Report Builder -->
-        <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-lg font-medium mb-4">Custom Report Builder</h2>
-          <form id="customReportForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
-              <select id="reportType" class="w-full border border-gray-300 rounded-md px-3 py-2">
-                <option value="drivers">Drivers</option>
-                <option value="vehicles">Vehicles</option>
-                <option value="users">Users</option>
-                <option value="activity">Activity Log</option>
-              </select>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-              <select id="dateRange" class="w-full border border-gray-300 rounded-md px-3 py-2">
-                <option value="7">Last 7 days</option>
-                <option value="30">Last 30 days</option>
-                <option value="90">Last 90 days</option>
-                <option value="365">Last year</option>
-                <option value="custom">Custom range</option>
-              </select>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Format</label>
-              <select id="reportFormat" class="w-full border border-gray-300 rounded-md px-3 py-2">
-                <option value="csv">CSV</option>
-                <option value="pdf">PDF</option>
-                <option value="excel">Excel</option>
-              </select>
-            </div>
-            
-            <div class="flex items-end">
-              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md">
-                Generate Report
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Audit Log Tab -->
-    <div id="content-audit" class="tab-content hidden">
-      <div class="bg-white rounded-lg shadow-md">
-        <div class="p-6 border-b">
-          <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 space-y-3 md:space-y-0">
-            <h2 class="text-lg font-medium">System Audit Log</h2>
+      <div class="bg-white rounded-lg shadow-md mb-8">
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 sm:mb-0">Driver Management</h2>
             <div class="flex flex-wrap gap-3">
-              <input type="search" id="auditSearch" placeholder="Search audit log..." class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-              <select id="auditFilter" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                <option value="">All Actions</option>
-                <option value="CREATE">Create</option>
-                <option value="UPDATE">Update</option>
-                <option value="DELETE">Delete</option>
-                <option value="LOGIN">Login</option>
-                <option value="EXPORT">Export</option>
-              </select>
-              <select id="auditUserFilter" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                <option value="">All Users</option>
-              </select>
-              <button onclick="exportAuditLog()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
-                Export Log
+              <input type="search" id="driverSearch" placeholder="Search drivers..." 
+                     class="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                     onkeyup="filterDrivers()">
+              <button onclick="exportDrivers()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
+                Export CSV
+              </button>
+              <button onclick="refreshDriverData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                Refresh Data
               </button>
             </div>
           </div>
@@ -1002,17 +296,17 @@
           <table class="w-full">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Resource</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP Address</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Driver</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expiry</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Certifications</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
-            <tbody id="auditTableBody" class="divide-y divide-gray-200">
+            <tbody id="driverTableBody" class="divide-y divide-gray-200">
               <tr>
-                <td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading audit log...</td>
+                <td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading drivers...</td>
               </tr>
             </tbody>
           </table>
@@ -1020,114 +314,39 @@
       </div>
     </div>
 
-    <!-- System Settings Tab -->
-    <div id="content-settings" class="tab-content hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- General Settings -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-lg font-medium mb-4">General Settings</h2>
-          <form id="settingsForm" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">System Name</label>
-              <input type="text" id="systemName" value="Safe Freight Program" class="w-full border border-gray-300 rounded-md px-3 py-2">
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Default Expiry Period (months)</label>
-              <input type="number" id="defaultExpiry" value="12" min="1" max="60" class="w-full border border-gray-300 rounded-md px-3 py-2">
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Warning Days</label>
-              <input type="number" id="warningDays" value="30" min="1" max="365" class="w-full border border-gray-300 rounded-md px-3 py-2">
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Email Notifications</label>
-              <div class="space-y-2">
-                <label class="flex items-center">
-                  <input type="checkbox" id="emailExpiry" checked class="mr-2">
-                  <span class="text-sm">Expiry notifications</span>
-                </label>
-                <label class="flex items-center">
-                  <input type="checkbox" id="emailNewUser" checked class="mr-2">
-                  <span class="text-sm">New user registrations</span>
-                </label>
-                <label class="flex items-center">
-                  <input type="checkbox" id="emailSystemAlerts" class="mr-2">
-                  <span class="text-sm">System alerts</span>
-                </label>
-              </div>
-            </div>
-            
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md">
-              Save Settings
-            </button>
-          </form>
-        </div>
-        
-        <!-- Data Management -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-lg font-medium mb-4">Data Management</h2>
-          <div class="space-y-4">
-            <div class="border border-gray-200 rounded p-4">
-              <h3 class="font-medium mb-2">Database Backup</h3>
-              <p class="text-sm text-gray-600 mb-3">Last backup: 2 days ago</p>
-              <button onclick="createBackup()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">
-                Create Backup Now
-              </button>
-            </div>
-            
-            <div class="border border-gray-200 rounded p-4">
-              <h3 class="font-medium mb-2">Data Export</h3>
-              <p class="text-sm text-gray-600 mb-3">Export all system data</p>
-              <button onclick="exportAllData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">
-                Export All Data
-              </button>
-            </div>
-            
-            <div class="border border-red-200 rounded p-4 bg-red-50">
-              <h3 class="font-medium mb-2 text-red-800">Danger Zone</h3>
-              <p class="text-sm text-red-600 mb-3">Irreversible actions</p>
-              <button onclick="showModal('dangerModal')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm">
-                System Maintenance
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Integration Settings -->
-        <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-lg font-medium mb-4">Integration Settings</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 class="font-medium mb-3">Google Sheets Integration</h3>
-              <div class="space-y-3">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Spreadsheet ID</label>
-                  <input type="text" id="spreadsheetId" value="1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono">
-                </div>
-                <button onclick="testSheetConnection()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">
-                  Test Connection
-                </button>
-              </div>
-            </div>
-            
-            <div>
-              <h3 class="font-medium mb-3">Firebase Configuration</h3>
-              <div class="space-y-3">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Project ID</label>
-                  <input type="text" value="safe-freight-program" disabled class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-gray-50">
-                </div>
-                <div class="flex items-center text-sm">
-                  <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                  <span class="text-green-600">Connected</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <!-- Other tabs would go here... for now just placeholders -->
+    <div id="content-vehicles" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Vehicle & Equipment Management</h2>
+        <p class="text-gray-600">Vehicle management features coming soon!</p>
+      </div>
+    </div>
+
+    <div id="content-ails" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">AIL Management</h2>
+        <p class="text-gray-600">AIL management features coming soon!</p>
+      </div>
+    </div>
+
+    <div id="content-qrcodes" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">QR Code Generator</h2>
+        <p class="text-gray-600">QR code generation features coming soon!</p>
+      </div>
+    </div>
+
+    <div id="content-users" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">User Management</h2>
+        <p class="text-gray-600">User management features coming soon!</p>
+      </div>
+    </div>
+
+    <div id="content-reports" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Reports & Analytics</h2>
+        <p class="text-gray-600">Reporting features coming soon!</p>
       </div>
     </div>
   </main>
@@ -1138,234 +357,381 @@
       <div id="statusContent"></div>
     </div>
   </div>
-
-  <!-- Modal Overlays -->
-  <div id="modalOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div id="modalContent" class="bg-white rounded-lg max-w-md w-full max-h-96 overflow-y-auto">
-      <!-- Modal content will be inserted here -->
-    </div>
-  </div>
 </div>
 
 <footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
   &copy; 2025 Safe Freight Program. All rights reserved.
 </footer>
 
-<!-- 📜 Enhanced JavaScript -->
+<!-- JavaScript -->
 <script>
-  const DRIVER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json';
-  const SPREADSHEET_ID = '1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ';
+  // Multiple Google Sheets URL formats to try
+  const SHEET_URLS = [
+    'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json',
+    'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:csv',
+    'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/export?format=csv'
+  ];
   
   let driversData = [];
+  let allDriversData = [];
   let vehiclesData = [];
+  let ailsData = [];
   let usersData = [];
-  let auditData = [];
-  let currentPage = 1;
-  let itemsPerPage = 10;
+  let currentTab = 'dashboard';
+  let dataLoadStatus = 'unknown';
 
-  // 🔄 Initialize admin portal
-  document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(() => {
-      const container = document.getElementById('userInfoContainer');
-      if (container) container.classList.remove('hidden');
-    }, 1000);
-  });
+  // Initialize data when portal loads
+  async function loadDashboardData() {
+    try {
+      showStatus('Connecting to Google Sheets...', 'info');
+      updateConnectionStatus('connecting');
+      
+      // Try to load from Google Sheets
+      const success = await tryLoadFromGoogleSheets();
+      
+      if (success) {
+        showStatus('Data loaded successfully from Google Sheets!', 'success');
+        updateConnectionStatus('connected');
+        dataLoadStatus = 'sheets';
+      } else {
+        showStatus('Using sample data - Google Sheets connection failed', 'warning');
+        updateConnectionStatus('failed');
+        loadFallbackData();
+        dataLoadStatus = 'fallback';
+      }
+      
+      // Update dashboard statistics
+      updateDashboardStats();
+      updateRecentActivity();
+      
+    } catch (error) {
+      console.error('Error loading data:', error);
+      showStatus('Error loading system data', 'error');
+      updateConnectionStatus('error');
+      loadFallbackData();
+      dataLoadStatus = 'error';
+    }
+  }
 
-  // 📊 Tab Management
+  // Try multiple methods to fetch Google Sheets data
+  async function tryLoadFromGoogleSheets() {
+    for (const url of SHEET_URLS) {
+      try {
+        console.log(`Trying to fetch from: ${url}`);
+        const data = await fetchSheetData(url);
+        
+        if (data && data.length > 0) {
+          console.log(`Successfully loaded ${data.length} rows from Google Sheets`);
+          allDriversData = data;
+          driversData = data;
+          return true;
+        }
+      } catch (error) {
+        console.error(`Failed to fetch from ${url}:`, error);
+        continue;
+      }
+    }
+    return false;
+  }
+
+  // Fetch data from Google Sheets with better error handling
+  async function fetchSheetData(url) {
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json, text/plain, */*'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const text = await response.text();
+      console.log('Raw response:', text.substring(0, 200) + '...');
+      
+      // Handle JSON response
+      if (url.includes('json')) {
+        try {
+          const json = JSON.parse(text.substr(47).slice(0, -2));
+          return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
+        } catch (e) {
+          console.error('Failed to parse JSON:', e);
+          return null;
+        }
+      }
+      
+      // Handle CSV response
+      if (url.includes('csv')) {
+        const lines = text.split('\n');
+        const headers = lines[0];
+        return lines.slice(1)
+          .filter(line => line.trim())
+          .map(line => {
+            // Simple CSV parsing - you might want to use a proper CSV parser
+            return line.split(',').map(cell => cell.replace(/"/g, ''));
+          });
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Fetch error:', error);
+      throw error;
+    }
+  }
+
+  // Load fallback data when Google Sheets fails
+  function loadFallbackData() {
+    console.log('Loading fallback data');
+    
+    // Your actual data from the sheet
+    driversData = [
+      ['SFPD-001234', 'John', 'Smith', 'Active', '2026-06-01', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-001234&size=150x150', 'https://drive.google.com/file/d/1tLa4Lw5tjyDjnxGjeNSZwA11oi5bF1-i/view?usp=drive_link', '1J_J1FhAAAuyQYJmpwaxSsRrRrY4RQNVwhYAU-QLTW4E', 'https://drive.google.com/uc?export=view&id=1MbZAJsBHZ6HHYNyqARWvBkjgcpghbq51', 'y', 'y', 'n', 'y'],
+      ['SFPD-001567', 'Jane', 'Doe', 'Active', '2025-12-15', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-001567&size=150x150', 'https://drive.google.com/file/d/1kngn3JsZ8OkG4XR59OqDL5OiRyIxjqs2/view?usp=sharing', '17XpTnEMcmktzGbFrLBubQOjy23IS-iM1sGu2uGgRLrg', 'https://drive.google.com/uc?export=view&id=1qkZRo_X5-EEI4Ml4fj4S15CzkThBZxx4', 'n', 'n', 'y', 'n'],
+      ['SFPD-002001', 'Amandeep', 'Singh', 'Active', '2027-01-30', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-002001&size=150x150', 'https://drive.google.com/file/d/1EYrIwonGQs3r-RNsah6tehREaYo0FfuJ/view?usp=sharing', '1X8E9Bhgwk84NWzsfa0488eO73ez9IwHXyzDRHLEUhPo', 'https://drive.google.com/uc?export=view&id=1BJL9jXYjarR_rsfgCxXmYsZnzpN_iyha', 'y', 'y', 'n', 'y'],
+      ['SFPD-002009', 'Louisa', 'Tran', 'Expired', '2024-11-20', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-002009&size=150x150', 'https://drive.google.com/file/d/1_PpXiUhADnNvnKGMLyfFn6NLobFbkmeb/view?usp=drive_link', '1pdPW9D4GNOY6Na5kPosKL_l3nCzxTwuxEOhPDT1OdFQ', 'https://drive.google.com/uc?export=view&id=17EZmEdvw7z291gnNdgmKif_oad4Tc31D', 'n', 'n', 'y', 'n'],
+      ['SFPD-001111', 'Darren', 'Jenkins', 'Expires Soon', '2025-08-01', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-001111&size=150x150', '', '1rMnryUnH1KY7pEXC6AOl1mCsdDlyeU08bYrvczGruUw', 'https://drive.google.com/uc?export=view&id=12eCrbN-kr087xCQmvg549DLcjicttL4f', '', '', '', '']
+    ];
+    allDriversData = driversData;
+    
+    // Mock data for other systems
+    loadMockVehicleData();
+    loadMockAILData();
+    loadMockUserData();
+  }
+
+  // Update connection status indicator
+  function updateConnectionStatus(status) {
+    const statusEl = document.getElementById('connectionStatus');
+    let content = '';
+    
+    switch(status) {
+      case 'connecting':
+        content = `
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div class="flex items-center">
+              <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600 mr-3"></div>
+              <span class="text-yellow-800 font-medium">Connecting to Google Sheets...</span>
+            </div>
+          </div>
+        `;
+        break;
+      case 'connected':
+        content = `
+          <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="text-green-800 font-medium">Connected to Google Sheets</span>
+              </div>
+              <button onclick="manualDataLoad()" class="text-green-600 hover:text-green-800 text-sm underline">Refresh</button>
+            </div>
+          </div>
+        `;
+        break;
+      case 'failed':
+        content = `
+          <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+                <span class="text-orange-800 font-medium">Using sample data - Google Sheets unavailable</span>
+              </div>
+              <button onclick="manualDataLoad()" class="text-orange-600 hover:text-orange-800 text-sm underline">Retry</button>
+            </div>
+          </div>
+        `;
+        break;
+      case 'error':
+        content = `
+          <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                <span class="text-red-800 font-medium">Data connection error</span>
+              </div>
+              <button onclick="manualDataLoad()" class="text-red-600 hover:text-red-800 text-sm underline">Retry</button>
+            </div>
+          </div>
+        `;
+        break;
+    }
+    
+    statusEl.innerHTML = content;
+  }
+
+  // Update dashboard statistics
+  function updateDashboardStats() {
+    const total = driversData.length;
+    const active = driversData.filter(row => row[3] === 'Active').length;
+    const expiring = driversData.filter(row => row[3] === 'Expires Soon').length;
+    const expired = driversData.filter(row => row[3] === 'Expired').length;
+    
+    document.getElementById('stat-total-drivers').textContent = total;
+    document.getElementById('stat-total-vehicles').textContent = vehiclesData.length;
+    document.getElementById('stat-total-ails').textContent = ailsData.length;
+    document.getElementById('stat-inspections-due').textContent = Math.floor(vehiclesData.length * 0.3); // Mock calculation
+  }
+
+  // Update recent activity based on real driver data
+  function updateRecentActivity() {
+    const recentActivityEl = document.getElementById('recent-activity');
+    
+    if (driversData.length === 0) {
+      recentActivityEl.innerHTML = '<p class="text-gray-500 text-center py-4">No driver data available</p>';
+      return;
+    }
+
+    // Generate activity based on driver data
+    const activities = [];
+    
+    driversData.forEach((driver, index) => {
+      const [id, firstName, surname, status] = driver;
+      const name = `${firstName} ${surname}`;
+      
+      if (status === 'Active') {
+        activities.push({
+          type: 'success',
+          message: `Driver credential verified`,
+          detail: `${id} • ${name}`,
+          time: `${Math.floor(Math.random() * 12) + 1} hours ago`
+        });
+      } else if (status === 'Expired') {
+        activities.push({
+          type: 'warning',
+          message: `Driver credential expired`,
+          detail: `${id} • ${name}`,
+          time: `${Math.floor(Math.random() * 7) + 1} days ago`
+        });
+      } else if (status === 'Expires Soon') {
+        activities.push({
+          type: 'info',
+          message: `Driver credential expiring soon`,
+          detail: `${id} • ${name}`,
+          time: `${Math.floor(Math.random() * 24) + 1} hours ago`
+        });
+      }
+    });
+
+    // Shuffle and take first 5
+    const shuffled = activities.sort(() => 0.5 - Math.random()).slice(0, 5);
+    
+    const activityHTML = shuffled.map(activity => {
+      const colorClass = activity.type === 'success' ? 'bg-green-500' :
+                        activity.type === 'warning' ? 'bg-orange-500' :
+                        'bg-blue-500';
+      
+      return `
+        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
+          <div class="flex items-center">
+            <div class="w-3 h-3 rounded-full mr-3 ${colorClass}"></div>
+            <div>
+              <div class="font-medium text-sm">${activity.message}</div>
+              <div class="text-xs text-gray-500">${activity.detail}</div>
+            </div>
+          </div>
+          <div class="text-xs text-gray-400">${activity.time}</div>
+        </div>
+      `;
+    }).join('');
+    
+    recentActivityEl.innerHTML = activityHTML;
+  }
+
+  // Load mock data for systems not yet implemented
+  function loadMockVehicleData() {
+    vehiclesData = [
+      ['SFPV-000001', 'ABC123', 'Semi-Trailer', '2025-01-15', '2025-07-15', 'Sydney Transport Inspections', 'Current'],
+      ['SFPV-000002', 'XYZ789', 'Rigid Truck', '2024-12-20', '2025-06-20', 'Melbourne Freight Check', 'Due Soon'],
+      ['SFPV-000003', 'DEF456', 'B-Double', '2025-02-10', '2025-08-10', 'Brisbane Heavy Vehicle', 'Current']
+    ];
+  }
+
+  function loadMockAILData() {
+    ailsData = [
+      ['Sydney Transport Inspections', 'John Smith', 'john@sydneytransport.com', 'Full', 'Active', '2 days ago'],
+      ['Melbourne Freight Check', 'Sarah Wilson', 'sarah@melbournefreight.com', 'Advanced', 'Active', '1 week ago'],
+      ['Brisbane Heavy Vehicle', 'Mike Johnson', 'mike@brisbaneheavy.com', 'Basic', 'Active', '3 days ago']
+    ];
+  }
+
+  function loadMockUserData() {
+    usersData = [
+      { name: 'System Admin', email: 'safefreightprogram@gmail.com', role: 'super_admin', org: 'Safe Freight Program', lastLogin: 'Now', status: 'Active' },
+      { name: 'John Smith', email: 'john@sydneytransport.com', role: 'ail', org: 'Sydney Transport Inspections', lastLogin: '2 days ago', status: 'Active' },
+      { name: 'Sarah Wilson', email: 'sarah@melbournefreight.com', role: 'ail', org: 'Melbourne Freight Check', lastLogin: '1 week ago', status: 'Active' },
+      { name: 'Fleet Manager', email: 'fleet@transportco.com', role: 'company', org: 'Transport Co', lastLogin: '3 days ago', status: 'Active' }
+    ];
+  }
+
+  // Manual data reload function
+  async function manualDataLoad() {
+    showStatus('Manually refreshing data...', 'info');
+    await loadDashboardData();
+    if (currentTab === 'drivers') {
+      renderDriverTable();
+    }
+  }
+
+  // Tab management
   function switchTab(tabName) {
+    // Hide all tab contents
     document.querySelectorAll('.tab-content').forEach(content => {
       content.classList.add('hidden');
     });
     
+    // Update tab styles
     document.querySelectorAll('[id^="tab-"]').forEach(tab => {
       tab.classList.remove('border-blue-500', 'text-blue-600');
       tab.classList.add('text-gray-500');
     });
     
+    // Show selected tab
     document.getElementById(`content-${tabName}`).classList.remove('hidden');
     
     const activeTab = document.getElementById(`tab-${tabName}`);
-    activeTab.classList.remove('text-gray-500');
-    activeTab.classList.add('border-blue-500', 'text-blue-600');
+    if (activeTab) {
+      activeTab.classList.remove('text-gray-500');
+      activeTab.classList.add('border-blue-500', 'text-blue-600');
+    }
     
-    // Load data for specific tabs
+    currentTab = tabName;
+    
+    // Load specific tab data
     switch(tabName) {
       case 'drivers':
-        loadDriversData();
+        renderDriverTable();
         break;
       case 'vehicles':
-        loadVehiclesData();
+        // renderVehicleTable();
+        break;
+      case 'ails':
+        // renderAILTable();
         break;
       case 'users':
-        loadUsersData();
-        break;
-      case 'audit':
-        loadAuditLog();
+        // renderUserTable();
         break;
     }
   }
 
-  // 📊 Dashboard Data Loading - Fast with fallbacks
-  async function loadDashboardData() {
-    try {
-      debugLog('Fetching sheet data...');
-      const data = await Promise.race([
-        fetchSheetData(DRIVER_SHEET_URL),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-      ]);
-      
-      debugLog('Sheet data loaded', { length: data.length });
-      
-      const total = data.length;
-      const active = data.filter(row => row[3] === 'Active').length;
-      const expiring = data.filter(row => row[3] === 'Expires Soon').length;
-      const expired = data.filter(row => row[3] === 'Expired').length;
-      
-      document.getElementById('stat-total-drivers').textContent = total;
-      document.getElementById('stat-active-drivers').textContent = active;
-      document.getElementById('stat-expiring-drivers').textContent = expiring;
-      document.getElementById('stat-expired-drivers').textContent = expired;
-      
-      loadRecentActivity();
-      
-    } catch (error) {
-      debugLog('Dashboard load failed, using mock data', error.message);
-      
-      // Use mock data as fallback
-      document.getElementById('stat-total-drivers').textContent = '145';
-      document.getElementById('stat-active-drivers').textContent = '127';
-      document.getElementById('stat-expiring-drivers').textContent = '12';
-      document.getElementById('stat-expired-drivers').textContent = '6';
-      
-      loadRecentActivity();
-    }
-  }
-
-  // 📋 Recent Activity
-  function loadRecentActivity() {
-    const activities = [
-      { action: 'New driver added', user: 'Admin', time: '2 hours ago', type: 'success', details: 'SFPD-001234 created' },
-      { action: 'Driver credentials renewed', user: 'Admin', time: '5 hours ago', type: 'info', details: 'SFPD-001200 extended' },
-      { action: 'User role updated', user: 'Admin', time: '1 day ago', type: 'warning', details: 'Changed to AIL role' },
-      { action: 'Bulk import completed', user: 'Admin', time: '2 days ago', type: 'success', details: '25 drivers imported' },
-      { action: 'System backup created', user: 'System', time: '2 days ago', type: 'info', details: 'Automated backup' }
-    ];
-    
-    const activityHtml = activities.map(activity => `
-      <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
-        <div class="flex items-center">
-          <div class="w-3 h-3 rounded-full mr-3 ${
-            activity.type === 'success' ? 'bg-green-500' :
-            activity.type === 'warning' ? 'bg-yellow-500' :
-            activity.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-          }"></div>
-          <div>
-            <div class="font-medium text-sm">${activity.action}</div>
-            <div class="text-xs text-gray-500">${activity.details}</div>
-            <div class="text-xs text-gray-400">by ${activity.user}</div>
-          </div>
-        </div>
-        <div class="text-xs text-gray-400">${activity.time}</div>
-      </div>
-    `).join('');
-    
-    document.getElementById('recent-activity').innerHTML = activityHtml;
-  }
-
-  // 🔍 Data fetching functions
-  async function fetchSheetData(url) {
-    const response = await fetch(url);
-    const text = await response.text();
-    try {
-      const json = JSON.parse(text.substr(47).slice(0, -2));
-      return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
-    } catch (e) {
-      console.error('Failed to parse sheet data:', e);
-      return [];
-    }
-  }
-
-  async function loadDriversData() {
-    try {
-      debugLog('Loading drivers data...');
-      driversData = await Promise.race([
-        fetchSheetData(DRIVER_SHEET_URL),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-      ]);
-      
-      debugLog('Drivers data loaded', { count: driversData.length });
-      renderDriverTable(driversData);
-      updatePagination(driversData.length);
-    } catch (error) {
-      debugLog('Drivers load failed, using mock data', error.message);
-      
-      // Use mock data as fallback
-      driversData = [
-        ['SFPD-001234', 'John', 'Smith', 'Active', '2025-12-31', '', '', '', '', 'y', 'n', 'y', 'n', 'Transport Co Ltd'],
-        ['SFPD-001235', 'Jane', 'Doe', 'Expires Soon', '2025-08-15', '', '', '', '', 'n', 'y', 'n', 'y', 'Freight Express'],
-        ['SFPD-001236', 'Bob', 'Wilson', 'Expired', '2024-12-01', '', '', '', '', 'y', 'y', 'n', 'n', 'Heavy Haulage']
-      ];
-      
-      renderDriverTable(driversData);
-      updatePagination(driversData.length);
-    }
-  }
-
-  async function loadVehiclesData() {
-    // Mock vehicle data - replace with actual data source
-    vehiclesData = [
-      ['ABC123', 'Semi-Trailer', 'Kenworth', 'T909', '2023', 'Transport Co Ltd', '2025-01-15', '2025-07-15', 'Active'],
-      ['XYZ789', 'Rigid Truck', 'Volvo', 'FH16', '2022', 'Freight Express', '2024-12-20', '2025-06-20', 'Maintenance'],
-      ['DEF456', 'B-Double', 'Mack', 'Anthem', '2024', 'Heavy Haulage', '2025-02-10', '2025-08-10', 'Active']
-    ];
-    renderVehicleTable(vehiclesData);
-  }
-
-  async function loadUsersData() {
-    debugLog('Loading users data...');
-    
-    // Use mock data for fast loading
-    usersData = [
-      { name: 'System Admin', email: 'safefreightprogram@gmail.com', role: 'super_admin', org: 'Safe Freight Program', lastLogin: '2 hours ago', status: 'Active' },
-      { name: 'John Manager', email: 'manager@transportco.com', role: 'admin', org: 'Transport Co', lastLogin: '1 day ago', status: 'Active' },
-      { name: 'Jane Inspector', email: 'inspector@ailcompany.com', role: 'ail', org: 'AIL Company', lastLogin: '3 days ago', status: 'Active' },
-      { name: 'Mike Driver', email: 'mike@freelance.com', role: 'driver', org: 'Freelance', lastLogin: '1 week ago', status: 'Inactive' }
-    ];
-    
-    renderUserTable(usersData);
-    debugLog('Users data loaded');
-  }
-
-  async function loadAuditLog() {
-    debugLog('Loading audit log...');
-    
-    auditData = [
-      { timestamp: '2025-07-20 14:30:25', user: 'admin@safefre...', action: 'CREATE', resource: 'Driver', details: 'Created SFPD-001234', ip: '203.123.45.67' },
-      { timestamp: '2025-07-20 14:25:10', user: 'admin@safefre...', action: 'UPDATE', resource: 'Driver', details: 'Updated SFPD-001200', ip: '203.123.45.67' },
-      { timestamp: '2025-07-20 14:20:05', user: 'manager@trans...', action: 'LOGIN', resource: 'System', details: 'User login', ip: '192.168.1.100' },
-      { timestamp: '2025-07-20 14:15:30', user: 'admin@safefre...', action: 'EXPORT', resource: 'Drivers', details: 'CSV export', ip: '203.123.45.67' },
-      { timestamp: '2025-07-20 14:10:15', user: 'inspector@ail...', action: 'UPDATE', resource: 'User', details: 'Role changed to AIL', ip: '10.0.0.50' }
-    ];
-    
-    renderAuditTable(auditData);
-    debugLog('Audit log loaded');
-  }
-
-  // 🎨 Table rendering functions
-  function renderDriverTable(data) {
+  // Render driver table
+  function renderDriverTable() {
     const tbody = document.getElementById('driverTableBody');
     
-    if (!data || data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 text-center text-gray-500">No drivers found</td></tr>';
+    if (!driversData || driversData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No drivers found</td></tr>';
       return;
     }
     
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const pageData = data.slice(startIndex, endIndex);
-    
-    const rows = pageData.map((row, index) => {
-      const [id, firstName, surname, status, expiry, qrUrl, photo, slideId, cardPng, slp, sup, sdp, dg, company = 'N/A'] = row;
+    const rows = driversData.map(row => {
+      const [id, firstName, surname, status, expiry, qrUrl, photo, slideId, cardPng, slp, sup, sdp, dg] = row;
       
       const certs = [];
       if (slp === 'y') certs.push('<span class="bg-blue-500 text-white px-2 py-1 rounded text-xs">SLP</span>');
@@ -1376,14 +742,13 @@
       const statusClass = 
         status === 'Active' ? 'bg-green-100 text-green-800' :
         status === 'Expired' ? 'bg-red-100 text-red-800' :
-        status === 'Suspended' ? 'bg-gray-100 text-gray-800' :
-        'bg-yellow-100 text-yellow-800';
+        status === 'Expires Soon' ? 'bg-yellow-100 text-yellow-800' :
+        'bg-gray-100 text-gray-800';
+      
+      const formattedExpiry = formatDate(expiry);
       
       return `
         <tr class="hover:bg-gray-50">
-          <td class="px-6 py-4">
-            <input type="checkbox" class="driver-checkbox" value="${id}">
-          </td>
           <td class="px-6 py-4">
             <div class="flex items-center">
               <div class="w-10 h-10 bg-gray-300 rounded-full mr-3 flex items-center justify-center text-sm font-medium text-gray-600">
@@ -1391,16 +756,15 @@
               </div>
               <div>
                 <div class="font-medium">${firstName || ''} ${surname || ''}</div>
-                <div class="text-sm text-gray-500">ID: ${id || ''}</div>
+                <div class="text-sm text-gray-500">${id || ''}</div>
               </div>
             </div>
           </td>
           <td class="px-6 py-4 text-sm text-gray-900">${id || ''}</td>
-          <td class="px-6 py-4 text-sm text-gray-500">${company}</td>
           <td class="px-6 py-4">
             <span class="${statusClass} px-2 py-1 rounded text-xs font-medium">${status || 'Unknown'}</span>
           </td>
-          <td class="px-6 py-4 text-sm text-gray-500">${expiry || 'N/A'}</td>
+          <td class="px-6 py-4 text-sm text-gray-500">${formattedExpiry || 'N/A'}</td>
           <td class="px-6 py-4">
             <div class="flex flex-wrap gap-1">
               ${certs.join(' ') || '<span class="text-gray-400 text-xs">None</span>'}
@@ -1408,9 +772,8 @@
           </td>
           <td class="px-6 py-4">
             <div class="flex space-x-2">
-              <button onclick="editDriver('${id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
-              <button onclick="renewDriver('${id}')" class="text-green-600 hover:text-green-800 text-sm font-medium">Renew</button>
-              <button onclick="suspendDriver('${id}')" class="text-red-600 hover:text-red-800 text-sm font-medium">Suspend</button>
+              <button onclick="viewDriver('${id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+              <button onclick="editDriver('${id}')" class="text-green-600 hover:text-green-800 text-sm font-medium">Edit</button>
             </div>
           </td>
         </tr>
@@ -1420,78 +783,149 @@
     tbody.innerHTML = rows;
   }
 
-  function renderVehicleTable(data) {
-    const tbody = document.getElementById('vehicleTableBody');
+  // Date formatting (from driver lookup)
+  function formatDate(d) {
+    if (!d) return '';
     
-    if (!data || data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No vehicles found</td></tr>';
+    // Handle various date formats
+    if (d.includes('-')) {
+      const [year, month, day] = d.split('-');
+      const parsed = new Date(`${year}-${month}-${day}`);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+    }
+    
+    if (d.includes('/')) {
+      const [day, month, year] = d.split('/');
+      const parsed = new Date(`${year}-${month}-${day}`);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+    }
+
+    return d;
+  }
+
+  // Action functions
+  function viewDriver(driverId) {
+    window.open(`/lookup-driver.html?id=${driverId}`, '_blank');
+  }
+
+  function editDriver(driverId) {
+    showStatus(`Edit functionality for driver ${driverId} - Coming soon!`, 'info');
+  }
+
+  // Filter functions
+  function filterDrivers() {
+    const searchTerm = document.getElementById('driverSearch').value.toLowerCase();
+    
+    if (!searchTerm) {
+      driversData = allDriversData;
+    } else {
+      driversData = allDriversData.filter(row => {
+        const searchString = `${row[0]} ${row[1]} ${row[2]} ${row[3]}`.toLowerCase();
+        return searchString.includes(searchTerm);
+      });
+    }
+    
+    renderDriverTable();
+  }
+
+  // Export functions
+  function exportDrivers() {
+    if (driversData.length === 0) {
+      showStatus('No data to export', 'warning');
       return;
     }
     
-    const rows = data.map(row => {
-      const [rego, type, make, model, year, owner, lastInspection, nextInspection, status] = row;
-      
-      const statusClass = 
-        status === 'Active' ? 'bg-green-100 text-green-800' :
-        status === 'Maintenance' ? 'bg-yellow-100 text-yellow-800' :
-        status === 'Inspection Due' ? 'bg-orange-100 text-orange-800' :
-        'bg-red-100 text-red-800';
-      
-      return `
-        <tr class="hover:bg-gray-50">
-          <td class="px-6 py-4 font-medium text-gray-900">${rego}</td>
-          <td class="px-6 py-4 text-sm text-gray-500">${type}</td>
-          <td class="px-6 py-4 text-sm text-gray-500">${make} ${model} (${year})</td>
-          <td class="px-6 py-4 text-sm text-gray-500">${owner}</td>
-          <td class="px-6 py-4">
-            <span class="${statusClass} px-2 py-1 rounded text-xs font-medium">${status}</span>
-          </td>
-          <td class="px-6 py-4 text-sm text-gray-500">${nextInspection}</td>
-          <td class="px-6 py-4">
-            <div class="flex space-x-2">
-              <button onclick="editVehicle('${rego}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
-              <button onclick="inspectVehicle('${rego}')" class="text-green-600 hover:text-green-800 text-sm font-medium">Inspect</button>
-              <button onclick="generateVehicleQR('${rego}')" class="text-purple-600 hover:text-purple-800 text-sm font-medium">QR Code</button>
-            </div>
-          </td>
-        </tr>
-      `;
-    }).join('');
+    const headers = ['ID', 'First Name', 'Surname', 'Status', 'Expiry', 'SLP', 'SUP', 'SDP', 'DG'];
+    const csvContent = [
+      headers.join(','),
+      ...driversData.map(row => [
+        row[0] || '', row[1] || '', row[2] || '', row[3] || '', 
+        formatDate(row[4]) || '', row[9] || '', row[10] || '', row[11] || '', row[12] || ''
+      ].join(','))
+    ].join('\n');
     
-    tbody.innerHTML = rows;
+    downloadCSV(csvContent, `sfp-drivers-${new Date().toISOString().split('T')[0]}.csv`);
+    showStatus('Driver data exported successfully!', 'success');
   }
 
-  function renderUserTable(data) {
-    const tbody = document.getElementById('userTableBody');
-    
-    const rows = data.map(user => {
-      const roleClass = 
-        user.role === 'super_admin' ? 'bg-purple-100 text-purple-800' :
-        user.role === 'admin' ? 'bg-blue-100 text-blue-800' :
-        user.role === 'ail' ? 'bg-green-100 text-green-800' :
-        user.role === 'company' ? 'bg-orange-100 text-orange-800' :
-        user.role === 'driver' ? 'bg-yellow-100 text-yellow-800' :
-        'bg-gray-100 text-gray-800';
-      
-      const roleDisplay = 
-        user.role === 'super_admin' ? 'Super Admin' :
-        user.role === 'admin' ? 'Admin' :
-        user.role === 'ail' ? 'AIL' :
-        user.role === 'company' ? 'Company' :
-        user.role === 'driver' ? 'Driver' :
-        'Viewer';
+  function downloadCSV(content, filename) {
+    const blob = new Blob([content], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
 
-      const statusClass = user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
-      
-      return `
-        <tr class="hover:bg-gray-50">
-          <td class="px-6 py-4">
-            <div>
-              <div class="font-medium text-gray-900">${user.name}">
-              <h3 class="font-medium mb-2">Driver Registration Trends</h3>
-              <div class="h-32 bg-gray-100 rounded flex items-center justify-center">
-                <span class="text-gray-500">Chart placeholder - Integration ready</span>
-              </div>
-            </div>
-            
-            <div class="border border-gray-200 rounded p-4
+  // Refresh functions
+  function refreshDriverData() {
+    allDriversData = [];
+    driversData = [];
+    loadDashboardData();
+  }
+
+  // Report functions
+  function generateDriverReport() {
+    const expiringDrivers = allDriversData.filter(row => 
+      row[3] === 'Expires Soon' || row[3] === 'Expired'
+    );
+    
+    if (expiringDrivers.length === 0) {
+      showStatus('No drivers requiring attention', 'info');
+      return;
+    }
+    
+    driversData = expiringDrivers;
+    renderDriverTable();
+    switchTab('drivers');
+    showStatus(`Showing ${expiringDrivers.length} drivers requiring attention`, 'info');
+  }
+
+  // Status message system
+  function showStatus(message, type = 'info') {
+    const statusEl = document.getElementById('statusMessage');
+    const contentEl = document.getElementById('statusContent');
+    
+    const colors = {
+      success: 'bg-green-50 border-green-200 text-green-800',
+      error: 'bg-red-50 border-red-200 text-red-800',
+      warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+      info: 'bg-blue-50 border-blue-200 text-blue-800'
+    };
+    
+    const icons = {
+      success: '✓',
+      error: '✗',
+      warning: '⚠',
+      info: 'ℹ'
+    };
+    
+    contentEl.innerHTML = `
+      <div class="flex items-center ${colors[type]} p-3 rounded-md border">
+        <div class="mr-2 font-bold">
+          ${icons[type]}
+        </div>
+        <span class="text-sm font-medium">${message}</span>
+      </div>
+    `;
+    
+    statusEl.classList.remove('hidden');
+    
+    setTimeout(() => {
+      statusEl.classList.add('hidden');
+    }, 5000);
+  }
+
+  // Initialize on load
+  setTimeout(() => {
+    loadDashboardData();
+  }, 500);
+</script>
+
+</body>
+</html>
