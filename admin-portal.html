@@ -164,11 +164,14 @@
 </head>
 
 <body class="bg-gray-50 text-gray-800 font-sans">
-<!-- 🔄 Loading overlay -->
+<!-- 🔄 Loading overlay with debug info -->
 <div id="authLoader" class="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50 transition-opacity duration-300">
-  <div class="text-center">
+  <div class="text-center max-w-md">
     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto mb-4"></div>
-    <p class="text-gray-600 text-lg">Checking permissions...</p>
+    <p class="text-gray-600 text-lg mb-4">Checking permissions...</p>
+    <div id="debugInfo" class="text-sm text-gray-500 bg-gray-100 p-3 rounded text-left">
+      <div>Loading authentication...</div>
+    </div>
   </div>
 </div>
 
