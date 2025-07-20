@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auth Test - Safe Freight Program</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-8">
+
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-2xl font-bold mb-6">🔍 Authentication Test</h1>
+  
+  <div id="authStatus" class="bg-white p-6 rounded-lg shadow mb-6">
+    <h2 class="text-lg font-medium mb-4">Auth Status:</h2>
+    <div id="statusInfo">Loading...</div>
+  </div>
+  
+  <div id="debugInfo" class="bg-gray-100 p-4 rounded text-sm">
+    <h3 class="font-medium mb-2">Debug Info:</h3>
+    <div id="debugOutput">Starting auth check...</div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBURlJUicOTobRLghN2RyEZfXEZvU_uiYU",
+    authDomain: "safe-freight-program.firebaseapp.com",
+    projectId: "safe-freight-program",
+  };
+
+  function log(message) {
+    console.log(message);
+    const debug = document.getElementById('debugOutput');
+    debug.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+  }
+
+  function updateStatus(status, user = null) {
+    const statusEl = document.getElementById('statusInfo');
+    if (status === 'logged-in') {
+      statusEl.innerHTML = `
+        <div class="text-green-600 font-medium">✅ LOGGED IN</div>
+        <div class="mt-2">
+          <div><strong>Email:</strong> ${user.email}</div>
+          <div><strong>UID:</strong> ${user.uid}</div>
+          <div><strong>Display Name:</strong> ${user.displayName || 'Not set'}</div>
+        </div>
+      `;
+    } else {
+      statusEl.innerHTML = `<div class="text-red-600 font-medium">❌ NOT LOGGED IN</div>`;
+    }
+  }
+
+  try {
+    log('Initializing Firebase...');
+    const app = initializeApp(firebaseConfig);
+    log('Firebase initialized successfully');
+    
+    const auth = getAuth(app);
+    log('Auth service initialized');
+    
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        log(`✅ User found: ${user.email}`);
+        updateStatus('logged-in', user);
+        
+        if (user.email === 'safreightprogram@gmail.com') {
+          log('🎉 Admin email confirmed! This user should have admin access.');
+        } else {
+          log('⚠️ This is not the admin email.');
+        }
+      } else {
+        log('❌ No user found - not logged in');
+        updateStatus('not-logged-in');
+      }
+    });
+    
+  } catch (error) {
+    log(`❌ Firebase error: ${error.message}`);
+    updateStatus('error');
+  }
+</script>
+
+</body>
+</html>
