@@ -33,7 +33,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // 🔄 Role-based authentication
+    // 🔄 Role-based authentication with better timeout handling
     let authInitialized = false;
     
     onAuthStateChanged(auth, async (user) => {
@@ -45,7 +45,7 @@
             await checkUserRole(auth.currentUser);
           }
           authInitialized = true;
-        }, 800);
+        }, 1000);
       } else if (!user) {
         window.location.href = "/login.html";
       } else {
@@ -53,15 +53,26 @@
       }
     });
 
-    // 🔍 Check user role and permissions
+    // 🔍 Check user role and permissions with timeout
     async function checkUserRole(user) {
       try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        console.log('Checking role for user:', user.uid);
+        
+        // Add timeout to Firestore call
+        const userDocPromise = getDoc(doc(db, 'users', user.uid));
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Firestore timeout')), 10000)
+        );
+        
+        const userDoc = await Promise.race([userDocPromise, timeoutPromise]);
+        
         let userRole = 'viewer'; // default role
         
         if (userDoc.exists()) {
           userRole = userDoc.data().role || 'viewer';
+          console.log('User role found:', userRole);
         } else {
+          console.log('No user document found, creating default');
           // First time user - set as viewer by default
           await setDoc(doc(db, 'users', user.uid), {
             email: user.email,
@@ -72,18 +83,29 @@
 
         // Check admin access
         if (userRole !== 'admin' && userRole !== 'super_admin') {
+          console.log('User is not admin, redirecting. Role:', userRole);
           // Redirect non-admins to driver lookup
           window.location.href = "/lookup-driver.html";
           return;
         }
 
+        console.log('User has admin access, initializing interface');
         // Initialize admin interface
         initializeAdminInterface(user, userRole);
         hideAuthLoader();
         
       } catch (error) {
         console.error('Error checking user role:', error);
-        window.location.href = "/login.html";
+        
+        // If Firestore fails, check if this is your email
+        if (user.email === 'safreightprogram@gmail.com') {
+          console.log('Firestore failed but email matches admin, granting access');
+          initializeAdminInterface(user, 'super_admin');
+          hideAuthLoader();
+        } else {
+          console.log('Firestore failed and email does not match, redirecting');
+          window.location.href = "/lookup-driver.html";
+        }
       }
     }
 
