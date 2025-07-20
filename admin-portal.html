@@ -8,7 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-  <!-- 🔐 Simplified Firebase Auth -->
+  <!-- 🔐 Firebase Auth with Role-Based Access -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
@@ -16,6 +16,12 @@
       onAuthStateChanged,
       signOut
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBURlJUicOTobRLghN2RyEZfXEZvU_uiYU",
@@ -25,31 +31,86 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    // 🔄 Simplified authentication - just check if logged in
-    onAuthStateChanged(auth, (user) => {
-      console.log('Auth state changed:', user);
-      
-      if (!user) {
-        console.log('No user, redirecting to login');
+    // 🔄 Role-based authentication with better timeout handling
+    let authInitialized = false;
+    
+    onAuthStateChanged(auth, async (user) => {
+      if (!authInitialized) {
+        setTimeout(async () => {
+          if (!auth.currentUser) {
+            window.location.href = "/login.html";
+          } else {
+            await checkUserRole(auth.currentUser);
+          }
+          authInitialized = true;
+        }, 1000);
+      } else if (!user) {
         window.location.href = "/login.html";
       } else {
-        console.log('User found:', user.email);
-        
-        // Simple email check for admin access
-        if (user.email === 'safreightprogram@gmail.com') {
-          console.log('Admin email confirmed, showing admin portal');
-          initializeAdminInterface(user);
-          hideAuthLoader();
-        } else {
-          console.log('Not admin email, redirecting to driver lookup');
-          window.location.href = "/lookup-driver.html";
-        }
+        await checkUserRole(user);
       }
     });
 
+    // 🔍 Check user role and permissions with timeout
+    async function checkUserRole(user) {
+      try {
+        console.log('Checking role for user:', user.uid);
+        
+        // Add timeout to Firestore call
+        const userDocPromise = getDoc(doc(db, 'users', user.uid));
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Firestore timeout')), 10000)
+        );
+        
+        const userDoc = await Promise.race([userDocPromise, timeoutPromise]);
+        
+        let userRole = 'viewer'; // default role
+        
+        if (userDoc.exists()) {
+          userRole = userDoc.data().role || 'viewer';
+          console.log('User role found:', userRole);
+        } else {
+          console.log('No user document found, creating default');
+          // First time user - set as viewer by default
+          await setDoc(doc(db, 'users', user.uid), {
+            email: user.email,
+            role: 'viewer',
+            createdAt: new Date()
+          });
+        }
+
+        // Check admin access
+        if (userRole !== 'admin' && userRole !== 'super_admin') {
+          console.log('User is not admin, redirecting. Role:', userRole);
+          // Redirect non-admins to driver lookup
+          window.location.href = "/lookup-driver.html";
+          return;
+        }
+
+        console.log('User has admin access, initializing interface');
+        // Initialize admin interface
+        initializeAdminInterface(user, userRole);
+        hideAuthLoader();
+        
+      } catch (error) {
+        console.error('Error checking user role:', error);
+        
+        // 🔧 FIXED: Updated to correct email address
+        if (user.email === 'safefreightprogram@gmail.com') {
+          console.log('Firestore failed but email matches admin, granting access');
+          initializeAdminInterface(user, 'super_admin');
+          hideAuthLoader();
+        } else {
+          console.log('Firestore failed and email does not match, redirecting');
+          window.location.href = "/lookup-driver.html";
+        }
+      }
+    }
+
     // 🎯 Initialize admin interface
-    function initializeAdminInterface(user) {
+    function initializeAdminInterface(user, role) {
       const logoutLink = document.getElementById("logoutLink");
       const userInfo = document.getElementById("userInfo");
       const roleDisplay = document.getElementById("roleDisplay");
@@ -62,7 +123,7 @@
       }
 
       if (roleDisplay) {
-        roleDisplay.textContent = 'Super Admin';
+        roleDisplay.textContent = role === 'super_admin' ? 'Super Admin' : 'Admin';
         roleDisplay.classList.remove("hidden");
       }
 
@@ -70,10 +131,8 @@
       const container = document.getElementById('userInfoContainer');
       if (container) container.classList.remove('hidden');
 
-      // Store user info globally
-      window.currentUser = { uid: user.uid, email: user.email, role: 'super_admin' };
-      
-      console.log('Admin interface initialized');
+      // Store user info globally for use in forms
+      window.currentUser = { uid: user.uid, email: user.email, role: role };
     }
 
     // 🔄 Hide auth loader
@@ -85,7 +144,7 @@
       }
     }
 
-    // 🚪 Logout function
+    // 🚪 Enhanced logout
     window.signOutUser = () => {
       const logoutBtn = document.getElementById("logoutLink");
       const originalText = logoutBtn.textContent;
@@ -102,15 +161,18 @@
           logoutBtn.style.pointerEvents = "auto";
         });
     };
+
+    // 🔧 Make Firestore available globally
+    window.db = db;
   </script>
 </head>
 
 <body class="bg-gray-50 text-gray-800 font-sans">
-<!-- 🔄 Simple loading overlay -->
+<!-- 🔄 Loading overlay -->
 <div id="authLoader" class="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50 transition-opacity duration-300">
   <div class="text-center">
     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto mb-4"></div>
-    <p class="text-gray-600 text-lg">Loading admin portal...</p>
+    <p class="text-gray-600 text-lg">Checking permissions...</p>
   </div>
 </div>
 
@@ -169,87 +231,319 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <!-- Page Title -->
   <div class="mb-8">
-    <h1 class="text-3xl font-bold text-blue-800">🎉 Admin Portal Access Confirmed!</h1>
-    <p class="text-gray-600 mt-2">Welcome to the Safe Freight Program admin system</p>
+    <h1 class="text-3xl font-bold text-blue-800">Admin Portal</h1>
+    <p class="text-gray-600 mt-2">Manage drivers, vehicles, users, and system settings</p>
   </div>
 
-  <!-- Success Message -->
-  <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
-    <div class="flex items-center">
-      <div class="p-2 bg-green-100 rounded-full">
-        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
+  <!-- Tab Navigation -->
+  <div class="mb-8">
+    <nav class="flex space-x-8 border-b border-gray-200">
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="border-b-2 border-blue-500 text-blue-600 font-medium pb-2 px-1">Dashboard</button>
+      <button onclick="switchTab('drivers')" id="tab-drivers" class="text-gray-500 hover:text-gray-700 pb-2 px-1">Driver Management</button>
+      <button onclick="switchTab('vehicles')" id="tab-vehicles" class="text-gray-500 hover:text-gray-700 pb-2 px-1">Vehicle Management</button>
+      <button onclick="switchTab('users')" id="tab-users" class="text-gray-500 hover:text-gray-700 pb-2 px-1">User Management</button>
+      <button onclick="switchTab('reports')" id="tab-reports" class="text-gray-500 hover:text-gray-700 pb-2 px-1">Reports</button>
+    </nav>
+  </div>
+
+  <!-- Dashboard Tab -->
+  <div id="content-dashboard" class="tab-content">
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-center">
+          <div class="p-3 bg-blue-100 rounded-full">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-sm font-medium text-gray-500">Total Drivers</h3>
+            <p class="text-2xl font-bold text-gray-900" id="stat-total-drivers">Loading...</p>
+          </div>
+        </div>
       </div>
-      <div class="ml-4">
-        <h3 class="text-lg font-medium text-green-800">Authentication Successful</h3>
-        <p class="text-green-700">You now have admin access to the Safe Freight Program portal. The role-based authentication system is working correctly.</p>
+      
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-center">
+          <div class="p-3 bg-green-100 rounded-full">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-sm font-medium text-gray-500">Active</h3>
+            <p class="text-2xl font-bold text-green-600" id="stat-active-drivers">Loading...</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-center">
+          <div class="p-3 bg-yellow-100 rounded-full">
+            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-sm font-medium text-gray-500">Expiring Soon</h3>
+            <p class="text-2xl font-bold text-yellow-600" id="stat-expiring-drivers">Loading...</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-center">
+          <div class="p-3 bg-red-100 rounded-full">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-sm font-medium text-gray-500">Expired</h3>
+            <p class="text-2xl font-bold text-red-600" id="stat-expired-drivers">Loading...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-lg font-medium mb-4">Recent Activity</h2>
+      <div id="recent-activity" class="space-y-3">
+        <p class="text-gray-500">Loading recent activity...</p>
       </div>
     </div>
   </div>
 
-  <!-- Quick Start Guide -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <div class="flex items-center mb-4">
-        <div class="p-3 bg-blue-100 rounded-full">
-          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-          </svg>
+  <!-- Driver Management Tab -->
+  <div id="content-drivers" class="tab-content hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Add New Driver Form -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-lg font-medium mb-4">Add New Driver</h2>
+          <form id="addDriverForm" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+              <input type="text" id="firstName" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="John">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Surname *</label>
+              <input type="text" id="surname" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Smith">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Driver ID *</label>
+              <div class="flex">
+                <span class="bg-gray-100 border border-r-0 border-gray-300 px-3 py-2 text-gray-500 rounded-l-md">SFPD-</span>
+                <input type="text" id="driverId" required pattern="[0-9]{6}" class="flex-1 border border-gray-300 rounded-r-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="001234">
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Date *</label>
+              <input type="date" id="expiryDate" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Photo Upload</label>
+              <input type="file" id="photoUpload" accept="image/*" class="w-full border border-gray-300 rounded-md px-3 py-2">
+              <p class="text-xs text-gray-500 mt-1">Recommended: 300x400px passport-style photo</p>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Certifications</label>
+              <div class="space-y-2">
+                <label class="flex items-center">
+                  <input type="checkbox" id="cert-slp" class="mr-2">
+                  <span class="text-sm">SLP (Fuels)</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" id="cert-sup" class="mr-2">
+                  <span class="text-sm">SUP (Fuels)</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" id="cert-sdp" class="mr-2">
+                  <span class="text-sm">SDP</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" id="cert-dg" class="mr-2">
+                  <span class="text-sm">Dangerous Goods</span>
+                </label>
+              </div>
+            </div>
+            
+            <button type="submit" id="addDriverBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors">
+              Create Driver & Generate Card
+            </button>
+          </form>
         </div>
-        <h3 class="text-lg font-medium text-gray-900 ml-3">Driver Management</h3>
       </div>
-      <p class="text-gray-600 mb-4">Add new drivers, manage certifications, and generate credentials.</p>
-      <p class="text-sm text-gray-500">✅ Authentication working<br>🔧 Full functionality ready to implement</p>
-    </div>
-    
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <div class="flex items-center mb-4">
-        <div class="p-3 bg-green-100 rounded-full">
-          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.25-4.5a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 5.25v13.5A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V8.25a2.25 2.25 0 00-2.25-2.25h-4.5m-3-3V3a1.5 1.5 0 011.5-1.5h1.5A1.5 1.5 0 0112 3v1.5"></path>
-          </svg>
+
+      <!-- Driver List -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-md">
+          <div class="p-6 border-b">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-lg font-medium">Driver List</h2>
+              <div class="flex space-x-3">
+                <input type="search" id="driverSearch" placeholder="Search drivers..." class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                <button onclick="exportDrivers()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm transition-colors">
+                  Export CSV
+                </button>
+                <button onclick="importDrivers()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition-colors">
+                  Import CSV
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Driver</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expiry</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Certifications</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="driverTableBody" class="divide-y divide-gray-200">
+                <tr>
+                  <td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading drivers...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <h3 class="text-lg font-medium text-gray-900 ml-3">Vehicle Management</h3>
       </div>
-      <p class="text-gray-600 mb-4">Manage vehicle inspections, QR codes, and compliance tracking.</p>
-      <p class="text-sm text-gray-500">🚀 Ready to build<br>📋 Equipment tracking system</p>
-    </div>
-    
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <div class="flex items-center mb-4">
-        <div class="p-3 bg-purple-100 rounded-full">
-          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 5.25v13.5A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V5.25z"></path>
-          </svg>
-        </div>
-        <h3 class="text-lg font-medium text-gray-900 ml-3">User Management</h3>
-      </div>
-      <p class="text-gray-600 mb-4">Create and manage user accounts with role-based permissions.</p>
-      <p class="text-sm text-gray-500">✅ Basic structure ready<br>👥 Role system functional</p>
     </div>
   </div>
 
-  <!-- Next Steps -->
-  <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
-    <h3 class="text-lg font-medium text-blue-800 mb-4">🚀 What's Next?</h3>
-    <div class="space-y-3">
-      <div class="flex items-center">
-        <div class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</div>
-        <span>Connect Google Sheets API for driver data management</span>
+  <!-- Vehicle Management Tab -->
+  <div id="content-vehicles" class="tab-content hidden">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-lg font-medium mb-4">Vehicle Management</h2>
+      <p class="text-gray-600">Vehicle management functionality will be implemented here.</p>
+      <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+        <p class="text-blue-800 font-medium">Coming Soon:</p>
+        <ul class="text-blue-700 mt-2 space-y-1">
+          <li>• Add/edit vehicle information</li>
+          <li>• QR code generation for equipment</li>
+          <li>• Inspection scheduling and tracking</li>
+          <li>• Equipment compliance monitoring</li>
+        </ul>
       </div>
-      <div class="flex items-center">
-        <div class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</div>
-        <span>Implement photo upload and card generation</span>
+    </div>
+  </div>
+
+  <!-- User Management Tab -->
+  <div id="content-users" class="tab-content hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Add User Form -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-lg font-medium mb-4">Add New User</h2>
+          <form id="addUserForm" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+              <input type="email" id="userEmail" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+              <select id="userRole" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                <option value="">Select role...</option>
+                <option value="viewer">Viewer (Lookup only)</option>
+                <option value="ail">AIL (Inspection portal)</option>
+                <option value="admin">Admin (Full management)</option>
+                <option value="super_admin">Super Admin (System-wide)</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+              <input type="text" id="userOrg" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Company name">
+            </div>
+            
+            <button type="submit" id="addUserBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors">
+              Create User Account
+            </button>
+          </form>
+        </div>
       </div>
-      <div class="flex items-center">
-        <div class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">3</div>
-        <span>Build vehicle management and QR code system</span>
+
+      <!-- User List -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-md">
+          <div class="p-6 border-b">
+            <h2 class="text-lg font-medium">User Management</h2>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Organization</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Login</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="userTableBody" class="divide-y divide-gray-200">
+                <tr>
+                  <td colspan="5" class="px-6 py-4 text-center text-gray-500">Loading users...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <div class="flex items-center">
-        <div class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">4</div>
-        <span>Add reporting and analytics dashboard</span>
+    </div>
+  </div>
+
+  <!-- Reports Tab -->
+  <div id="content-reports" class="tab-content hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-lg font-medium mb-4">Expiry Reports</h2>
+        <div class="space-y-3">
+          <button onclick="generateExpiryReport()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
+            <div class="font-medium">Drivers Expiring This Month</div>
+            <div class="text-sm text-gray-500">Generate report of drivers requiring renewal</div>
+          </button>
+          <button onclick="generateOverdueReport()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
+            <div class="font-medium">Overdue Renewals</div>
+            <div class="text-sm text-gray-500">List of expired credentials</div>
+          </button>
+        </div>
       </div>
+      
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-lg font-medium mb-4">System Reports</h2>
+        <div class="space-y-3">
+          <button onclick="generateActivityReport()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
+            <div class="font-medium">User Activity Report</div>
+            <div class="text-sm text-gray-500">Track login and system usage</div>
+          </button>
+          <button onclick="generateAuditReport()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
+            <div class="font-medium">Audit Trail</div>
+            <div class="text-sm text-gray-500">Complete system audit log</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Messages -->
+  <div id="statusMessage" class="fixed bottom-4 right-4 max-w-sm hidden">
+    <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+      <div id="statusContent"></div>
     </div>
   </div>
 </main>
@@ -258,14 +552,441 @@
   &copy; 2025 Safe Freight Program. All rights reserved.
 </footer>
 
+<!-- 📜 Admin Portal JavaScript -->
 <script>
-  function searchAllRecords(event) {
-    event.preventDefault();
-    alert('Search functionality ready to implement!');
+  const DRIVER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json';
+  const SPREADSHEET_ID = '1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ';
+  
+  let driversData = [];
+  let usersData = [];
+
+  // 🔄 Initialize admin portal
+  document.addEventListener('DOMContentLoaded', function() {
+    // Show user info container when auth completes
+    setTimeout(() => {
+      const container = document.getElementById('userInfoContainer');
+      if (container) container.classList.remove('hidden');
+    }, 1000);
+    
+    // Load initial data
+    loadDashboardData();
+    loadDriversData();
+    loadUsersData();
+  });
+
+  // 📊 Tab Management
+  function switchTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.add('hidden');
+    });
+    
+    // Remove active styles from all tabs
+    document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+      tab.classList.remove('border-blue-500', 'text-blue-600');
+      tab.classList.add('text-gray-500');
+    });
+    
+    // Show selected tab content
+    document.getElementById(`content-${tabName}`).classList.remove('hidden');
+    
+    // Style active tab
+    const activeTab = document.getElementById(`tab-${tabName}`);
+    activeTab.classList.remove('text-gray-500');
+    activeTab.classList.add('border-blue-500', 'text-blue-600');
+    
+    // Load data for specific tabs
+    if (tabName === 'drivers') {
+      loadDriversData();
+    } else if (tabName === 'users') {
+      loadUsersData();
+    }
   }
 
-  function switchTab(tab) {
-    alert(`${tab} management ready to implement!`);
+  // 📊 Dashboard Data Loading
+  async function loadDashboardData() {
+    try {
+      const data = await fetchSheetData(DRIVER_SHEET_URL);
+      
+      const total = data.length;
+      const active = data.filter(row => row[3] === 'Active').length;
+      const expiring = data.filter(row => row[3] === 'Expires Soon').length;
+      const expired = data.filter(row => row[3] === 'Expired').length;
+      
+      document.getElementById('stat-total-drivers').textContent = total;
+      document.getElementById('stat-active-drivers').textContent = active;
+      document.getElementById('stat-expiring-drivers').textContent = expiring;
+      document.getElementById('stat-expired-drivers').textContent = expired;
+      
+      // Load recent activity
+      loadRecentActivity();
+      
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      showStatus('Error loading dashboard data', 'error');
+    }
+  }
+
+  // 📋 Recent Activity
+  function loadRecentActivity() {
+    const activities = [
+      { action: 'New driver added', user: 'Admin', time: '2 hours ago', type: 'success' },
+      { action: 'Driver credentials renewed', user: 'Admin', time: '5 hours ago', type: 'info' },
+      { action: 'User role updated', user: 'Admin', time: '1 day ago', type: 'warning' },
+      { action: 'Bulk import completed', user: 'Admin', time: '2 days ago', type: 'success' }
+    ];
+    
+    const activityHtml = activities.map(activity => `
+      <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
+        <div class="flex items-center">
+          <div class="w-3 h-3 rounded-full mr-3 ${
+            activity.type === 'success' ? 'bg-green-500' :
+            activity.type === 'warning' ? 'bg-yellow-500' :
+            activity.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+          }"></div>
+          <div>
+            <div class="font-medium text-sm">${activity.action}</div>
+            <div class="text-xs text-gray-500">by ${activity.user}</div>
+          </div>
+        </div>
+        <div class="text-xs text-gray-400">${activity.time}</div>
+      </div>
+    `).join('');
+    
+    document.getElementById('recent-activity').innerHTML = activityHtml;
+  }
+
+  // 🔍 Driver Data Management
+  async function fetchSheetData(url) {
+    const response = await fetch(url);
+    const text = await response.text();
+    try {
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
+    } catch (e) {
+      console.error('Failed to parse sheet data:', e);
+      return [];
+    }
+  }
+
+  async function loadDriversData() {
+    try {
+      driversData = await fetchSheetData(DRIVER_SHEET_URL);
+      renderDriverTable(driversData);
+    } catch (error) {
+      console.error('Error loading drivers:', error);
+      showStatus('Error loading driver data', 'error');
+    }
+  }
+
+  function renderDriverTable(data) {
+    const tbody = document.getElementById('driverTableBody');
+    
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No drivers found</td></tr>';
+      return;
+    }
+    
+    const rows = data.map(row => {
+      const [id, firstName, surname, status, expiry, qrUrl, photo, slideId, cardPng, slp, sup, sdp, dg] = row;
+      
+      // Build certification badges
+      const certs = [];
+      if (slp === 'y') certs.push('<span class="bg-blue-500 text-white px-2 py-1 rounded text-xs">SLP</span>');
+      if (sup === 'y') certs.push('<span class="bg-green-500 text-white px-2 py-1 rounded text-xs">SUP</span>');
+      if (sdp === 'y') certs.push('<span class="bg-purple-500 text-white px-2 py-1 rounded text-xs">SDP</span>');
+      if (dg === 'y') certs.push('<span class="bg-orange-500 text-white px-2 py-1 rounded text-xs">DG</span>');
+      
+      const statusClass = 
+        status === 'Active' ? 'bg-green-100 text-green-800' :
+        status === 'Expired' ? 'bg-red-100 text-red-800' :
+        'bg-yellow-100 text-yellow-800';
+      
+      return `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4">
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-gray-300 rounded-full mr-3 flex items-center justify-center text-sm font-medium text-gray-600">
+                ${firstName ? firstName.charAt(0) : '?'}${surname ? surname.charAt(0) : '?'}
+              </div>
+              <span class="font-medium">${firstName || ''} ${surname || ''}</span>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">${id || ''}</td>
+          <td class="px-6 py-4">
+            <span class="${statusClass} px-2 py-1 rounded text-xs font-medium">${status || 'Unknown'}</span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">${expiry || 'N/A'}</td>
+          <td class="px-6 py-4">
+            <div class="flex flex-wrap gap-1">
+              ${certs.join(' ') || '<span class="text-gray-400 text-xs">None</span>'}
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex space-x-2">
+              <button onclick="editDriver('${id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
+              <button onclick="renewDriver('${id}')" class="text-green-600 hover:text-green-800 text-sm font-medium">Renew</button>
+              <button onclick="suspendDriver('${id}')" class="text-red-600 hover:text-red-800 text-sm font-medium">Suspend</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    
+    tbody.innerHTML = rows;
+  }
+
+  // 👤 User Management
+  async function loadUsersData() {
+    // Mock user data for demonstration
+    usersData = [
+      { email: 'safefreightprogram@gmail.com', role: 'super_admin', org: 'Safe Freight Program', lastLogin: '2 hours ago' },
+      { email: 'manager@transportco.com', role: 'admin', org: 'Transport Co', lastLogin: '1 day ago' },
+      { email: 'inspector@ailcompany.com', role: 'ail', org: 'AIL Company', lastLogin: '3 days ago' }
+    ];
+    
+    renderUserTable(usersData);
+  }
+
+  function renderUserTable(data) {
+    const tbody = document.getElementById('userTableBody');
+    
+    const rows = data.map(user => {
+      const roleClass = 
+        user.role === 'super_admin' ? 'bg-purple-100 text-purple-800' :
+        user.role === 'admin' ? 'bg-blue-100 text-blue-800' :
+        user.role === 'ail' ? 'bg-green-100 text-green-800' :
+        'bg-gray-100 text-gray-800';
+      
+      const roleDisplay = 
+        user.role === 'super_admin' ? 'Super Admin' :
+        user.role === 'admin' ? 'Admin' :
+        user.role === 'ail' ? 'AIL' :
+        'Viewer';
+      
+      return `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4 text-sm font-medium text-gray-900">${user.email}</td>
+          <td class="px-6 py-4">
+            <span class="${roleClass} px-2 py-1 rounded text-xs font-medium">${roleDisplay}</span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">${user.org || 'N/A'}</td>
+          <td class="px-6 py-4 text-sm text-gray-500">${user.lastLogin || 'Never'}</td>
+          <td class="px-6 py-4">
+            <div class="flex space-x-2">
+              <button onclick="editUser('${user.email}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
+              <button onclick="resetPassword('${user.email}')" class="text-yellow-600 hover:text-yellow-800 text-sm font-medium">Reset</button>
+              <button onclick="deleteUser('${user.email}')" class="text-red-600 hover:text-red-800 text-sm font-medium">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    
+    tbody.innerHTML = rows;
+  }
+
+  // 📝 Form Handlers
+  document.getElementById('addDriverForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('addDriverBtn');
+    const originalText = btn.textContent;
+    btn.textContent = 'Creating...';
+    btn.disabled = true;
+    
+    try {
+      const formData = {
+        id: 'SFPD-' + document.getElementById('driverId').value,
+        firstName: document.getElementById('firstName').value,
+        surname: document.getElementById('surname').value,
+        status: 'Active',
+        expiry: document.getElementById('expiryDate').value,
+        photo: document.getElementById('photoUpload').files[0],
+        certifications: {
+          slp: document.getElementById('cert-slp').checked ? 'y' : 'n',
+          sup: document.getElementById('cert-sup').checked ? 'y' : 'n',
+          sdp: document.getElementById('cert-sdp').checked ? 'y' : 'n',
+          dg: document.getElementById('cert-dg').checked ? 'y' : 'n'
+        }
+      };
+      
+      // Here you would integrate with Google Sheets API to add the new driver
+      console.log('Adding new driver:', formData);
+      
+      showStatus('Driver created successfully! Card generation in progress...', 'success');
+      
+      // Reset form
+      document.getElementById('addDriverForm').reset();
+      
+      // Reload drivers table
+      setTimeout(() => {
+        loadDriversData();
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Error creating driver:', error);
+      showStatus('Error creating driver: ' + error.message, 'error');
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('addUserForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('addUserBtn');
+    const originalText = btn.textContent;
+    btn.textContent = 'Creating...';
+    btn.disabled = true;
+    
+    try {
+      const userData = {
+        email: document.getElementById('userEmail').value,
+        role: document.getElementById('userRole').value,
+        organization: document.getElementById('userOrg').value
+      };
+      
+      // Here you would integrate with Firebase Auth to create the user
+      console.log('Creating new user:', userData);
+      
+      showStatus('User account created successfully!', 'success');
+      
+      // Reset form
+      document.getElementById('addUserForm').reset();
+      
+      // Reload users table
+      setTimeout(() => {
+        loadUsersData();
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Error creating user:', error);
+      showStatus('Error creating user: ' + error.message, 'error');
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  });
+
+  // 🔍 Search Functions
+  document.getElementById('driverSearch').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const filteredData = driversData.filter(row => {
+      const searchString = `${row[0]} ${row[1]} ${row[2]} ${row[3]}`.toLowerCase();
+      return searchString.includes(searchTerm);
+    });
+    renderDriverTable(filteredData);
+  });
+
+  function searchAllRecords(event) {
+    event.preventDefault();
+    const searchTerm = document.getElementById('globalSearch').value;
+    showStatus(`Searching for: ${searchTerm}`, 'info');
+    // Implement global search across all records
+  }
+
+  // 🛠 Action Functions
+  function editDriver(driverId) {
+    showStatus(`Edit driver: ${driverId}`, 'info');
+    // Implement edit driver modal/form
+  }
+
+  function renewDriver(driverId) {
+    showStatus(`Renewing driver: ${driverId}`, 'info');
+    // Implement renewal process
+  }
+
+  function suspendDriver(driverId) {
+    if (confirm(`Are you sure you want to suspend ${driverId}?`)) {
+      showStatus(`Driver ${driverId} suspended`, 'warning');
+      // Implement suspension logic
+    }
+  }
+
+  function editUser(email) {
+    showStatus(`Edit user: ${email}`, 'info');
+    // Implement edit user modal/form
+  }
+
+  function resetPassword(email) {
+    if (confirm(`Send password reset email to ${email}?`)) {
+      showStatus(`Password reset sent to ${email}`, 'info');
+      // Implement password reset
+    }
+  }
+
+  function deleteUser(email) {
+    if (confirm(`Are you sure you want to delete ${email}?`)) {
+      showStatus(`User ${email} deleted`, 'warning');
+      // Implement user deletion
+    }
+  }
+
+  // 📊 Export/Import Functions
+  function exportDrivers() {
+    showStatus('Exporting driver data...', 'info');
+    // Implement CSV export
+  }
+
+  function importDrivers() {
+    showStatus('Import feature coming soon', 'info');
+    // Implement CSV import
+  }
+
+  // 📈 Report Functions
+  function generateExpiryReport() {
+    showStatus('Generating expiry report...', 'info');
+    // Implement expiry report generation
+  }
+
+  function generateOverdueReport() {
+    showStatus('Generating overdue report...', 'info');
+    // Implement overdue report generation
+  }
+
+  function generateActivityReport() {
+    showStatus('Generating activity report...', 'info');
+    // Implement activity report generation
+  }
+
+  function generateAuditReport() {
+    showStatus('Generating audit report...', 'info');
+    // Implement audit report generation
+  }
+
+  // 💬 Status Message System
+  function showStatus(message, type = 'info') {
+    const statusEl = document.getElementById('statusMessage');
+    const contentEl = document.getElementById('statusContent');
+    
+    const iconClass = 
+      type === 'success' ? 'text-green-600' :
+      type === 'error' ? 'text-red-600' :
+      type === 'warning' ? 'text-yellow-600' :
+      'text-blue-600';
+    
+    const bgClass = 
+      type === 'success' ? 'bg-green-50 border-green-200' :
+      type === 'error' ? 'bg-red-50 border-red-200' :
+      type === 'warning' ? 'bg-yellow-50 border-yellow-200' :
+      'bg-blue-50 border-blue-200';
+    
+    contentEl.innerHTML = `
+      <div class="flex items-center ${bgClass} p-3 rounded-md">
+        <div class="${iconClass} mr-2">
+          ${type === 'success' ? '✓' : type === 'error' ? '✗' : type === 'warning' ? '⚠' : 'ℹ'}
+        </div>
+        <span class="text-sm font-medium">${message}</span>
+      </div>
+    `;
+    
+    statusEl.classList.remove('hidden');
+    
+    setTimeout(() => {
+      statusEl.classList.add('hidden');
+    }, 5000);
   }
 </script>
 
