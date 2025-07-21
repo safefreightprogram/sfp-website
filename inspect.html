@@ -23,25 +23,23 @@
     const allowedAILEmails = [
       "safefreightprogram@gmail.com",
       "safrightprogram@gmail.com"
-      // Add real AIL emails here
     ];
 
     onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "/login.html";
-        return;
-      }
+      if (!user) return window.location.href = "/login.html";
 
       const isAIL = allowedAILEmails.includes(user.email.toLowerCase());
-      if (!isAIL) {
-        alert("Access denied – you are not authorised to submit inspections.");
-        window.location.href = "/lookup-vehicle.html";
-        return;
-      }
+      if (!isAIL) return window.location.href = "/lookup-vehicle.html";
 
-      document.getElementById("inspectionForm").classList.remove("hidden");
+      document.getElementById("userPanel").classList.remove("hidden");
+      document.getElementById("formWrapper").classList.remove("hidden");
       document.getElementById("inspectorEmailField").value = user.email;
       document.getElementById("userInfo").textContent = user.email;
+
+      fetch('/data/forms/SFP-Tanker-Trailer-Inspection-Schema.json')
+        .then(res => res.json())
+        .then(schema => renderInspectionForm(schema))
+        .catch(err => console.error("Failed to load inspection schema", err));
     });
 
     window.signOutUser = () => {
@@ -58,29 +56,58 @@
       <button onclick="signOutUser()" class="ml-2 text-red-600 underline">Sign out</button>
     </div>
 
-    <h1 class="text-2xl font-bold mb-4 text-blue-800">Vehicle Inspection Submission</h1>
-    <p class="mb-6 text-sm text-gray-600">Authorised Inspectors only. Complete the inspection form and submit.</p>
+    <div id="formWrapper" class="hidden">
+      <h1 class="text-2xl font-bold mb-4 text-blue-800">Vehicle Inspection Submission</h1>
+      <p class="mb-6 text-sm text-gray-600">Authorised Inspectors only. Complete the inspection form and submit.</p>
 
-    <form id="inspectionForm" class="space-y-4 hidden">
-      <input type="text" name="sfpvId" placeholder="SFPV ID (e.g. SFPV-001234)" required class="w-full border px-3 py-2 rounded-md" />
-      <input type="text" name="rego" placeholder="Vehicle Registration" required class="w-full border px-3 py-2 rounded-md" />
-      <input type="email" id="inspectorEmailField" name="inspectorEmail" readonly class="w-full border px-3 py-2 rounded-md bg-gray-100 text-gray-600" />
-      <input type="date" name="inspectionDate" required class="w-full border px-3 py-2 rounded-md" />
-      <select name="outcome" required class="w-full border px-3 py-2 rounded-md">
-        <option value="">-- Inspection Outcome --</option>
-        <option value="Pass">Pass</option>
-        <option value="Fail">Fail</option>
-        <option value="Needs Repair">Needs Repair</option>
-      </select>
-      <textarea name="comments" placeholder="Optional Comments" class="w-full border px-3 py-2 rounded-md"></textarea>
-      <input type="text" name="ailName" placeholder="AIL Name" required class="w-full border px-3 py-2 rounded-md" />
-      <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-md font-semibold">Submit Inspection</button>
-    </form>
+      <form id="inspectionForm" class="space-y-4">
+        <input type="text" name="sfpvId" placeholder="SFPV ID (e.g. SFPV-001234)" required class="w-full border px-3 py-2 rounded-md" />
+        <input type="text" name="rego" placeholder="Vehicle Registration" required class="w-full border px-3 py-2 rounded-md" />
+        <input type="email" id="inspectorEmailField" name="inspectorEmail" readonly class="w-full border px-3 py-2 rounded-md bg-gray-100 text-gray-600" />
+        <input type="date" name="inspectionDate" required class="w-full border px-3 py-2 rounded-md" />
+        <select name="outcome" required class="w-full border px-3 py-2 rounded-md">
+          <option value="">-- Inspection Outcome --</option>
+          <option value="Pass">Pass</option>
+          <option value="Fail">Fail</option>
+          <option value="Needs Repair">Needs Repair</option>
+        </select>
+        <textarea name="comments" placeholder="Optional Comments" class="w-full border px-3 py-2 rounded-md"></textarea>
+        <input type="text" name="ailName" placeholder="AIL Name" required class="w-full border px-3 py-2 rounded-md" />
+        <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-md font-semibold">Submit Inspection</button>
+      </form>
 
-    <div id="formStatus" class="text-sm mt-4 text-center"></div>
+      <div id="formContainer" class="space-y-8 mt-8"></div>
+      <div id="formStatus" class="text-sm mt-4 text-center"></div>
+    </div>
   </div>
 
   <script>
+    function renderInspectionForm(schema) {
+      const container = document.getElementById("formContainer");
+      container.innerHTML = "";
+
+      schema.sections.forEach((section, sIdx) => {
+        const sectionEl = document.createElement("div");
+        sectionEl.innerHTML = `
+          <h2 class="text-xl font-bold text-blue-800 mb-2">${section.title}</h2>
+          <div class="space-y-4">
+          ${section.items.map((item, i) => `
+            <div class="bg-gray-50 p-4 rounded-md shadow-sm">
+              <label class="block font-medium text-gray-700 mb-2">${item}</label>
+              <div class="flex items-center gap-4 text-sm">
+                <label><input type="radio" name="q-${sIdx}-${i}" value="Pass" required> ✓ Pass</label>
+                <label><input type="radio" name="q-${sIdx}-${i}" value="Fail"> ✗ Fail</label>
+                <label><input type="radio" name="q-${sIdx}-${i}" value="N/A"> ☐ N/A</label>
+              </div>
+              <textarea name="notes-${sIdx}-${i}" placeholder="Notes (optional)" class="w-full mt-2 border px-3 py-2 rounded-md text-sm"></textarea>
+            </div>
+          `).join('')}
+          </div>
+        `;
+        container.appendChild(sectionEl);
+      });
+    }
+
     const form = document.getElementById("inspectionForm");
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -96,9 +123,7 @@
       };
 
       document.getElementById("formStatus").textContent = "Submitting...";
-
       try {
-        // Placeholder – we’ll connect to Google Sheets in Step 4
         console.log("Inspection Data:", data);
         document.getElementById("formStatus").textContent = "✅ Inspection submitted successfully!";
         form.reset();
