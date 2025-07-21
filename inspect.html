@@ -111,6 +111,7 @@
     const form = document.getElementById("inspectionForm");
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
+
       const data = {
         timestamp: new Date().toISOString(),
         sfpvId: form.sfpvId.value.trim(),
@@ -123,10 +124,24 @@
       };
 
       document.getElementById("formStatus").textContent = "Submitting...";
+
       try {
-        console.log("Inspection Data:", data);
-        document.getElementById("formStatus").textContent = "✅ Inspection submitted successfully!";
-        form.reset();
+        const response = await fetch("https://script.google.com/macros/s/AKfycbw4Cht9-kkgXjEdbiR1zA-V-8L83zLPMGgQpQKlER2296_kizjG_WpS36wzy715sEmJ/exec", {
+          method: "POST",
+          body: JSON.stringify(data),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+
+        const result = await response.json();
+
+        if (result.result === "success") {
+          document.getElementById("formStatus").textContent = "✅ Inspection submitted successfully!";
+          form.reset();
+        } else {
+          throw new Error(result.message || "Submission failed");
+        }
       } catch (err) {
         console.error(err);
         document.getElementById("formStatus").textContent = "❌ Submission failed. Please try again.";
