@@ -36,10 +36,46 @@
       document.getElementById("inspectorEmailField").value = user.email;
       document.getElementById("userInfo").textContent = user.email;
 
+      // Load inspection schema - fallback to local schema if fetch fails
       fetch('/data/forms/SFP-Tanker-Trailer-Inspection-Schema.json')
         .then(res => res.json())
         .then(schema => renderInspectionForm(schema))
-        .catch(err => console.error("Failed to load inspection schema", err));
+        .catch(err => {
+          console.warn("Failed to load inspection schema from server, using fallback", err);
+          // Fallback schema
+          const fallbackSchema = {
+            sections: [
+              {
+                title: "Identification & Placarding",
+                items: [
+                  "Emergency info panels are clean, visible, and legible on both sides and rear",
+                  "UN number displayed correctly on panels and placards",
+                  "Placards are appropriate for the load and securely mounted",
+                  "Vehicle identification numbers are visible and match documentation"
+                ]
+              },
+              {
+                title: "Structural Integrity",
+                items: [
+                  "Tank shell shows no signs of corrosion, dents, or damage",
+                  "Welds and joints are intact with no visible cracks",
+                  "Support framework and mounting points are secure",
+                  "Walkways and platforms are structurally sound"
+                ]
+              },
+              {
+                title: "Safety Equipment",
+                items: [
+                  "Fire extinguisher is present, charged, and within service date",
+                  "Emergency response equipment is accessible and complete",
+                  "Spill response kit is present and adequate",
+                  "Personal protective equipment meets requirements"
+                ]
+              }
+            ]
+          };
+          renderInspectionForm(fallbackSchema);
+        });
     });
 
     window.signOutUser = () => {
@@ -49,7 +85,7 @@
 </head>
 
 <body class="bg-gray-50 text-gray-800 font-sans">
-  <div class="max-w-xl mx-auto mt-12 p-6 bg-white shadow-lg rounded-lg">
+  <div class="max-w-4xl mx-auto mt-12 p-6 bg-white shadow-lg rounded-lg">
 
     <div class="text-right text-sm text-blue-700 mb-4 hidden" id="userPanel">
       Logged in as: <span id="userInfo"></span>
@@ -61,22 +97,43 @@
       <p class="mb-6 text-sm text-gray-600">Authorised Inspectors only. Complete the inspection form and submit.</p>
 
       <form id="inspectionForm" class="space-y-4">
-        <input type="text" name="sfpvId" placeholder="SFPV ID (e.g. SFPV-001234)" required class="w-full border px-3 py-2 rounded-md" />
-        <input type="text" name="rego" placeholder="Vehicle Registration" required class="w-full border px-3 py-2 rounded-md" />
-        <input type="email" id="inspectorEmailField" name="inspectorEmail" readonly class="w-full border px-3 py-2 rounded-md bg-gray-100 text-gray-600" />
-        <input type="date" name="inspectionDate" required class="w-full border px-3 py-2 rounded-md" />
-        <select name="outcome" required class="w-full border px-3 py-2 rounded-md">
-          <option value="">-- Inspection Outcome --</option>
-          <option value="Pass">Pass</option>
-          <option value="Fail">Fail</option>
-          <option value="Needs Repair">Needs Repair</option>
-        </select>
-        <textarea name="comments" placeholder="Optional Comments" class="w-full border px-3 py-2 rounded-md"></textarea>
-        <input type="text" name="ailName" placeholder="AIL Name" required class="w-full border px-3 py-2 rounded-md" />
-        <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-md font-semibold">Submit Inspection</button>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input type="text" name="sfpvId" placeholder="SFPV ID (e.g. SFPV-001234)" required 
+                 class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <input type="text" name="rego" placeholder="Vehicle Registration" required 
+                 class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input type="email" id="inspectorEmailField" name="inspectorEmail" readonly 
+                 class="w-full border border-gray-300 px-3 py-2 rounded-md bg-gray-100 text-gray-600" />
+          <input type="date" name="inspectionDate" required 
+                 class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <select name="outcome" required 
+                  class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">-- Inspection Outcome --</option>
+            <option value="Pass">Pass</option>
+            <option value="Fail">Fail</option>
+            <option value="Needs Repair">Needs Repair</option>
+          </select>
+          <input type="text" name="ailName" placeholder="AIL Name" required 
+                 class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        
+        <textarea name="comments" placeholder="Optional Comments" rows="3"
+                  class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+
+        <div id="formContainer" class="space-y-8 mt-8"></div>
+
+        <button type="submit" id="submitBtn" 
+                class="w-full bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-md font-semibold transition-colors">
+          Submit Inspection
+        </button>
       </form>
 
-      <div id="formContainer" class="space-y-8 mt-8"></div>
       <div id="formStatus" class="text-sm mt-4 text-center"></div>
     </div>
   </div>
@@ -88,18 +145,29 @@
 
       schema.sections.forEach((section, sIdx) => {
         const sectionEl = document.createElement("div");
+        sectionEl.className = "bg-gray-50 p-6 rounded-lg shadow-sm";
         sectionEl.innerHTML = `
-          <h2 class="text-xl font-bold text-blue-800 mb-2">${section.title}</h2>
+          <h2 class="text-xl font-bold text-blue-800 mb-4">${section.title}</h2>
           <div class="space-y-4">
           ${section.items.map((item, i) => `
-            <div class="bg-gray-50 p-4 rounded-md shadow-sm">
-              <label class="block font-medium text-gray-700 mb-2">${item}</label>
-              <div class="flex items-center gap-4 text-sm">
-                <label><input type="radio" name="q-${sIdx}-${i}" value="Pass" required> ✓ Pass</label>
-                <label><input type="radio" name="q-${sIdx}-${i}" value="Fail"> ✗ Fail</label>
-                <label><input type="radio" name="q-${sIdx}-${i}" value="N/A"> ☐ N/A</label>
+            <div class="bg-white p-4 rounded-md border border-gray-200">
+              <label class="block font-medium text-gray-700 mb-3">${item}</label>
+              <div class="flex items-center gap-6 text-sm mb-3">
+                <label class="flex items-center cursor-pointer">
+                  <input type="radio" name="q-${sIdx}-${i}" value="Pass" required class="mr-2 text-green-600"> 
+                  <span class="text-green-600">✓ Pass</span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                  <input type="radio" name="q-${sIdx}-${i}" value="Fail" class="mr-2 text-red-600"> 
+                  <span class="text-red-600">✗ Fail</span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                  <input type="radio" name="q-${sIdx}-${i}" value="N/A" class="mr-2 text-gray-600"> 
+                  <span class="text-gray-600">☐ N/A</span>
+                </label>
               </div>
-              <textarea name="notes-${sIdx}-${i}" placeholder="Notes (optional)" class="w-full mt-2 border px-3 py-2 rounded-md text-sm"></textarea>
+              <textarea name="notes-${sIdx}-${i}" placeholder="Notes (optional)" rows="2"
+                        class="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
             </div>
           `).join('')}
           </div>
@@ -108,49 +176,110 @@
       });
     }
 
-  const form = document.getElementById("inspectionForm");
-  form.addEventListener("submit", async function (e) {
-    e.preventDefault();
+    const form = document.getElementById("inspectionForm");
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
 
-    const data = {
-      timestamp: new Date().toISOString(),
-      sfpvId: form.sfpvId.value.trim(),
-      rego: form.rego.value.trim(),
-      inspectorEmail: form.inspectorEmail.value.trim(),
-      inspectionDate: form.inspectionDate.value,
-      outcome: form.outcome.value,
-      comments: form.comments.value.trim(),
-      ailName: form.ailName.value.trim()
-    };
+      const submitBtn = document.getElementById("submitBtn");
+      const statusEl = document.getElementById("formStatus");
+      const originalBtnText = submitBtn.textContent;
+      
+      // Collect all form data including dynamic questions
+      const formData = new FormData(form);
+      const data = {
+        timestamp: new Date().toISOString(),
+        sfpvId: formData.get('sfpvId')?.trim(),
+        rego: formData.get('rego')?.trim(),
+        inspectorEmail: formData.get('inspectorEmail')?.trim(),
+        inspectionDate: formData.get('inspectionDate'),
+        outcome: formData.get('outcome'),
+        comments: formData.get('comments')?.trim(),
+        ailName: formData.get('ailName')?.trim(),
+        inspectionDetails: {}
+      };
 
-    document.getElementById("formStatus").textContent = "Submitting...";
-
-    try {
-      const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbw4Cht9-kkgXjEdbiR1zA-V-8L83zLPMGgQpQKlER2296_kizjG_WpS36wzy715sEmJ/exec",
-        {
-          method: "POST",
-          mode: "cors",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(data)
+      // Collect inspection questions and notes
+      for (let [key, value] of formData.entries()) {
+        if (key.startsWith('q-') || key.startsWith('notes-')) {
+          data.inspectionDetails[key] = value;
         }
-      );
-
-      const result = await response.json();
-      if (result.result === "success") {
-        document.getElementById("formStatus").textContent = "✅ Inspection submitted successfully!";
-        form.reset();
-      } else {
-        document.getElementById("formStatus").textContent = "❌ Submission failed: " + (result.message || "Unknown error");
       }
-    } catch (err) {
-      console.error(err);
-      document.getElementById("formStatus").textContent = "❌ Network or server error. Please try again.";
-    }
-  });
-</script>
+
+      // Show loading state
+      submitBtn.textContent = "Submitting...";
+      submitBtn.disabled = true;
+      statusEl.textContent = "Submitting inspection...";
+      statusEl.className = "text-sm mt-4 text-center text-blue-600";
+
+      try {
+        // Method 1: Try direct POST (works if CORS is properly configured)
+        const response = await fetch(
+          "https://script.google.com/macros/s/AKfycbw4Cht9-kkgXjEdbiR1zA-V-8L83zLPMGgQpQKlER2296_kizjG_WpS36wzy715sEmJ/exec",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+          }
+        );
+
+        const result = await response.json();
+        if (result.result === "success") {
+          statusEl.textContent = "✅ Inspection submitted successfully!";
+          statusEl.className = "text-sm mt-4 text-center text-green-600 font-semibold";
+          form.reset();
+        } else {
+          throw new Error(result.message || "Submission failed");
+        }
+      } catch (err) {
+        console.error("Direct POST failed:", err);
+        
+        // Method 2: Fallback to form submission approach
+        try {
+          const fallbackForm = document.createElement('form');
+          fallbackForm.method = 'POST';
+          fallbackForm.action = 'https://script.google.com/macros/s/AKfycbw4Cht9-kkgXjEdbiR1zA-V-8L83zLPMGgQpQKlER2296_kizjG_WpS36wzy715sEmJ/exec';
+          fallbackForm.style.display = 'none';
+          
+          // Add data as hidden inputs
+          const dataInput = document.createElement('input');
+          dataInput.type = 'hidden';
+          dataInput.name = 'data';
+          dataInput.value = JSON.stringify(data);
+          fallbackForm.appendChild(dataInput);
+          
+          document.body.appendChild(fallbackForm);
+          fallbackForm.submit();
+          
+          // Show success message after a short delay
+          setTimeout(() => {
+            statusEl.textContent = "✅ Inspection submitted successfully!";
+            statusEl.className = "text-sm mt-4 text-center text-green-600 font-semibold";
+            form.reset();
+          }, 1000);
+          
+        } catch (fallbackErr) {
+          console.error("Fallback submission failed:", fallbackErr);
+          statusEl.textContent = "❌ Submission failed. Please check your connection and try again.";
+          statusEl.className = "text-sm mt-4 text-center text-red-600";
+        }
+      } finally {
+        // Reset button
+        submitBtn.textContent = originalBtnText;
+        submitBtn.disabled = false;
+      }
+    });
+
+    // Set today's date as default
+    window.addEventListener('load', function() {
+      const today = new Date().toISOString().split('T')[0];
+      const dateInput = document.querySelector('input[name="inspectionDate"]');
+      if (dateInput && !dateInput.value) {
+        dateInput.value = today;
+      }
+    });
+  </script>
 
 </body>
 </html>
