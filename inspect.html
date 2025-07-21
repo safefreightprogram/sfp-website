@@ -5,16 +5,66 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vehicle Inspection – Safe Freight Program</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase Auth Setup -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBURlJUicOTobRLghN2RyEZfXEZvU_uiYU",
+      authDomain: "safe-freight-program.firebaseapp.com",
+      projectId: "safe-freight-program",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const allowedAILEmails = [
+      "safefreightprogram@gmail.com",
+      "safrightprogram@gmail.com"
+      // Add real AIL emails here
+    ];
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "/login.html";
+        return;
+      }
+
+      const isAIL = allowedAILEmails.includes(user.email.toLowerCase());
+      if (!isAIL) {
+        alert("Access denied – you are not authorised to submit inspections.");
+        window.location.href = "/lookup-vehicle.html";
+        return;
+      }
+
+      document.getElementById("inspectionForm").classList.remove("hidden");
+      document.getElementById("inspectorEmailField").value = user.email;
+      document.getElementById("userInfo").textContent = user.email;
+    });
+
+    window.signOutUser = () => {
+      signOut(auth).then(() => window.location.href = "/login.html");
+    };
+  </script>
 </head>
+
 <body class="bg-gray-50 text-gray-800 font-sans">
   <div class="max-w-xl mx-auto mt-12 p-6 bg-white shadow-lg rounded-lg">
+
+    <div class="text-right text-sm text-blue-700 mb-4 hidden" id="userPanel">
+      Logged in as: <span id="userInfo"></span>
+      <button onclick="signOutUser()" class="ml-2 text-red-600 underline">Sign out</button>
+    </div>
+
     <h1 class="text-2xl font-bold mb-4 text-blue-800">Vehicle Inspection Submission</h1>
     <p class="mb-6 text-sm text-gray-600">Authorised Inspectors only. Complete the inspection form and submit.</p>
 
-    <form id="inspectionForm" class="space-y-4">
+    <form id="inspectionForm" class="space-y-4 hidden">
       <input type="text" name="sfpvId" placeholder="SFPV ID (e.g. SFPV-001234)" required class="w-full border px-3 py-2 rounded-md" />
       <input type="text" name="rego" placeholder="Vehicle Registration" required class="w-full border px-3 py-2 rounded-md" />
-      <input type="email" name="inspectorEmail" placeholder="Your Email (Inspector)" required class="w-full border px-3 py-2 rounded-md" />
+      <input type="email" id="inspectorEmailField" name="inspectorEmail" readonly class="w-full border px-3 py-2 rounded-md bg-gray-100 text-gray-600" />
       <input type="date" name="inspectionDate" required class="w-full border px-3 py-2 rounded-md" />
       <select name="outcome" required class="w-full border px-3 py-2 rounded-md">
         <option value="">-- Inspection Outcome --</option>
@@ -31,9 +81,9 @@
   </div>
 
   <script>
-    document.getElementById("inspectionForm").addEventListener("submit", async function (e) {
+    const form = document.getElementById("inspectionForm");
+    form.addEventListener("submit", async function (e) {
       e.preventDefault();
-      const form = e.target;
       const data = {
         timestamp: new Date().toISOString(),
         sfpvId: form.sfpvId.value.trim(),
@@ -48,8 +98,8 @@
       document.getElementById("formStatus").textContent = "Submitting...";
 
       try {
-        // Placeholder: we'll hook this up to Apps Script or Sheets API in Step 4
-        console.log("Submitting", data);
+        // Placeholder – we’ll connect to Google Sheets in Step 4
+        console.log("Inspection Data:", data);
         document.getElementById("formStatus").textContent = "✅ Inspection submitted successfully!";
         form.reset();
       } catch (err) {
