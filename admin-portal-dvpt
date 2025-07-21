@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Portal – Safe Freight Program</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+
+  <!-- 🔐 Firebase Auth -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBURlJUicOTobRLghN2RyEZfXEZvU_uiYU",
+      authDomain: "safe-freight-program.firebaseapp.com",
+      projectId: "safe-freight-program",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "/login.html";
+        return;
+      }
+
+      const adminEmails = [
+        'safefreightprogram@gmail.com',
+        'safrightprogram@gmail.com'
+      ];
+      
+      const isAdmin = adminEmails.some(email => 
+        user.email.toLowerCase() === email.toLowerCase()
+      );
+      
+      if (!isAdmin) {
+        window.location.href = "/lookup-driver.html";
+        return;
+      }
+
+      initializeAdminInterface(user);
+      hideAuthLoader();
+    });
+
+    function initializeAdminInterface(user) {
+      const elements = {
+        logoutLink: document.getElementById("logoutLink"),
+        userInfo: document.getElementById("userInfo"),
+        adminContent: document.getElementById('adminContent')
+      };
+      
+      Object.values(elements).forEach(el => {
+        if (el) el.classList.remove("hidden");
+      });
+      
+      if (elements.userInfo) {
+        elements.userInfo.textContent = user.email;
+      }
+
+      loadDashboardData();
+    }
+
+    function hideAuthLoader() {
+      const loader = document.getElementById('authLoader');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 300);
+      }
+    }
+
+    window.signOutUser = () => {
+      signOut(auth).then(() => window.location.href = "/login.html");
+    };
+  </script>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans">
+<!-- Loading overlay -->
+<div id="authLoader" class="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50">
+  <div class="text-center">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto mb-4"></div>
+    <p class="text-gray-600 text-lg">Loading admin portal...</p>
+  </div>
+</div>
+
+<div id="adminContent" class="hidden">
+  <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false }">
+    <div class="max-w-7xl mx-auto p-4 flex justify-between items-center relative">
+      <a href="index.html" class="text-xl font-bold">Safe Freight Program</a>
+      
+      <div class="flex items-center space-x-4">
+        <span id="userInfo" class="text-sm text-blue-200"></span>
+        
+        <button @click="open = !open" class="inline-flex">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+      
+      <div x-show="open" @click.away="open = false" x-transition class="absolute top-full right-0 bg-blue-900 text-white text-sm z-50 shadow-md min-w-48">
+        <nav class="flex flex-col">
+          <a href="lookup-driver.html" class="block px-4 py-2 hover:bg-blue-800">Driver Lookup</a>
+          <a href="lookup-vehicle.html" class="block px-4 py-2 hover:bg-blue-800">Vehicle Lookup</a>
+          <div class="border-t border-blue-700 my-1"></div>
+          <a href="admin-portal.html" class="block px-4 py-2 bg-blue-800 font-bold">Admin Portal</a>
+          <a href="#" onclick="switchTab('dashboard')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Dashboard</a>
+          <a href="#" onclick="switchTab('drivers')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Driver Management</a>
+          <a href="#" onclick="switchTab('vehicles')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Vehicle/Equipment</a>
+          <a href="#" onclick="switchTab('ails')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• AIL Management</a>
+          <a href="#" onclick="switchTab('qrcodes')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• QR Code Generator</a>
+          <a href="#" onclick="switchTab('users')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• User Management</a>
+          <a href="#" onclick="switchTab('reports')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Reports & Analytics</a>
+          <div class="border-t border-blue-700 my-1"></div>
+          <a href="find-ail.html" class="block px-4 py-2 hover:bg-blue-800">Find AIL</a>
+          <a href="training.html" class="block px-4 py-2 hover:bg-blue-800">SFP Training</a>
+          <a id="logoutLink" href="#" onclick="signOutUser()" class="block px-4 py-2 text-red-300 hover:bg-red-800 hidden">Logout</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-blue-800">Safe Freight Program Admin Portal</h1>
+      <p class="text-gray-600 mt-2">Complete management system for drivers, equipment, AILs, and compliance</p>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="mb-8">
+      <nav class="flex space-x-8 border-b border-gray-200 overflow-x-auto">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="border-b-2 border-blue-500 text-blue-600 font-medium pb-2 px-1 whitespace-nowrap">Dashboard</button>
+        <button onclick="switchTab('drivers')" id="tab-drivers" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Drivers</button>
+        <button onclick="switchTab('vehicles')" id="tab-vehicles" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Vehicles/Equipment</button>
+        <button onclick="switchTab('ails')" id="tab-ails" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">AIL Management</button>
+        <button onclick="switchTab('qrcodes')" id="tab-qrcodes" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">QR Codes</button>
+        <button onclick="switchTab('users')" id="tab-users" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Users</button>
+        <button onclick="switchTab('reports')" id="tab-reports" class="text-gray-500 hover:text-gray-700 pb-2 px-1 whitespace-nowrap">Reports</button>
+      </nav>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div id="content-dashboard" class="tab-content">
+      <!-- System Overview Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Total Drivers</h3>
+              <p class="text-3xl font-bold text-gray-900" id="stat-total-drivers">-</p>
+              <p class="text-xs text-gray-500 mt-1">Active credentials</p>
+            </div>
+            <div class="p-3 bg-blue-100 rounded-full">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Equipment Units</h3>
+              <p class="text-3xl font-bold text-green-600" id="stat-total-vehicles">-</p>
+              <p class="text-xs text-gray-500 mt-1">Registered equipment</p>
+            </div>
+            <div class="p-3 bg-green-100 rounded-full">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Active AILs</h3>
+              <p class="text-3xl font-bold text-purple-600" id="stat-total-ails">-</p>
+              <p class="text-xs text-gray-500 mt-1">Authorized inspectors</p>
+            </div>
+            <div class="p-3 bg-purple-100 rounded-full">
+              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.992-3a10 10 0 11-9.925 8.27c.44-.02.865-.072 1.273-.15"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Inspections Due</h3>
+              <p class="text-3xl font-bold text-orange-600" id="stat-inspections-due">-</p>
+              <p class="text-xs text-gray-500 mt-1">Next 30 days</p>
+            </div>
+            <div class="p-3 bg-orange-100 rounded-full">
+              <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connection Status -->
+      <div id="connectionStatus" class="mb-8">
+        <!-- This will be populated by JavaScript -->
+      </div>
+
+      <!-- Quick Actions Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold mb-4">Driver Management</h3>
+          <div class="space-y-3">
+            <button onclick="switchTab('drivers')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">View All Drivers</div>
+              <div class="text-sm text-gray-500">Manage credentials and certifications</div>
+            </button>
+            <button onclick="generateDriverReport()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Expiry Report</div>
+              <div class="text-sm text-gray-500">Drivers requiring renewal</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold mb-4">Equipment Management</h3>
+          <div class="space-y-3">
+            <button onclick="switchTab('vehicles')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">View All Equipment</div>
+              <div class="text-sm text-gray-500">Manage vehicles and inspections</div>
+            </button>
+            <button onclick="switchTab('qrcodes')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Generate QR Codes</div>
+              <div class="text-sm text-gray-500">Create SFPV stickers</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold mb-4">System Administration</h3>
+          <div class="space-y-3">
+            <button onclick="switchTab('ails')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Manage AILs</div>
+              <div class="text-sm text-gray-500">Authorized inspection locations</div>
+            </button>
+            <button onclick="manualDataLoad()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Refresh Data</div>
+              <div class="text-sm text-gray-500">Reload from Google Sheets</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Recent Driver Activity</h2>
+        <div id="recent-activity" class="space-y-3">
+          <!-- This will be populated by JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Driver Management Tab -->
+    <div id="content-drivers" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-md mb-8">
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 sm:mb-0">Driver Management</h2>
+            <div class="flex flex-wrap gap-3">
+              <input type="search" id="driverSearch" placeholder="Search drivers..." 
+                     class="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                     onkeyup="filterDrivers()">
+              <button onclick="exportDrivers()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
+                Export CSV
+              </button>
+              <button onclick="refreshDriverData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                Refresh Data
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Driver</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expiry</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Certifications</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="driverTableBody" class="divide-y divide-gray-200">
+              <tr>
+                <td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading drivers...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vehicle Management Tab -->
+    <div id="content-vehicles" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-md mb-8">
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 sm:mb-0">Vehicle & Equipment Management</h2>
+            <div class="flex flex-wrap gap-3">
+              <input type="search" id="vehicleSearch" placeholder="Search vehicles..." 
+                     class="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                     onkeyup="filterVehicles()">
+              <button onclick="addVehicle()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                Add Vehicle
+              </button>
+              <button onclick="exportVehicles()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
+                Export CSV
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SFPV ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registration</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Inspection</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Next Due</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Inspector</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="vehicleTableBody" class="divide-y divide-gray-200">
+              <!-- This will be populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- AIL Management Tab -->
+    <div id="content-ails" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-md mb-8">
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 sm:mb-0">Authorized Inspection Location Management</h2>
+            <div class="flex flex-wrap gap-3">
+              <input type="search" id="ailSearch" placeholder="Search AILs..." 
+                     class="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                     onkeyup="filterAILs()">
+              <button onclick="addAIL()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                Add AIL
+              </button>
+              <button onclick="exportAILs()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
+                Export CSV
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
+          <div id="ailCardsContainer">
+            <!-- AIL cards will be populated here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR Code Generator Tab -->
+    <div id="content-qrcodes" class="tab-content hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- QR Code Generator -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-6">SFPV QR Code Generator</h2>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Vehicle SFPV ID</label>
+              <input type="text" id="qr-vehicle-id" placeholder="e.g., SFPV-000123" 
+                     class="w-full border border-gray-300 rounded-md px-3 py-2"
+                     oninput="generateQRPreview()">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">QR Code Size</label>
+              <select id="qr-size" class="w-full border border-gray-300 rounded-md px-3 py-2" onchange="generateQRPreview()">
+                <option value="200">200x200 (Small sticker)</option>
+                <option value="300" selected>300x300 (Medium sticker)</option>
+                <option value="400">400x400 (Large sticker)</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Include Text Below QR</label>
+              <input type="checkbox" id="qr-include-text" checked onchange="generateQRPreview()" class="mr-2">
+              <span class="text-sm text-gray-600">Show SFPV ID below QR code</span>
+            </div>
+            
+            <button onclick="generateQRCode()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md font-medium">
+              Generate QR Code
+            </button>
+          </div>
+        </div>
+        
+        <!-- QR Code Preview -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Preview</h3>
+          <div id="qr-preview" class="text-center">
+            <p class="text-gray-500">Enter a vehicle SFPV ID to generate preview</p>
+          </div>
+          
+          <div id="qr-actions" class="mt-6 space-y-2 hidden">
+            <button onclick="downloadQR()" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+              Download QR Code
+            </button>
+            <button onclick="printQR()" class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md">
+              Print Sticker
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Bulk QR Generation -->
+      <div class="bg-white rounded-lg shadow-md p-6 mt-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Bulk QR Code Generation</h3>
+        <p class="text-gray-600 mb-4">Generate QR codes for all registered vehicles at once.</p>
+        
+        <div class="flex flex-wrap gap-3">
+          <button onclick="generateBulkQR()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md">
+            Generate All Vehicle QR Codes
+          </button>
+          <button onclick="generateBulkPDF()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md">
+            Create PDF Sticker Sheet
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Management Tab -->
+    <div id="content-users" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-md mb-8">
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 sm:mb-0">User Management</h2>
+            <div class="flex flex-wrap gap-3">
+              <input type="search" id="userSearch" placeholder="Search users..." 
+                     class="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                     onkeyup="filterUsers()">
+              <button onclick="inviteUser()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                Invite User
+              </button>
+              <button onclick="exportUsers()"
