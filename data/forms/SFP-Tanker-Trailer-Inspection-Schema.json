@@ -1,1 +1,71 @@
-
+{
+  "title": "Safe Freight Program \u2013 Tanker Trailer Inspection",
+  "vehicleType": "Tanker Trailer",
+  "sections": [
+    {
+      "title": "Identification & Placarding",
+      "items": [
+        "Emergency info panels are clean, visible, and legible on both sides and rear",
+        "Emergency panels show contact details and are accessible from ground level",
+        "Dangerous goods signage (if required) is appropriate and in good condition",
+        "Tank compliance plate is present and includes manufacturer, approval #, serial no.",
+        "Tank is within hydrostatic test period (5 years)",
+        "Hatch/vent tests are within 2.5-year window"
+      ]
+    },
+    {
+      "title": "Barrel Condition",
+      "items": [
+        "Barrel shows no major dents, cracks, or weld failures",
+        "All drain pipes and fittings are in serviceable condition",
+        "No visible signs of liquid leaks or weeping from tank or fittings",
+        "Coaming and rollover protection present and intact",
+        "Earth reel (if fitted) is secure and continuity tested"
+      ]
+    },
+    {
+      "title": "Electrical Systems",
+      "items": [
+        "Electrical wiring and conduits are intact and secure",
+        "All lights are operational and correctly rated (LED, IP67 for critical zones)",
+        "Electrical connectors are latched and IP54+ rated",
+        "Junction boxes and enclosures are IP67 or better"
+      ]
+    },
+    {
+      "title": "Valves, Fittings & Delivery",
+      "items": [
+        "No leaks from valves, vents or seals",
+        "API valves and adapters function correctly and close securely",
+        "Emergency stop system shuts off internal valves as expected",
+        "All valve caps are tethered and free from damage",
+        "Dip/fill tubes are secured and hatches lock properly",
+        "Pressure/vacuum vents in place and clean"
+      ]
+    },
+    {
+      "title": "Braking & Drive-Away Protection",
+      "items": [
+        "Brakes engage with park brake applied (immobilisation check)",
+        "Brakes release with park brake disengaged",
+        "Safety gate (if fitted) functions correctly and interlocks as intended",
+        "Overfill system (if fitted) responds correctly during test"
+      ]
+    },
+    {
+      "title": "Hoses, Stowage & Fire Safety",
+      "items": [
+        "Vapour & transfer hoses are tested, tagged, and in good condition",
+        "Hose stowage is secure and poppets sealed",
+        "Fire extinguishers in-date, accessible, and quick-release mounted",
+        "Safety equipment is clearly marked and not obstructing discharge zone"
+      ]
+    },
+    {
+      "title": "Final Sign-Off",
+      "items": [
+        "Vehicle passed all required inspection points OR items marked for follow-up"
+      ]
+    }
+  ]
+}
