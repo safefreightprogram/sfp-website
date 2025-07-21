@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vehicle Inspection – Safe Freight Program</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+  <div class="max-w-xl mx-auto mt-12 p-6 bg-white shadow-lg rounded-lg">
+    <h1 class="text-2xl font-bold mb-4 text-blue-800">Vehicle Inspection Submission</h1>
+    <p class="mb-6 text-sm text-gray-600">Authorised Inspectors only. Complete the inspection form and submit.</p>
+
+    <form id="inspectionForm" class="space-y-4">
+      <input type="text" name="sfpvId" placeholder="SFPV ID (e.g. SFPV-001234)" required class="w-full border px-3 py-2 rounded-md" />
+      <input type="text" name="rego" placeholder="Vehicle Registration" required class="w-full border px-3 py-2 rounded-md" />
+      <input type="email" name="inspectorEmail" placeholder="Your Email (Inspector)" required class="w-full border px-3 py-2 rounded-md" />
+      <input type="date" name="inspectionDate" required class="w-full border px-3 py-2 rounded-md" />
+      <select name="outcome" required class="w-full border px-3 py-2 rounded-md">
+        <option value="">-- Inspection Outcome --</option>
+        <option value="Pass">Pass</option>
+        <option value="Fail">Fail</option>
+        <option value="Needs Repair">Needs Repair</option>
+      </select>
+      <textarea name="comments" placeholder="Optional Comments" class="w-full border px-3 py-2 rounded-md"></textarea>
+      <input type="text" name="ailName" placeholder="AIL Name" required class="w-full border px-3 py-2 rounded-md" />
+      <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-md font-semibold">Submit Inspection</button>
+    </form>
+
+    <div id="formStatus" class="text-sm mt-4 text-center"></div>
+  </div>
+
+  <script>
+    document.getElementById("inspectionForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        timestamp: new Date().toISOString(),
+        sfpvId: form.sfpvId.value.trim(),
+        rego: form.rego.value.trim(),
+        inspectorEmail: form.inspectorEmail.value.trim(),
+        inspectionDate: form.inspectionDate.value,
+        outcome: form.outcome.value,
+        comments: form.comments.value.trim(),
+        ailName: form.ailName.value.trim()
+      };
+
+      document.getElementById("formStatus").textContent = "Submitting...";
+
+      try {
+        // Placeholder: we'll hook this up to Apps Script or Sheets API in Step 4
+        console.log("Submitting", data);
+        document.getElementById("formStatus").textContent = "✅ Inspection submitted successfully!";
+        form.reset();
+      } catch (err) {
+        console.error(err);
+        document.getElementById("formStatus").textContent = "❌ Submission failed. Please try again.";
+      }
+    });
+  </script>
+</body>
+</html>
