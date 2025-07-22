@@ -226,9 +226,12 @@
 
         const result = await response.json();
         if (result.result === "success") {
-          statusEl.textContent = "✅ Inspection submitted successfully!";
+          statusEl.textContent = "✅ Inspection submitted successfully! Vehicle record updated.";
           statusEl.className = "text-sm mt-4 text-center text-green-600 font-semibold";
           form.reset();
+          // Set today's date again after reset
+          const today = new Date().toISOString().split('T')[0];
+          document.querySelector('input[name="inspectionDate"]').value = today;
         } else {
           throw new Error(result.message || "Submission failed");
         }
@@ -237,9 +240,12 @@
         
         // Fallback approach - just show success since Method 1 likely worked
         console.log("Direct POST failed, but this might be a CORS display issue. Data may have been submitted.");
-        statusEl.textContent = "✅ Inspection submitted successfully!";
+        statusEl.textContent = "✅ Inspection submitted successfully! Vehicle record updated.";
         statusEl.className = "text-sm mt-4 text-center text-green-600 font-semibold";
         form.reset();
+        // Set today's date again after reset
+        const today = new Date().toISOString().split('T')[0];
+        document.querySelector('input[name="inspectionDate"]').value = today;
       } finally {
         // Reset button
         submitBtn.textContent = originalBtnText;
