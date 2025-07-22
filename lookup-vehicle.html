@@ -354,14 +354,32 @@
                 <!-- SFP Vehicle Sticker - 100mm x 75mm (scaled for display) -->
                 <div class="sfp-sticker" style="width: 200px; height: 150px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border: 3px solid #1e40af; border-radius: 8px; position: relative; font-family: Arial, sans-serif; color: white; overflow: hidden;">
                   
+                  <!-- QR Code in top right corner -->
+                  ${qrUrl ? `
+                    <div style="position: absolute; top: 8px; right: 8px; background: white; padding: 2px; border-radius: 3px; z-index: 10;">
+                      <img src="${qrUrl}" style="width: 30px; height: 30px; display: block;" alt="QR">
+                    </div>
+                  ` : ''}
+                  
+                  <!-- SFP Logo in top left -->
+                  <div style="position: absolute; top: 6px; left: 8px; z-index: 10;">
+                    <!-- Safe Freight Program Logo (recreated as text) -->
+                    <div style="color: white; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); line-height: 0.9; font-family: Arial, sans-serif;">
+                      <div style="font-size: 14px; margin: 0; letter-spacing: -0.5px;">SFP</div>
+                      <div style="font-size: 7px; margin: 1px 0 0 0; letter-spacing: 0.5px; opacity: 0.9;">Safe</div>
+                      <div style="font-size: 7px; margin: 0; letter-spacing: 0.5px; opacity: 0.9;">Freight</div>
+                      <div style="font-size: 7px; margin: 0; letter-spacing: 0.5px; opacity: 0.9;">Program</div>
+                    </div>
+                  </div>
+                  
                   <!-- Header with SFP branding -->
-                  <div style="background: rgba(255,255,255,0.15); padding: 4px 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2);">
-                    <div style="font-size: 12px; font-weight: bold; letter-spacing: 1px;">SAFE FREIGHT PROGRAM</div>
-                    <div style="font-size: 8px; opacity: 0.9;">AUTHORIZED VEHICLE</div>
+                  <div style="background: rgba(255,255,255,0.15); padding: 20px 8px 4px 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); margin-top: 15px;">
+                    <div style="font-size: 10px; font-weight: bold; letter-spacing: 0.5px;">SAFE FREIGHT PROGRAM</div>
+                    <div style="font-size: 7px; opacity: 0.9;">AUTHORISED VEHICLE</div>
                   </div>
                   
                   <!-- Main content area -->
-                  <div style="padding: 8px; height: calc(100% - 45px); display: flex; flex-direction: column; justify-content: space-between;">
+                  <div style="padding: 8px; height: calc(100% - 60px); display: flex; flex-direction: column; justify-content: space-between;">
                     
                     <!-- Vehicle ID (prominent) -->
                     <div style="text-align: center; margin: 4px 0;">
@@ -390,13 +408,6 @@
                     </div>
                     
                   </div>
-                  
-                  <!-- QR Code in bottom right corner -->
-                  ${qrUrl ? `
-                    <div style="position: absolute; bottom: 4px; right: 4px; background: white; padding: 2px; border-radius: 2px;">
-                      <img src="${qrUrl}" style="width: 25px; height: 25px; display: block;" alt="QR">
-                    </div>
-                  ` : ''}
                   
                   <!-- Watermark pattern -->
                   <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.05; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, white 10px, white 12px); pointer-events: none;"></div>
