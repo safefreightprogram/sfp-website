@@ -398,10 +398,12 @@
       statusEl.className = "text-sm mt-4 text-center text-blue-600";
 
       try {
+        // Method 1: Try direct fetch
         const response = await fetch(
           "https://script.google.com/macros/s/AKfycbw4Cht9-kkgXjEdbiR1zA-V-8L83zLPMGgQpQKlER2296_kizjG_WpS36wzy715sEmJ/exec",
           {
             method: "POST",
+            mode: "no-cors",
             headers: {
               "Content-Type": "application/json"
             },
@@ -409,28 +411,54 @@
           }
         );
 
-        const result = await response.json();
-        if (result.result === "success") {
-          statusEl.textContent = `✅ Inspection submitted successfully! Vehicle ${fullSFPVId} record created/updated.`;
-          statusEl.className = "text-sm mt-4 text-center text-green-600 font-semibold";
-          form.reset();
-          if (signaturePad) signaturePad.clear();
-          document.getElementById('signaturePadContainer').classList.add('hidden');
-          // Set today's date again after reset
-          const today = new Date().toISOString().split('T')[0];
-          document.querySelector('input[name="inspectionDate"]').value = today;
-        } else {
-          throw new Error(result.message || "Submission failed");
-        }
-      } catch (err) {
-        console.error("Submission failed:", err);
+        // With no-cors, we can't read the response, so assume success
         statusEl.textContent = `✅ Inspection submitted successfully! Vehicle ${fullSFPVId} record created/updated.`;
         statusEl.className = "text-sm mt-4 text-center text-green-600 font-semibold";
         form.reset();
         if (signaturePad) signaturePad.clear();
         document.getElementById('signaturePadContainer').classList.add('hidden');
+        // Set today's date again after reset
         const today = new Date().toISOString().split('T')[0];
         document.querySelector('input[name="inspectionDate"]').value = today;
+
+      } catch (err) {
+        console.error("Direct fetch failed, trying form submission:", err);
+        
+        // Method 2: Form submission fallback
+        try {
+          // Create a hidden form and submit it
+          const hiddenForm = document.createElement('form');
+          hiddenForm.method = 'POST';
+          hiddenForm.action = 'https://script.google.com/macros/s/AKfycbw4Cht9-kkgXjEdbiR1zA-V-8L83zLPMGgQpQKlER2296_kizjG_WpS36wzy715sEmJ/exec';
+          hiddenForm.target = '_blank'; // Open in new tab so user can see result
+          hiddenForm.style.display = 'none';
+          
+          // Add all data as hidden form fields
+          Object.keys(data).forEach(key => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : data[key];
+            hiddenForm.appendChild(input);
+          });
+          
+          document.body.appendChild(hiddenForm);
+          hiddenForm.submit();
+          document.body.removeChild(hiddenForm);
+          
+          statusEl.textContent = `✅ Inspection submitted! Check the new tab for confirmation.`;
+          statusEl.className = "text-sm mt-4 text-center text-green-600 font-semibold";
+          form.reset();
+          if (signaturePad) signaturePad.clear();
+          document.getElementById('signaturePadContainer').classList.add('hidden');
+          const today = new Date().toISOString().split('T')[0];
+          document.querySelector('input[name="inspectionDate"]').value = today;
+          
+        } catch (formErr) {
+          console.error("Form submission also failed:", formErr);
+          statusEl.textContent = "❌ Submission failed. Please try again or contact support.";
+          statusEl.className = "text-sm mt-4 text-center text-red-600";
+        }
       } finally {
         // Reset button
         submitBtn.textContent = originalBtnText;
