@@ -1,44 +1,4 @@
-// Mobile keyboard handling
-    let activeInput = null;
-
-    function handleMobileKeyboard(element) {
-      if (window.innerWidth <= 768) {
-        activeInput = element;
-        // Add small delay to ensure keyboard is visible
-        setTimeout(() => {
-          element.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center',
-            inline: 'nearest'
-          });
-        }, 300);
-      }
-    }
-
-    function handleMobileKeyboardHide(element) {
-      activeInput = null;
-    }
-
-    // Handle window resize (keyboard show/hide on mobile)
-    let initialViewportHeight = window.innerHeight;
-    
-    window.addEventListener('resize', () => {
-      if (window.innerWidth <= 768) {
-        const currentHeight = window.innerHeight;
-        const keyboardVisible = currentHeight < initialViewportHeight * 0.75;
-        
-        if (keyboardVisible && activeInput) {
-          // Keyboard is visible, ensure active input is visible
-          setTimeout(() => {
-            activeInput.scrollIntoView({ 
-              behavior: 'smooth', 
-              block: 'start',
-              inline: 'nearest'
-            });
-          }, 100);
-        }
-      }
-    });<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en-AU">
 <head>
   <meta charset="UTF-8" />
@@ -47,6 +7,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Vehicle Inspection – Safe Freight Program</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+  
   <style>
     /* Mobile responsive improvements */
     @media (max-width: 768px) {
@@ -78,8 +41,6 @@
       }
     }
   </style>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 
   <!-- Firebase Auth Setup -->
   <script type="module">
@@ -95,7 +56,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // AIL mapping - email to AIL name
+    // AIL mapping - email to AIL name and inspector name
     const ailMapping = {
       "safefreightprogram@gmail.com": { ail: "SFP Head Office", name: "Darren Jenkins" },
       "safrightprogram@gmail.com": { ail: "SFP Alternative Office", name: "Alternative Inspector" }
@@ -351,6 +312,65 @@
     let signaturePad;
     let qrScanner;
 
+    // Mobile keyboard handling
+    let activeInput = null;
+
+    function handleMobileKeyboard(element) {
+      if (window.innerWidth <= 768) {
+        activeInput = element;
+        // Add small delay to ensure keyboard is visible
+        setTimeout(() => {
+          element.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',
+            inline: 'nearest'
+          });
+        }, 300);
+      }
+    }
+
+    function handleMobileKeyboardHide(element) {
+      activeInput = null;
+    }
+
+    // Handle window resize (keyboard show/hide on mobile)
+    let initialViewportHeight = window.innerHeight;
+    
+    window.addEventListener('resize', () => {
+      if (window.innerWidth <= 768) {
+        const currentHeight = window.innerHeight;
+        const keyboardVisible = currentHeight < initialViewportHeight * 0.75;
+        
+        if (keyboardVisible && activeInput) {
+          // Keyboard is visible, ensure active input is visible
+          setTimeout(() => {
+            activeInput.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start',
+              inline: 'nearest'
+            });
+          }, 100);
+        }
+      }
+    });
+
+    // Pad SFPV number with zeros (ensure exactly 6 digits)
+    function padSFPVNumber(input) {
+      return input.padStart(6, '0').slice(-6); // Take only last 6 digits if longer
+    }
+
+    // Enforce 6 digit limit on SFPV input
+    document.addEventListener('DOMContentLoaded', function() {
+      const sfpvInput = document.getElementById('sfpvNumberInput');
+      if (sfpvInput) {
+        sfpvInput.addEventListener('input', function(e) {
+          // Remove any non-digit characters and limit to 6 digits
+          let value = e.target.value.replace(/\D/g, '').slice(0, 6);
+          e.target.value = value;
+        });
+      }
+    });
+
     // QR Code scanning functions
     function startQRScan() {
       const modal = document.getElementById('qrModal');
@@ -479,23 +499,6 @@
         } else {
           signaturePadContainer.classList.add('hidden');
         }
-      }
-    });
-
-    // Pad SFPV number with zeros (ensure exactly 6 digits)
-    function padSFPVNumber(input) {
-      return input.padStart(6, '0').slice(-6); // Take only last 6 digits if longer
-    }
-
-    // Enforce 6 digit limit on SFPV input
-    document.addEventListener('DOMContentLoaded', function() {
-      const sfpvInput = document.getElementById('sfpvNumberInput');
-      if (sfpvInput) {
-        sfpvInput.addEventListener('input', function(e) {
-          // Remove any non-digit characters and limit to 6 digits
-          let value = e.target.value.replace(/\D/g, '').slice(0, 6);
-          e.target.value = value;
-        });
       }
     });
 
