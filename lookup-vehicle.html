@@ -355,48 +355,48 @@
                 <div class="sfp-sticker" style="width: 200px; height: 150px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border: 2px solid #1e40af; border-radius: 6px; position: relative; font-family: Arial, sans-serif; color: white; overflow: hidden;">
                   
                   <!-- Top section with logo and QR -->
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 8px 8px 0 8px;">
-                    <!-- SFP Logo -->
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 8px 0 8px;">
+                    <!-- Safe Freight Program Logo (actual image) -->
                     <div style="text-align: left;">
-                      <div style="font-size: 18px; font-weight: bold; line-height: 1; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">SFP</div>
-                      <div style="font-size: 6px; line-height: 1; margin-top: 1px; opacity: 0.9;">Safe<br>Freight<br>Program</div>
+                      <img src="https://www.safefreightprogram.com/Sfp-Logo.png" 
+                           alt="Safe Freight Program" 
+                           style="width: 45px; height: auto; filter: brightness(0) invert(1); opacity: 0.95;"
+                           onload="console.log('SFP logo loaded')"
+                           onerror="console.log('SFP logo failed to load'); this.innerHTML='<div style=&quot;color:white;font-size:12px;font-weight:bold;&quot;>SFP<br><span style=&quot;font-size:6px;&quot;>Safe Freight<br>Program</span></div>';">
                     </div>
                     
                     <!-- QR Code -->
                     ${qrUrl ? `
                       <div style="background: white; padding: 2px; border-radius: 3px;">
-                        <img src="${qrUrl}" style="width: 28px; height: 28px; display: block;" alt="QR">
+                        <img src="${qrUrl}" style="width: 24px; height: 24px; display: block;" alt="QR">
                       </div>
                     ` : ''}
                   </div>
                   
                   <!-- Main title -->
-                  <div style="text-align: center; margin: 8px 0 4px 0;">
-                    <div style="font-size: 10px; font-weight: bold; letter-spacing: 1px;">SAFE FREIGHT PROGRAM</div>
-                    <div style="font-size: 7px; opacity: 0.9; margin-top: 1px;">AUTHORISED VEHICLE</div>
+                  <div style="text-align: center; margin: 6px 0 4px 0;">
+                    <div style="font-size: 9px; font-weight: bold; letter-spacing: 1px;">SAFE FREIGHT PROGRAM</div>
+                    <div style="font-size: 6px; opacity: 0.9; margin-top: 1px;">AUTHORISED VEHICLE</div>
                   </div>
                   
                   <!-- Vehicle ID (most prominent) -->
-                  <div style="text-align: center; margin: 8px 0;">
-                    <div style="font-size: 20px; font-weight: bold; background: rgba(255,255,255,0.25); padding: 4px 8px; border-radius: 4px; display: inline-block; letter-spacing: 1px;">
+                  <div style="text-align: center; margin: 6px 0;">
+                    <div style="font-size: 18px; font-weight: bold; background: rgba(255,255,255,0.25); padding: 3px 6px; border-radius: 4px; display: inline-block; letter-spacing: 1px;">
                       ${vehicleId}
                     </div>
                   </div>
                   
-                  <!-- Vehicle details in two columns -->
-                  <div style="display: flex; justify-content: space-between; padding: 0 12px; margin: 8px 0;">
-                    <div style="font-size: 8px; line-height: 1.3;">
-                      <div><strong>Type:</strong> ${vehicleType}</div>
-                      <div><strong>Rego:</strong> ${rego}</div>
+                  <!-- Vehicle details in single row -->
+                  <div style="padding: 0 8px; margin: 4px 0; font-size: 7px; text-align: center;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                      <span><strong>Type:</strong> ${vehicleType}</span>
+                      <span><strong>Status:</strong> <span style="color: ${status.toLowerCase() === 'active' ? '#4ade80' : status.toLowerCase() === 'expired' ? '#f87171' : '#fbbf24'};">${status}</span></span>
                     </div>
-                    <div style="font-size: 8px; line-height: 1.3; text-align: right;">
-                      <div><strong>Status:</strong> <span style="color: ${status.toLowerCase() === 'active' ? '#4ade80' : status.toLowerCase() === 'expired' ? '#f87171' : '#fbbf24'};">${status}</span></div>
-                      <div><strong>Expires:</strong> ${expiry.split(' ').slice(0, 2).join(' ')}</div>
+                    <div style="display: flex; justify-content: space-between;">
+                      <span><strong>Rego:</strong> ${rego}</span>
+                      <span><strong>Expires:</strong> ${expiry.split(' ').slice(0, 2).join(' ')}</span>
                     </div>
                   </div>
-                  
-                  <!-- Bottom border accent -->
-                  <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.2);"></div>
                   
                 </div>
               </div>
