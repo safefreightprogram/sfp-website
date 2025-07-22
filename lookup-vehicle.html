@@ -338,6 +338,8 @@
           }
         };
         
+        const qrUrl = match[12] || '';
+        
         resultEl.className = 'bg-blue-50 border-l-4 border-blue-500 text-blue-900 p-6 rounded-md mt-6';
         resultEl.innerHTML = `
           <div class="space-y-4">
@@ -345,6 +347,64 @@
               <h3 class="text-xl font-bold text-gray-800">${vehicleType}</h3>
               <p class="text-lg font-semibold">${vehicleId}</p>
               <p class="text-sm">Registration: <span class="font-medium">${rego}</span></p>
+            </div>
+            
+            <div class="text-center">
+              <div class="inline-block bg-white rounded-lg shadow-lg p-4">
+                <!-- SFP Vehicle Sticker - 100mm x 75mm (scaled for display) -->
+                <div class="sfp-sticker" style="width: 200px; height: 150px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border: 3px solid #1e40af; border-radius: 8px; position: relative; font-family: Arial, sans-serif; color: white; overflow: hidden;">
+                  
+                  <!-- Header with SFP branding -->
+                  <div style="background: rgba(255,255,255,0.15); padding: 4px 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2);">
+                    <div style="font-size: 12px; font-weight: bold; letter-spacing: 1px;">SAFE FREIGHT PROGRAM</div>
+                    <div style="font-size: 8px; opacity: 0.9;">AUTHORIZED VEHICLE</div>
+                  </div>
+                  
+                  <!-- Main content area -->
+                  <div style="padding: 8px; height: calc(100% - 45px); display: flex; flex-direction: column; justify-content: space-between;">
+                    
+                    <!-- Vehicle ID (prominent) -->
+                    <div style="text-align: center; margin: 4px 0;">
+                      <div style="font-size: 16px; font-weight: bold; background: rgba(255,255,255,0.2); padding: 3px 6px; border-radius: 4px; display: inline-block;">
+                        ${vehicleId}
+                      </div>
+                    </div>
+                    
+                    <!-- Vehicle details -->
+                    <div style="font-size: 9px; line-height: 1.2; text-align: center;">
+                      <div style="margin: 2px 0;"><strong>Type:</strong> ${vehicleType}</div>
+                      <div style="margin: 2px 0;"><strong>Rego:</strong> ${rego}</div>
+                    </div>
+                    
+                    <!-- Status and Expiry -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 8px; margin-top: 4px;">
+                      <div>
+                        <div style="background: ${status.toLowerCase() === 'active' ? '#10b981' : status.toLowerCase() === 'expired' ? '#ef4444' : '#f59e0b'}; padding: 2px 4px; border-radius: 3px; font-weight: bold; font-size: 7px;">
+                          ${status.toUpperCase()}
+                        </div>
+                      </div>
+                      <div style="text-align: right; line-height: 1.1;">
+                        <div style="opacity: 0.9;">EXPIRES</div>
+                        <div style="font-weight: bold;">${expiry.split(' ').slice(0, 2).join(' ')}</div>
+                      </div>
+                    </div>
+                    
+                  </div>
+                  
+                  <!-- QR Code in bottom right corner -->
+                  ${qrUrl ? `
+                    <div style="position: absolute; bottom: 4px; right: 4px; background: white; padding: 2px; border-radius: 2px;">
+                      <img src="${qrUrl}" style="width: 25px; height: 25px; display: block;" alt="QR">
+                    </div>
+                  ` : ''}
+                  
+                  <!-- Watermark pattern -->
+                  <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.05; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, white 10px, white 12px); pointer-events: none;"></div>
+                  
+                </div>
+              </div>
+              <p class="text-xs text-gray-600 mt-2">SFP Vehicle Sticker (100mm × 75mm)</p>
+              <p class="text-xs text-gray-500">This sticker should be displayed prominently on the vehicle</p>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
