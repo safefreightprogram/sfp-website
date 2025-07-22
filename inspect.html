@@ -331,9 +331,9 @@
       }
     });
 
-    // Pad SFPV number with zeros
+    // Pad SFPV number with zeros (ensure exactly 6 digits)
     function padSFPVNumber(input) {
-      return input.padStart(6, '0');
+      return input.padStart(6, '0').slice(-6); // Take only last 6 digits if longer
     }
 
     const form = document.getElementById("inspectionForm");
