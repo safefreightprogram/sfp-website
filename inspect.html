@@ -1,10 +1,83 @@
-<!DOCTYPE html>
+// Mobile keyboard handling
+    let activeInput = null;
+
+    function handleMobileKeyboard(element) {
+      if (window.innerWidth <= 768) {
+        activeInput = element;
+        // Add small delay to ensure keyboard is visible
+        setTimeout(() => {
+          element.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',
+            inline: 'nearest'
+          });
+        }, 300);
+      }
+    }
+
+    function handleMobileKeyboardHide(element) {
+      activeInput = null;
+    }
+
+    // Handle window resize (keyboard show/hide on mobile)
+    let initialViewportHeight = window.innerHeight;
+    
+    window.addEventListener('resize', () => {
+      if (window.innerWidth <= 768) {
+        const currentHeight = window.innerHeight;
+        const keyboardVisible = currentHeight < initialViewportHeight * 0.75;
+        
+        if (keyboardVisible && activeInput) {
+          // Keyboard is visible, ensure active input is visible
+          setTimeout(() => {
+            activeInput.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start',
+              inline: 'nearest'
+            });
+          }, 100);
+        }
+      }
+    });<!DOCTYPE html>
 <html lang="en-AU">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Vehicle Inspection – Safe Freight Program</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Mobile responsive improvements */
+    @media (max-width: 768px) {
+      .form-section {
+        margin-bottom: 1rem;
+      }
+      
+      /* Handle mobile keyboard overlay */
+      .mobile-input-focus {
+        transform: translateY(-100px);
+        transition: transform 0.3s ease-in-out;
+      }
+      
+      /* Ensure content is visible above mobile keyboards */
+      body {
+        padding-bottom: env(safe-area-inset-bottom, 20px);
+      }
+    }
+    
+    /* Better mobile touch targets */
+    @media (max-width: 640px) {
+      input, select, textarea, button {
+        min-height: 44px;
+      }
+      
+      .radio-option {
+        padding: 0.75rem;
+        min-height: 44px;
+      }
+    }
+  </style>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 
@@ -24,21 +97,22 @@
 
     // AIL mapping - email to AIL name
     const ailMapping = {
-      "safefreightprogram@gmail.com": "SFP Head Office",
-      "safrightprogram@gmail.com": "SFP Alternative Office"
-      // Add more email to AIL mappings as needed
+      "safefreightprogram@gmail.com": { ail: "SFP Head Office", name: "Darren Jenkins" },
+      "safrightprogram@gmail.com": { ail: "SFP Alternative Office", name: "Alternative Inspector" }
+      // Add more email to AIL and name mappings as needed
     };
 
     onAuthStateChanged(auth, (user) => {
       if (!user) return window.location.href = "/login.html";
 
-      const userAIL = ailMapping[user.email.toLowerCase()];
-      if (!userAIL) return window.location.href = "/lookup-vehicle.html";
+      const userMapping = ailMapping[user.email.toLowerCase()];
+      if (!userMapping) return window.location.href = "/lookup-vehicle.html";
 
       document.getElementById("userPanel").classList.remove("hidden");
       document.getElementById("formWrapper").classList.remove("hidden");
       document.getElementById("inspectorEmailField").value = user.email;
-      document.getElementById("ailNameField").value = userAIL;
+      document.getElementById("ailNameField").value = userMapping.ail;
+      document.getElementById("inspectorName").textContent = userMapping.name;
       document.getElementById("userInfo").textContent = user.email;
 
       // Load inspection schema - fallback to local schema if fetch fails
@@ -109,15 +183,13 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">SFPV ID</label>
-              <div class="flex items-center space-x-2">
-                <div class="flex-1 flex items-center border border-gray-300 rounded-md px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
-                  <span class="text-blue-700 font-semibold pr-1">SFPV-</span>
-                  <input type="text" id="sfpvNumberInput" name="sfpvNumber" pattern="[0-9]*" inputmode="numeric" autocomplete="off"
-                         class="flex-1 border-none focus:ring-0 focus:outline-none text-sm"
-                         placeholder="001234" required />
-                </div>
+              <div class="flex items-center border border-gray-300 rounded-md px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 bg-white">
+                <span class="text-blue-700 font-semibold pr-1">SFPV-</span>
+                <input type="text" id="sfpvNumberInput" name="sfpvNumber" pattern="[0-9]*" inputmode="numeric" autocomplete="off" maxlength="6"
+                       class="flex-1 border-none focus:ring-0 focus:outline-none text-sm"
+                       placeholder="001234" required />
                 <button type="button" onclick="startQRScan()" 
-                        class="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center">
+                        class="ml-2 p-1 text-blue-600 hover:text-blue-800 transition-colors flex items-center">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h2l2-3h10l2 3h2a1 1 0 011 1v11a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1zm9 3a4 4 0 100 8 4 4 0 000-8z" />
                   </svg>
@@ -148,17 +220,19 @@
               <select name="vehicleType" required 
                       class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">-- Select Vehicle Type --</option>
-                <option value="Prime Mover">Prime Mover</option>
-                <option value="Tanker">Tanker</option>
-                <option value="Dolly">Dolly</option>
-                <option value="Flat Bed">Flat Bed</option>
-                <option value="Box Trailer">Box Trailer</option>
                 <option value="Rigid Truck">Rigid Truck</option>
-                <option value="Dog Trailer">Dog Trailer</option>
-                <option value="Pig Trailer">Pig Trailer</option>
-                <option value="Vehicle Carrier">Vehicle Carrier</option>
-                <option value="Livestock Vehicle">Livestock Vehicle</option>
+                <option value="Prime Mover">Prime Mover</option>
+                <optgroup label="Trailers">
+                  <option value="Box Trailer">&nbsp;&nbsp;&nbsp;&nbsp;Box Trailer</option>
+                  <option value="Dog Trailer">&nbsp;&nbsp;&nbsp;&nbsp;Dog Trailer</option>
+                  <option value="Dolly">&nbsp;&nbsp;&nbsp;&nbsp;Dolly</option>
+                  <option value="Flat Bed">&nbsp;&nbsp;&nbsp;&nbsp;Flat Bed</option>
+                  <option value="Pig Trailer">&nbsp;&nbsp;&nbsp;&nbsp;Pig Trailer</option>
+                  <option value="Tanker">&nbsp;&nbsp;&nbsp;&nbsp;Tanker</option>
+                  <option value="Vehicle Carrier">&nbsp;&nbsp;&nbsp;&nbsp;Vehicle Carrier</option>
+                </optgroup>
                 <option value="Buses">Buses</option>
+                <option value="Livestock Vehicle">Livestock Vehicle</option>
                 <option value="Special Purpose Vehicles">Special Purpose Vehicles</option>
               </select>
             </div>
@@ -205,7 +279,8 @@
           <div class="mt-4">
             <label class="block text-sm font-medium text-gray-700 mb-2">Comments</label>
             <textarea name="comments" placeholder="Optional inspection comments" rows="3"
-                      class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                      class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mobile-textarea"
+                      onfocus="handleMobileKeyboard(this)" onblur="handleMobileKeyboardHide(this)"></textarea>
           </div>
         </div>
 
@@ -218,7 +293,7 @@
           
           <div class="mb-4">
             <p class="text-sm text-gray-700 mb-4">
-              <strong>Legal Certification:</strong> I hereby certify that I am an authorised nominee of the above-named Approved Inspection Location (AIL) and that the inspection detailed herein has been conducted in accordance with Safe Freight Program standards and regulations. This certification constitutes a legal declaration under applicable transport safety legislation.
+              <strong>Legal Certification:</strong> I, <span id="inspectorName" class="font-semibold text-blue-700"></span>, hereby certify that I am an authorised nominee of the above-named Approved Inspection Location (AIL) and that the inspection detailed herein has been conducted in accordance with Safe Freight Program standards and regulations. This certification constitutes a legal declaration under applicable transport safety legislation.
             </p>
           </div>
 
@@ -342,22 +417,23 @@
           ${section.items.map((item, i) => `
             <div class="bg-white p-4 rounded-md border border-gray-200">
               <label class="block font-medium text-gray-700 mb-3">${item}</label>
-              <div class="flex items-center gap-6 text-sm mb-3">
-                <label class="flex items-center cursor-pointer">
+              <div class="flex flex-wrap items-center gap-4 sm:gap-6 text-sm mb-3">
+                <label class="flex items-center cursor-pointer radio-option">
                   <input type="radio" name="q-${sIdx}-${i}" value="Pass" required class="mr-2 text-green-600"> 
                   <span class="text-green-600">✓ Pass</span>
                 </label>
-                <label class="flex items-center cursor-pointer">
+                <label class="flex items-center cursor-pointer radio-option">
                   <input type="radio" name="q-${sIdx}-${i}" value="Fail" class="mr-2 text-red-600"> 
                   <span class="text-red-600">✗ Fail</span>
                 </label>
-                <label class="flex items-center cursor-pointer">
+                <label class="flex items-center cursor-pointer radio-option">
                   <input type="radio" name="q-${sIdx}-${i}" value="N/A" class="mr-2 text-gray-600"> 
                   <span class="text-gray-600">☐ N/A</span>
                 </label>
               </div>
               <textarea name="notes-${sIdx}-${i}" placeholder="Notes (optional)" rows="2"
-                        class="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                        class="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mobile-textarea"
+                        onfocus="handleMobileKeyboard(this)" onblur="handleMobileKeyboardHide(this)"></textarea>
             </div>
           `).join('')}
           </div>
@@ -410,6 +486,18 @@
     function padSFPVNumber(input) {
       return input.padStart(6, '0').slice(-6); // Take only last 6 digits if longer
     }
+
+    // Enforce 6 digit limit on SFPV input
+    document.addEventListener('DOMContentLoaded', function() {
+      const sfpvInput = document.getElementById('sfpvNumberInput');
+      if (sfpvInput) {
+        sfpvInput.addEventListener('input', function(e) {
+          // Remove any non-digit characters and limit to 6 digits
+          let value = e.target.value.replace(/\D/g, '').slice(0, 6);
+          e.target.value = value;
+        });
+      }
+    });
 
     const form = document.getElementById("inspectionForm");
     form.addEventListener("submit", async function (e) {
