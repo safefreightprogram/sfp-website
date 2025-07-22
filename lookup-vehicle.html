@@ -152,7 +152,7 @@
       <img src="https://www.safefreightprogram.com/Sfp-Logo.png" 
            alt="SFP Logo" 
            class="w-8 h-auto"
-           onerror="this.style.display='none';">
+           onerror="this.style.display='none'; console.log('Logo failed to load from:', this.src);">
       <a href="index.html" class="text-xl font-bold transition-transform transform hover:scale-[1.015]">Safe Freight Program</a>
     </div>
     
@@ -382,8 +382,8 @@
                       <img src="https://www.safefreightprogram.com/Sfp-Logo.png" 
                            alt="Safe Freight Program" 
                            style="width: 30px; height: auto; filter: brightness(0) invert(1); opacity: 0.95;"
-                           onload="console.log('SFP logo loaded')"
-                           onerror="console.log('SFP logo failed to load'); this.style.display='none'; this.parentNode.innerHTML='<div style=&quot;color:white;font-size:10px;font-weight:bold;line-height:1;&quot;>SFP<br><span style=&quot;font-size:5px;&quot;>Safe<br>Freight<br>Program</span></div>';">
+                           onload="console.log('SFP logo loaded successfully')"
+                           onerror="console.log('SFP logo failed to load from:', this.src); this.style.display='none'; this.parentNode.innerHTML='<div style=&quot;color:white;font-size:10px;font-weight:bold;line-height:1;&quot;>SFP<br><span style=&quot;font-size:5px;&quot;>Safe<br>Freight<br>Program</span></div>';">
                     </div>
                     
                     <!-- QR Code -->
@@ -473,53 +473,76 @@
   function startScan() {
     const modal = document.getElementById('qrModal');
     modal.classList.remove('hidden');
-    qrScanner = new Html5Qrcode("qr-reader");
-    qrScanner.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: 250 },
-      (decodedText) => {
-        qrScanner.stop();
-        modal.classList.add('hidden');
-        
-        // Extract vehicle ID from the scanned URL
-        let vehicleId = decodedText.trim();
-        console.log('Scanned QR code:', vehicleId);
+    
+    // Add error handling for QR scanner initialization
+    try {
+      qrScanner = new Html5Qrcode("qr-reader");
+      qrScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+          console.log('QR Code scanned successfully:', decodedText);
+          qrScanner.stop().then(() => {
+            modal.classList.add('hidden');
+            
+            // Extract vehicle ID from the scanned URL
+            let vehicleId = decodedText.trim();
+            console.log('Original scanned text:', vehicleId);
 
-        // Handle the lookup-vehicle?id= format
-        if (vehicleId.includes('?id=')) {
-          vehicleId = vehicleId.split('?id=')[1];
-        }
-        // Handle any other URL format patterns
-        else if (vehicleId.includes('/vehicle/')) {
-          vehicleId = vehicleId.split('/vehicle/')[1];
-        }
+            // Handle different URL formats that might be scanned
+            if (vehicleId.includes('lookup-vehicle')) {
+              // Extract ID from lookup-vehicle URLs
+              const urlParams = new URLSearchParams(vehicleId.split('?')[1] || '');
+              vehicleId = urlParams.get('id') || vehicleId;
+            } else if (vehicleId.includes('/vehicle/')) {
+              // Handle /vehicle/ format
+              vehicleId = vehicleId.split('/vehicle/')[1];
+            }
 
-        // Remove any URL parameters after the ID
-        if (vehicleId.includes('&')) {
-          vehicleId = vehicleId.split('&')[0];
-        }
+            // Clean up the ID
+            if (vehicleId.includes('&')) {
+              vehicleId = vehicleId.split('&')[0];
+            }
 
-        // Remove SFPV- prefix if present
-        if (vehicleId.startsWith('SFPV-')) {
-          vehicleId = vehicleId.substring(5);
-        }
+            // Remove SFPV- prefix if present for input
+            let inputValue = vehicleId;
+            if (inputValue.startsWith('SFPV-')) {
+              inputValue = inputValue.substring(5);
+            }
 
-        console.log('Extracted vehicle ID:', vehicleId);
-        document.getElementById('vehicleInput').value = vehicleId;
-        lookupVehicle();
-      },
-      (err) => {} // Handle errors silently
-    );
+            console.log('Final extracted vehicle ID for input:', inputValue);
+            document.getElementById('vehicleInput').value = inputValue;
+            lookupVehicle();
+          }).catch(err => {
+            console.error("Error stopping QR scanner:", err);
+            modal.classList.add('hidden');
+          });
+        },
+        (err) => {
+          // Handle scan errors silently (common during scanning process)
+          if (err.includes && !err.includes('QR code parse error')) {
+            console.log('QR Scanner error:', err);
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Failed to initialize QR scanner:', error);
+      alert('Camera access failed. Please ensure you have granted camera permissions and try again.');
+      modal.classList.add('hidden');
+    }
   }
 
   function stopScan() {
     if (qrScanner) {
       qrScanner.stop().then(() => {
+        console.log('QR scanner stopped successfully');
         document.getElementById('qrModal').classList.add('hidden');
       }).catch(err => {
         console.error("Error stopping QR scanner:", err);
         document.getElementById('qrModal').classList.add('hidden');
       });
+    } else {
+      document.getElementById('qrModal').classList.add('hidden');
     }
   }
 
