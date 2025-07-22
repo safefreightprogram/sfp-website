@@ -17,10 +17,43 @@
         margin-bottom: 1rem;
       }
       
-      /* Handle mobile keyboard overlay */
-      .mobile-input-focus {
-        transform: translateY(-100px);
-        transition: transform 0.3s ease-in-out;
+      /* Compact radio buttons on mobile */
+      .mobile-radio-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+      
+      .mobile-radio-option {
+        padding: 0.5rem 0.75rem;
+        min-height: 40px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        flex: 0 0 auto;
+      }
+      
+      .mobile-radio-option:has(input:checked) {
+        background: #dbeafe;
+        border-color: #3b82f6;
+      }
+      
+      /* Reset mobile styles on larger screens */
+      .sm\:mobile-radio-option-reset {
+        padding: 0;
+        background: none;
+        border: none;
+        border-radius: 0;
+        min-height: auto;
+      }
+      
+      /* Better mobile keyboard handling */
+      .mobile-keyboard-active {
+        position: relative;
+        z-index: 1000;
       }
       
       /* Ensure content is visible above mobile keyboards */
@@ -36,8 +69,17 @@
       }
       
       .radio-option {
-        padding: 0.75rem;
-        min-height: 44px;
+        padding: 0.5rem;
+        min-height: 40px;
+      }
+      
+      /* More compact spacing on mobile */
+      .mobile-form-spacing {
+        gap: 1rem;
+      }
+      
+      .mobile-section-spacing {
+        margin-bottom: 1rem;
       }
     }
   </style>
@@ -312,43 +354,89 @@
     let signaturePad;
     let qrScanner;
 
-    // Mobile keyboard handling
+    // Mobile keyboard handling - improved
     let activeInput = null;
+    let keyboardHeight = 0;
 
     function handleMobileKeyboard(element) {
       if (window.innerWidth <= 768) {
         activeInput = element;
+        element.classList.add('mobile-keyboard-active');
+        
         // Add small delay to ensure keyboard is visible
         setTimeout(() => {
-          element.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center',
-            inline: 'nearest'
-          });
+          // Get the keyboard height estimation
+          const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+          keyboardHeight = window.innerHeight - viewportHeight;
+          
+          // Calculate position to keep textarea just above keyboard
+          const elementRect = element.getBoundingClientRect();
+          const targetPosition = viewportHeight - 150; // Leave 150px above keyboard
+          
+          if (elementRect.bottom > targetPosition) {
+            const scrollAmount = elementRect.bottom - targetPosition;
+            window.scrollBy({
+              top: scrollAmount,
+              behavior: 'smooth'
+            });
+          }
         }, 300);
       }
     }
 
     function handleMobileKeyboardHide(element) {
-      activeInput = null;
+      if (activeInput === element) {
+        activeInput = null;
+        element.classList.remove('mobile-keyboard-active');
+      }
     }
 
-    // Handle window resize (keyboard show/hide on mobile)
+    // Handle visual viewport changes (better keyboard detection)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', () => {
+        if (activeInput && window.innerWidth <= 768) {
+          const viewportHeight = window.visualViewport.height;
+          const keyboardVisible = viewportHeight < window.innerHeight * 0.8;
+          
+          if (keyboardVisible) {
+            // Keyboard is visible, adjust active input position
+            setTimeout(() => {
+              const elementRect = activeInput.getBoundingClientRect();
+              const targetPosition = viewportHeight - 120; // Keep 120px above keyboard
+              
+              if (elementRect.bottom > targetPosition) {
+                const scrollAmount = elementRect.bottom - targetPosition;
+                window.scrollBy({
+                  top: scrollAmount,
+                  behavior: 'smooth'
+                });
+              }
+            }, 100);
+          }
+        }
+      });
+    }
+
+    // Fallback for older browsers
     let initialViewportHeight = window.innerHeight;
     
     window.addEventListener('resize', () => {
-      if (window.innerWidth <= 768) {
+      if (!window.visualViewport && window.innerWidth <= 768) {
         const currentHeight = window.innerHeight;
         const keyboardVisible = currentHeight < initialViewportHeight * 0.75;
         
         if (keyboardVisible && activeInput) {
-          // Keyboard is visible, ensure active input is visible
           setTimeout(() => {
-            activeInput.scrollIntoView({ 
-              behavior: 'smooth', 
-              block: 'start',
-              inline: 'nearest'
-            });
+            const elementRect = activeInput.getBoundingClientRect();
+            const targetPosition = currentHeight - 120;
+            
+            if (elementRect.bottom > targetPosition) {
+              const scrollAmount = elementRect.bottom - targetPosition;
+              window.scrollBy({
+                top: scrollAmount,
+                behavior: 'smooth'
+              });
+            }
           }, 100);
         }
       }
@@ -435,20 +523,20 @@
           <h2 class="text-xl font-bold text-blue-800 mb-4">${section.title}</h2>
           <div class="space-y-4">
           ${section.items.map((item, i) => `
-            <div class="bg-white p-4 rounded-md border border-gray-200">
-              <label class="block font-medium text-gray-700 mb-3">${item}</label>
-              <div class="flex flex-wrap items-center gap-4 sm:gap-6 text-sm mb-3">
-                <label class="flex items-center cursor-pointer radio-option">
+            <div class="bg-white p-3 sm:p-4 rounded-md border border-gray-200 mobile-section-spacing">
+              <label class="block font-medium text-gray-700 mb-3 text-sm sm:text-base">${item}</label>
+              <div class="mobile-radio-group sm:flex sm:flex-wrap sm:items-center sm:gap-4 sm:gap-6 text-sm mb-3">
+                <label class="flex items-center cursor-pointer mobile-radio-option sm:mobile-radio-option-reset">
                   <input type="radio" name="q-${sIdx}-${i}" value="Pass" required class="mr-2 text-green-600"> 
-                  <span class="text-green-600">✓ Pass</span>
+                  <span class="text-green-600 font-medium">✓ Pass</span>
                 </label>
-                <label class="flex items-center cursor-pointer radio-option">
+                <label class="flex items-center cursor-pointer mobile-radio-option sm:mobile-radio-option-reset">
                   <input type="radio" name="q-${sIdx}-${i}" value="Fail" class="mr-2 text-red-600"> 
-                  <span class="text-red-600">✗ Fail</span>
+                  <span class="text-red-600 font-medium">✗ Fail</span>
                 </label>
-                <label class="flex items-center cursor-pointer radio-option">
+                <label class="flex items-center cursor-pointer mobile-radio-option sm:mobile-radio-option-reset">
                   <input type="radio" name="q-${sIdx}-${i}" value="N/A" class="mr-2 text-gray-600"> 
-                  <span class="text-gray-600">☐ N/A</span>
+                  <span class="text-gray-600 font-medium">☐ N/A</span>
                 </label>
               </div>
               <textarea name="notes-${sIdx}-${i}" placeholder="Notes (optional)" rows="2"
