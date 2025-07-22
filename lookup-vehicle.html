@@ -147,7 +147,14 @@
 
 <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false, showSearch: false }">
   <div class="max-w-7xl mx-auto p-4 flex justify-between items-center relative">
-    <a href="index.html" class="text-xl font-bold transition-transform transform hover:scale-[1.015]">Safe Freight Program</a>
+    <!-- Logo and Title -->
+    <div class="flex items-center space-x-3">
+      <img src="https://www.safefreightprogram.com/Sfp-Logo.png" 
+           alt="SFP Logo" 
+           class="w-8 h-auto"
+           onerror="this.style.display='none';">
+      <a href="index.html" class="text-xl font-bold transition-transform transform hover:scale-[1.015]">Safe Freight Program</a>
+    </div>
     
     <!-- User info and controls -->
     <div class="flex items-center space-x-4">
@@ -292,7 +299,21 @@
 
   async function lookupVehicle() {
     const raw = document.getElementById('vehicleInput').value.trim();
-    const input = raw.startsWith('SFPV-') ? raw : 'SFPV-' + padWithZeros(raw);
+    
+    // Pad single digits or short numbers to 6 digits, then add SFPV- prefix if not present
+    let paddedInput;
+    if (raw.startsWith('SFPV-')) {
+      // Already has prefix, just ensure the number part is 6 digits
+      const numberPart = raw.substring(5);
+      paddedInput = 'SFPV-' + padWithZeros(numberPart, 6);
+    } else {
+      // No prefix, pad the input and add prefix
+      paddedInput = 'SFPV-' + padWithZeros(raw, 6);
+    }
+    
+    const input = paddedInput;
+    console.log('Original input:', raw, 'Processed input:', input);
+    
     const resultEl = document.getElementById('vehicleResult');
     const searchBtn = document.getElementById('searchBtn');
     
@@ -360,9 +381,9 @@
                     <div style="text-align: left;">
                       <img src="https://www.safefreightprogram.com/Sfp-Logo.png" 
                            alt="Safe Freight Program" 
-                           style="width: 45px; height: auto; filter: brightness(0) invert(1); opacity: 0.95;"
+                           style="width: 30px; height: auto; filter: brightness(0) invert(1); opacity: 0.95;"
                            onload="console.log('SFP logo loaded')"
-                           onerror="console.log('SFP logo failed to load'); this.innerHTML='<div style=&quot;color:white;font-size:12px;font-weight:bold;&quot;>SFP<br><span style=&quot;font-size:6px;&quot;>Safe Freight<br>Program</span></div>';">
+                           onerror="console.log('SFP logo failed to load'); this.style.display='none'; this.parentNode.innerHTML='<div style=&quot;color:white;font-size:10px;font-weight:bold;line-height:1;&quot;>SFP<br><span style=&quot;font-size:5px;&quot;>Safe<br>Freight<br>Program</span></div>';">
                     </div>
                     
                     <!-- QR Code -->
