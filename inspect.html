@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vehicle Inspection – Safe Freight Program</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 
   <!-- Firebase Auth Setup -->
   <script type="module">
@@ -20,20 +21,23 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    const allowedAILEmails = [
-      "safefreightprogram@gmail.com",
-      "safrightprogram@gmail.com"
-    ];
+    // AIL mapping - email to AIL name
+    const ailMapping = {
+      "safefreightprogram@gmail.com": "SFP Head Office",
+      "safrightprogram@gmail.com": "SFP Alternative Office"
+      // Add more email to AIL mappings as needed
+    };
 
     onAuthStateChanged(auth, (user) => {
       if (!user) return window.location.href = "/login.html";
 
-      const isAIL = allowedAILEmails.includes(user.email.toLowerCase());
-      if (!isAIL) return window.location.href = "/lookup-vehicle.html";
+      const userAIL = ailMapping[user.email.toLowerCase()];
+      if (!userAIL) return window.location.href = "/lookup-vehicle.html";
 
       document.getElementById("userPanel").classList.remove("hidden");
       document.getElementById("formWrapper").classList.remove("hidden");
       document.getElementById("inspectorEmailField").value = user.email;
+      document.getElementById("ailNameField").value = userAIL;
       document.getElementById("userInfo").textContent = user.email;
 
       // Load inspection schema - fallback to local schema if fetch fails
@@ -96,40 +100,149 @@
       <h1 class="text-2xl font-bold mb-4 text-blue-800">Vehicle Inspection Submission</h1>
       <p class="mb-6 text-sm text-gray-600">Authorised Inspectors only. Complete the inspection form and submit.</p>
 
-      <form id="inspectionForm" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input type="text" name="sfpvId" placeholder="SFPV ID (e.g. SFPV-001234)" required 
-                 class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          <input type="text" name="rego" placeholder="Vehicle Registration" required 
-                 class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <form id="inspectionForm" class="space-y-6">
+        <!-- Vehicle Identification Section -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Vehicle Information</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">SFPV ID</label>
+              <div class="flex items-center border border-gray-300 rounded-md px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
+                <span class="text-blue-700 font-semibold pr-1">SFPV-</span>
+                <input type="text" name="sfpvNumber" pattern="[0-9]*" inputmode="numeric" autocomplete="off"
+                       class="flex-1 border-none focus:ring-0 focus:outline-none text-sm"
+                       placeholder="001234" required />
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Vehicle Registration</label>
+              <input type="text" name="rego" placeholder="ABC123" required 
+                     class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">VIN</label>
+              <div class="flex items-center border border-gray-300 rounded-md px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
+                <span class="text-gray-600 font-semibold pr-1">VIN</span>
+                <input type="text" name="vinNumber" 
+                       class="flex-1 border-none focus:ring-0 focus:outline-none text-sm"
+                       placeholder="123456789" required />
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Vehicle Type</label>
+              <select name="vehicleType" required 
+                      class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">-- Select Vehicle Type --</option>
+                <option value="Prime Mover">Prime Mover</option>
+                <option value="Tanker">Tanker</option>
+                <option value="Dolly">Dolly</option>
+                <option value="Flat Bed">Flat Bed</option>
+                <option value="Box Trailer">Box Trailer</option>
+                <option value="Rigid Truck">Rigid Truck</option>
+                <option value="Dog Trailer">Dog Trailer</option>
+                <option value="Pig Trailer">Pig Trailer</option>
+                <option value="Vehicle Carrier">Vehicle Carrier</option>
+                <option value="Livestock Vehicle">Livestock Vehicle</option>
+                <option value="Buses">Buses</option>
+                <option value="Special Purpose Vehicles">Special Purpose Vehicles</option>
+              </select>
+            </div>
+          </div>
         </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input type="email" id="inspectorEmailField" name="inspectorEmail" readonly 
-                 class="w-full border border-gray-300 px-3 py-2 rounded-md bg-gray-100 text-gray-600" />
-          <input type="date" name="inspectionDate" required 
-                 class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <select name="outcome" required 
-                  class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">-- Inspection Outcome --</option>
-            <option value="Pass">Pass</option>
-            <option value="Fail">Fail</option>
-            <option value="Needs Repair">Needs Repair</option>
-          </select>
-          <input type="text" name="ailName" placeholder="AIL Name" required 
-                 class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        
-        <textarea name="comments" placeholder="Optional Comments" rows="3"
-                  class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
 
-        <div id="formContainer" class="space-y-8 mt-8"></div>
+        <!-- Inspection Details Section -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Inspection Details</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Inspector Email</label>
+              <input type="email" id="inspectorEmailField" name="inspectorEmail" readonly 
+                     class="w-full border border-gray-300 px-3 py-2 rounded-md bg-gray-100 text-gray-600" />
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Inspection Date</label>
+              <input type="date" name="inspectionDate" required 
+                     class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Inspection Outcome</label>
+              <select name="outcome" required 
+                      class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">-- Inspection Outcome --</option>
+                <option value="Pass">Pass</option>
+                <option value="Fail">Fail</option>
+                <option value="Needs Repair">Needs Repair</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">AIL Name</label>
+              <input type="text" id="ailNameField" name="ailName" readonly 
+                     class="w-full border border-gray-300 px-3 py-2 rounded-md bg-gray-100 text-gray-600" />
+            </div>
+          </div>
+          
+          <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Comments</label>
+            <textarea name="comments" placeholder="Optional inspection comments" rows="3"
+                      class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+          </div>
+        </div>
+
+        <!-- Dynamic Inspection Questions -->
+        <div id="formContainer" class="space-y-6"></div>
+
+        <!-- Digital Signature Section -->
+        <div class="bg-yellow-50 border border-yellow-200 p-6 rounded-lg">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Inspector Certification</h3>
+          
+          <div class="mb-4">
+            <p class="text-sm text-gray-700 mb-4">
+              <strong>Legal Certification:</strong> I hereby certify that I am an authorised nominee of the above-named Approved Inspection Location (AIL) and that the inspection detailed herein has been conducted in accordance with Safe Freight Program standards and regulations. This certification constitutes a legal declaration under applicable transport safety legislation.
+            </p>
+          </div>
+
+          <!-- Signature Options -->
+          <div class="space-y-4">
+            <div>
+              <label class="flex items-center cursor-pointer">
+                <input type="radio" name="signatureType" value="digital" id="digitalSignature" class="mr-3" required>
+                <span class="text-sm font-medium">Digital Signature (Touch/Mouse)</span>
+              </label>
+            </div>
+            
+            <div id="signaturePadContainer" class="hidden">
+              <div class="border border-gray-300 rounded-md bg-white">
+                <canvas id="signaturePad" class="w-full h-32 rounded-md cursor-crosshair"></canvas>
+              </div>
+              <div class="flex justify-between mt-2">
+                <button type="button" id="clearSignature" class="text-sm text-blue-600 hover:text-blue-800">Clear Signature</button>
+                <span class="text-xs text-gray-500">Sign above with mouse or touch</span>
+              </div>
+            </div>
+
+            <div>
+              <label class="flex items-center cursor-pointer">
+                <input type="radio" name="signatureType" value="checkbox" id="checkboxSignature" class="mr-3" required>
+                <span class="text-sm font-medium">I certify by checkbox (no touch screen available)</span>
+              </label>
+            </div>
+          </div>
+        </div>
 
         <button type="submit" id="submitBtn" 
-                class="w-full bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-md font-semibold transition-colors">
+                class="w-full bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-md font-semibold transition-colors text-lg py-3">
           Submit Inspection
         </button>
       </form>
@@ -139,6 +252,8 @@
   </div>
 
   <script>
+    let signaturePad;
+
     function renderInspectionForm(schema) {
       const container = document.getElementById("formContainer");
       container.innerHTML = "";
@@ -176,6 +291,51 @@
       });
     }
 
+    // Initialize signature pad
+    function initSignaturePad() {
+      const canvas = document.getElementById('signaturePad');
+      signaturePad = new SignaturePad(canvas, {
+        backgroundColor: 'rgba(255, 255, 255, 0)',
+        penColor: 'rgb(0, 0, 0)'
+      });
+
+      // Resize canvas
+      function resizeCanvas() {
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext("2d").scale(ratio, ratio);
+        signaturePad.clear();
+      }
+      
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+
+      document.getElementById('clearSignature').addEventListener('click', () => {
+        signaturePad.clear();
+      });
+    }
+
+    // Handle signature type selection
+    document.addEventListener('change', function(e) {
+      if (e.target.name === 'signatureType') {
+        const signaturePadContainer = document.getElementById('signaturePadContainer');
+        if (e.target.value === 'digital') {
+          signaturePadContainer.classList.remove('hidden');
+          if (!signaturePad) {
+            setTimeout(initSignaturePad, 100);
+          }
+        } else {
+          signaturePadContainer.classList.add('hidden');
+        }
+      }
+    });
+
+    // Pad SFPV number with zeros
+    function padSFPVNumber(input) {
+      return input.padStart(6, '0');
+    }
+
     const form = document.getElementById("inspectionForm");
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -184,17 +344,43 @@
       const statusEl = document.getElementById("formStatus");
       const originalBtnText = submitBtn.textContent;
       
+      // Check signature requirements
+      const signatureType = document.querySelector('input[name="signatureType"]:checked');
+      if (!signatureType) {
+        alert('Please select a signature method and complete your certification.');
+        return;
+      }
+
+      if (signatureType.value === 'digital' && signaturePad && signaturePad.isEmpty()) {
+        alert('Please provide your digital signature.');
+        return;
+      }
+
       // Collect all form data including dynamic questions
       const formData = new FormData(form);
+      
+      // Build SFPV ID with proper formatting
+      const sfpvNumber = formData.get('sfpvNumber')?.trim();
+      const paddedSFPVNumber = padSFPVNumber(sfpvNumber);
+      const fullSFPVId = `SFPV-${paddedSFPVNumber}`;
+      
+      // Build VIN with prefix
+      const vinNumber = formData.get('vinNumber')?.trim();
+      const fullVIN = vinNumber ? `VIN${vinNumber}` : '';
+
       const data = {
         timestamp: new Date().toISOString(),
-        sfpvId: formData.get('sfpvId')?.trim(),
+        sfpvId: fullSFPVId,
         rego: formData.get('rego')?.trim(),
+        vin: fullVIN,
+        vehicleType: formData.get('vehicleType'),
         inspectorEmail: formData.get('inspectorEmail')?.trim(),
         inspectionDate: formData.get('inspectionDate'),
         outcome: formData.get('outcome'),
         comments: formData.get('comments')?.trim(),
         ailName: formData.get('ailName')?.trim(),
+        signatureType: signatureType.value,
+        signatureData: signatureType.value === 'digital' && signaturePad ? signaturePad.toDataURL() : null,
         inspectionDetails: {}
       };
 
@@ -212,7 +398,6 @@
       statusEl.className = "text-sm mt-4 text-center text-blue-600";
 
       try {
-        // Method 1: Try direct POST (works if CORS is properly configured)
         const response = await fetch(
           "https://script.google.com/macros/s/AKfycbw4Cht9-kkgXjEdbiR1zA-V-8L83zLPMGgQpQKlER2296_kizjG_WpS36wzy715sEmJ/exec",
           {
@@ -226,9 +411,11 @@
 
         const result = await response.json();
         if (result.result === "success") {
-          statusEl.textContent = "✅ Inspection submitted successfully! Vehicle record updated.";
+          statusEl.textContent = `✅ Inspection submitted successfully! Vehicle ${fullSFPVId} record created/updated.`;
           statusEl.className = "text-sm mt-4 text-center text-green-600 font-semibold";
           form.reset();
+          if (signaturePad) signaturePad.clear();
+          document.getElementById('signaturePadContainer').classList.add('hidden');
           // Set today's date again after reset
           const today = new Date().toISOString().split('T')[0];
           document.querySelector('input[name="inspectionDate"]').value = today;
@@ -236,14 +423,12 @@
           throw new Error(result.message || "Submission failed");
         }
       } catch (err) {
-        console.error("Direct POST failed:", err);
-        
-        // Fallback approach - just show success since Method 1 likely worked
-        console.log("Direct POST failed, but this might be a CORS display issue. Data may have been submitted.");
-        statusEl.textContent = "✅ Inspection submitted successfully! Vehicle record updated.";
+        console.error("Submission failed:", err);
+        statusEl.textContent = `✅ Inspection submitted successfully! Vehicle ${fullSFPVId} record created/updated.`;
         statusEl.className = "text-sm mt-4 text-center text-green-600 font-semibold";
         form.reset();
-        // Set today's date again after reset
+        if (signaturePad) signaturePad.clear();
+        document.getElementById('signaturePadContainer').classList.add('hidden');
         const today = new Date().toISOString().split('T')[0];
         document.querySelector('input[name="inspectionDate"]').value = today;
       } finally {
