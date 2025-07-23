@@ -126,88 +126,6 @@
       background-color: #fee2e2;
       border-radius: 0.25rem;
     }
-
-    /* Enhanced form validation styling */
-    .validation-errors {
-      animation: slideDown 0.3s ease-out;
-    }
-
-    .network-warning {
-      animation: slideDown 0.3s ease-out;
-    }
-
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Loading spinner animation */
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .animate-spin {
-      animation: spin 1s linear infinite;
-    }
-
-    /* Auto-save indicator */
-    .auto-save-indicator {
-      position: fixed;
-      top: 80px;
-      right: 20px;
-      background: #10b981;
-      color: white;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      z-index: 1000;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .auto-save-indicator.show {
-      opacity: 1;
-    }
-
-    /* Enhanced file upload feedback */
-    .file-message {
-      animation: fadeIn 0.3s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-5px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Form field validation states */
-    .field-error {
-      border-color: #ef4444 !important;
-      box-shadow: 0 0 0 1px #ef4444 !important;
-    }
-
-    .field-warning {
-      border-color: #f59e0b !important;
-      box-shadow: 0 0 0 1px #f59e0b !important;
-    }
-
-    .field-success {
-      border-color: #10b981 !important;
-      box-shadow: 0 0 0 1px #10b981 !important;
-    }
   </style>
 
   <!-- Firebase Auth Setup -->
@@ -591,24 +509,19 @@
       files.forEach(file => {
         // Validate file type
         if (!allowedTypes.includes(file.type)) {
-          showFileError(`File "${file.name}" is not a supported format. Please use PDF, JPG, or PNG files.`);
+          alert(`File "${file.name}" is not a supported format. Please use PDF, JPG, or PNG files.`);
           return;
         }
 
-        // Validate file size with warning
+        // Validate file size
         if (file.size > maxFileSize) {
-          showFileError(`File "${file.name}" is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 10MB.`);
+          alert(`File "${file.name}" is too large. Maximum size is 10MB.`);
           return;
-        }
-
-        // Show size warning for large files
-        if (file.size > 5 * 1024 * 1024) { // 5MB warning
-          showFileWarning(`File "${file.name}" is large (${(file.size / 1024 / 1024).toFixed(1)}MB). Upload may take longer.`);
         }
 
         // Check for duplicates
         if (uploadedFiles.some(f => f.name === file.name && f.size === file.size)) {
-          showFileWarning(`File "${file.name}" is already selected.`);
+          alert(`File "${file.name}" is already selected.`);
           return;
         }
 
@@ -618,44 +531,6 @@
       updateFileList();
       // Clear the input so the same file can be selected again if removed and re-added
       document.getElementById('fileInput').value = '';
-    }
-
-    function showFileError(message) {
-      showFileMessage(message, 'error');
-    }
-
-    function showFileWarning(message) {
-      showFileMessage(message, 'warning');
-    }
-
-    function showFileMessage(message, type) {
-      const messageClass = type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-yellow-50 border-yellow-200 text-yellow-700';
-      const icon = type === 'error' ? 
-        '<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>' :
-        '<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>';
-
-      const messageHtml = `
-        <div class="file-message mt-2 p-3 ${messageClass} border rounded-md">
-          <div class="flex items-center">
-            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">${icon}</svg>
-            <span class="text-sm">${message}</span>
-          </div>
-        </div>
-      `;
-
-      const fileUploadArea = document.querySelector('.file-upload-area');
-      const existingMessage = fileUploadArea.querySelector('.file-message');
-      if (existingMessage) {
-        existingMessage.remove();
-      }
-
-      fileUploadArea.insertAdjacentHTML('afterend', messageHtml);
-
-      // Auto-remove message after 5 seconds
-      setTimeout(() => {
-        const messageEl = document.querySelector('.file-message');
-        if (messageEl) messageEl.remove();
-      }, 5000);
     }
 
     function removeFile(index) {
@@ -946,37 +821,24 @@
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
 
-      // Prevent duplicate submissions
-      if (!preventDuplicateSubmission()) {
-        return;
-      }
-
       const submitBtn = document.getElementById("submitBtn");
       const statusEl = document.getElementById("formStatus");
       const originalBtnText = submitBtn.textContent;
       
-      // Clear any existing error/warning messages
-      const existingMessages = document.querySelectorAll('.validation-errors, .network-warning, .file-message');
-      existingMessages.forEach(msg => msg.remove());
-
-      // Check network connectivity
-      if (!checkNetworkConnectivity()) {
-        showNetworkWarning();
+      // Check signature requirements
+      const signatureType = document.querySelector('input[name="signatureType"]:checked');
+      if (!signatureType) {
+        alert('Please select a signature method and complete your certification.');
         return;
       }
 
-      // Collect all form data for validation
+      if (signatureType.value === 'digital' && signaturePad && signaturePad.isEmpty()) {
+        alert('Please provide your digital signature.');
+        return;
+      }
+
+      // Collect all form data including dynamic questions
       const formData = new FormData(form);
-      
-      // Validate form before submission
-      const validationErrors = validateForm(formData);
-      if (validationErrors.length > 0) {
-        showValidationErrors(validationErrors);
-        return;
-      }
-
-      // Set submission state
-      isSubmitting = true;
       
       // Build SFPV ID with proper formatting
       const sfpvNumber = formData.get('sfpvNumber')?.trim();
@@ -1006,8 +868,8 @@
         outcome: formData.get('outcome'),
         comments: formData.get('comments')?.trim(),
         ailName: formData.get('ailName')?.trim(),
-        signatureType: document.querySelector('input[name="signatureType"]:checked').value,
-        signatureData: document.querySelector('input[name="signatureType"]:checked').value === 'digital' && signaturePad ? signaturePad.toDataURL() : null,
+        signatureType: signatureType.value,
+        signatureData: signatureType.value === 'digital' && signaturePad ? signaturePad.toDataURL() : null,
         inspectionDetails: {},
         documents: []
       };
@@ -1019,16 +881,13 @@
         }
       }
 
-      // Process uploaded files with progress indication
+      // Process uploaded files
       if (uploadedFiles.length > 0) {
-        statusEl.textContent = `Processing ${uploadedFiles.length} uploaded file(s)...`;
+        statusEl.textContent = "Processing uploaded files...";
         statusEl.className = "text-sm mt-4 text-center text-blue-600";
         
-        try {
-          for (let i = 0; i < uploadedFiles.length; i++) {
-            const file = uploadedFiles[i];
-            statusEl.textContent = `Processing file ${i + 1} of ${uploadedFiles.length}: ${file.name}`;
-            
+        for (let file of uploadedFiles) {
+          try {
             const base64Data = await fileToBase64(file);
             data.documents.push({
               name: file.name,
@@ -1036,19 +895,18 @@
               size: file.size,
               data: base64Data
             });
+          } catch (error) {
+            console.error('Error processing file:', file.name, error);
+            alert(`Error processing file: ${file.name}`);
+            return;
           }
-        } catch (error) {
-          console.error('Error processing files:', error);
-          alert("Error processing files: " + error.message);
-          isSubmitting = false;
-          return;
         }
       }
 
-      // Show loading state with spinner
-      submitBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Processing...';
+      // Show loading state
+      submitBtn.textContent = "Submitting...";
       submitBtn.disabled = true;
-      statusEl.textContent = "Submitting inspection to Safe Freight Program system...";
+      statusEl.textContent = "Submitting inspection...";
       statusEl.className = "text-sm mt-4 text-center text-blue-600";
 
       try {
@@ -1070,14 +928,11 @@
         console.log('Fetch completed - no-cors mode');
         
         // With no-cors, we can't read the response, so assume success
-        statusEl.textContent = "✅ Inspection successfully completed! Vehicle " + fullSFPVId + " record updated in spreadsheet.";
+        statusEl.textContent = `✅ Inspection submitted successfully! Vehicle ${fullSFPVId} record updated in spreadsheet.`;
         statusEl.className = "text-sm mt-4 text-center text-green-600 font-semibold";
         
         // Show download/print options
         showSuccessOptions(data, fullSFPVId);
-        
-        // Clear form backup after successful submission
-        clearFormBackup();
         
         // Reset form
         form.reset();
@@ -1118,37 +973,7 @@
           hiddenForm.submit();
           document.body.removeChild(hiddenForm);
           
-    // Function to show success options (download/print)
-    function showSuccessOptions(data, sfpvId) { Inspection submitted via fallback method! Check the new tab for confirmation. Vehicle ${fullSFPVId} should be updated in spreadsheet.`;
-          statusEl.className = "text-sm mt-4 text-center text-green-600 font-semibold";
-          
-          // Show download/print options
-          showSuccessOptions(data, fullSFPVId);
-          
-          // Clear form backup
-          clearFormBackup();
-          
-          // Reset form
-          form.reset();
-          uploadedFiles = [];
-          updateFileList();
-          if (signaturePad) signaturePad.clear();
-          document.getElementById('signaturePadContainer').classList.add('hidden');
-          const today = new Date().toISOString().split('T')[0];
-          document.querySelector('input[name="inspectionDate"]').value = today;
-          
-        } catch (formErr) {
-          console.error("Form submission also failed:", formErr);
-          statusEl.textContent = "❌ Submission failed. Please check your internet connection and try again. If the problem persists, contact support.";
-          statusEl.className = "text-sm mt-4 text-center text-red-600";
-        }
-      } finally {
-        // Reset button and submission state
-        submitBtn.innerHTML = originalBtnText;
-        submitBtn.disabled = false;
-        isSubmitting = false;
-      }
-    }); Inspection submitted via fallback method! Check the new tab for confirmation. Vehicle ${fullSFPVId} should be updated in spreadsheet.`;
+          statusEl.textContent = `✅ Inspection submitted via fallback method! Check the new tab for confirmation. Vehicle ${fullSFPVId} should be updated in spreadsheet.`;
           statusEl.className = "text-sm mt-4 text-center text-green-600 font-semibold";
           
           // Show download/print options
@@ -1175,117 +1000,8 @@
       }
     });
 
-    // Function to validate form before submission
-    function validateForm(formData, inspectionDetails) {
-      const errors = [];
-      
-      // Check required fields
-      if (!formData.get('sfpvNumber')?.trim()) {
-        errors.push('SFPV ID is required');
-      }
-      if (!formData.get('rego')?.trim()) {
-        errors.push('Vehicle registration is required');
-      }
-      if (!formData.get('vinNumber')?.trim()) {
-        errors.push('VIN number is required');
-      }
-      if (!formData.get('vehicleType')) {
-        errors.push('Vehicle type must be selected');
-      }
-      if (!formData.get('inspectionDate')) {
-        errors.push('Inspection date is required');
-      }
-      if (!formData.get('outcome')) {
-        errors.push('Inspection outcome must be selected');
-      }
-      
-      // Check signature
-      const signatureType = document.querySelector('input[name="signatureType"]:checked');
-      if (!signatureType) {
-        errors.push('Signature method must be selected');
-      } else if (signatureType.value === 'digital' && signaturePad && signaturePad.isEmpty()) {
-        errors.push('Digital signature is required');
-      }
-      
-      // Check if all inspection questions are answered
-      const questionInputs = document.querySelectorAll('input[name^="q-"]');
-      const questionGroups = {};
-      
-      questionInputs.forEach(input => {
-        const groupName = input.name;
-        if (!questionGroups[groupName]) {
-          questionGroups[groupName] = false;
-        }
-        if (input.checked) {
-          questionGroups[groupName] = true;
-        }
-      });
-      
-      const unansweredQuestions = Object.keys(questionGroups).filter(group => !questionGroups[group]);
-      if (unansweredQuestions.length > 0) {
-        errors.push(`Please answer all inspection questions (${unansweredQuestions.length} remaining)`);
-      }
-      
-      return errors;
-    }
-
-    // Function to show validation errors
-    function showValidationErrors(errors) {
-      const errorHtml = `
-        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div class="flex items-center mb-2">
-            <svg class="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-            </svg>
-            <span class="text-red-800 font-semibold">Please correct the following errors:</span>
-          </div>
-          <ul class="text-red-700 text-sm list-disc list-inside">
-            ${errors.map(error => `<li>${error}</li>`).join('')}
-          </ul>
-        </div>
-      `;
-      
-      // Remove any existing error messages
-      const existingErrors = document.querySelector('.validation-errors');
-      if (existingErrors) {
-        existingErrors.remove();
-      }
-      
-      // Add new error message at top of form
-      const formWrapper = document.getElementById('formWrapper');
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'validation-errors';
-      errorDiv.innerHTML = errorHtml;
-      formWrapper.insertBefore(errorDiv, document.getElementById('inspectionForm'));
-      
-      // Scroll to top to show errors
-      errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    // Function to check network connectivity
-    function checkNetworkConnectivity() {
-      return navigator.onLine;
-    }
-
-    // Function to show network warning
-    function showNetworkWarning() {
-      const warningHtml = `
-        <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div class="flex items-center">
-            <svg class="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-            </svg>
-            <span class="text-yellow-800 font-semibold">No internet connection detected. Please check your connection before submitting.</span>
-          </div>
-        </div>
-      `;
-      
-      const formWrapper = document.getElementById('formWrapper');
-      const warningDiv = document.createElement('div');
-      warningDiv.className = 'network-warning';
-      warningDiv.innerHTML = warningHtml;
-      formWrapper.insertBefore(warningDiv, document.getElementById('inspectionForm'));
-    }
+    // Set today's date as default
+    window.addEventListener('load', function() {
       const today = new Date().toISOString().split('T')[0];
       const dateInput = document.querySelector('input[name="inspectionDate"]');
       if (dateInput && !dateInput.value) {
@@ -1293,98 +1009,8 @@
       }
     });
 
-    // Auto-save functionality
-    let autoSaveTimer;
-    let isSubmitting = false;
-
-    function autoSaveFormData() {
-      if (isSubmitting) return; // Don't save during submission
-
-      try {
-        const formData = new FormData(form);
-        const autoSaveData = {
-          timestamp: new Date().toISOString(),
-          formData: {},
-          uploadedFiles: uploadedFiles.map(f => ({ name: f.name, size: f.size, type: f.type })),
-          signatureExists: signaturePad && !signaturePad.isEmpty()
-        };
-
-        // Save form field values
-        for (let [key, value] of formData.entries()) {
-          autoSaveData.formData[key] = value;
-        }
-
-        // Don't save in localStorage (not supported in Claude artifacts)
-        // Instead, store in memory for session
-        window.formBackupData = autoSaveData;
-        
-        console.log('Form data auto-saved');
-      } catch (error) {
-        console.error('Auto-save failed:', error);
-      }
-    }
-
-    function restoreFormData() {
-      if (!window.formBackupData) return;
-
-      try {
-        const backup = window.formBackupData;
-        const timeDiff = new Date() - new Date(backup.timestamp);
-        
-        // Only restore if backup is less than 1 hour old
-        if (timeDiff > 3600000) return;
-
-        if (confirm('Found unsaved form data from ' + new Date(backup.timestamp).toLocaleString() + '. Would you like to restore it?')) {
-          // Restore form fields
-          Object.keys(backup.formData).forEach(key => {
-            const field = document.querySelector(`[name="${key}"]`);
-            if (field) {
-              if (field.type === 'radio' || field.type === 'checkbox') {
-                if (field.value === backup.formData[key]) {
-                  field.checked = true;
-                }
-              } else {
-                field.value = backup.formData[key];
-              }
-            }
-          });
-
-          console.log('Form data restored from backup');
-        }
-      } catch (error) {
-        console.error('Form restore failed:', error);
-      }
-    }
-
-    // Set up auto-save on form changes
-    function setupAutoSave() {
-      const form = document.getElementById('inspectionForm');
-      
-      form.addEventListener('input', () => {
-        clearTimeout(autoSaveTimer);
-        autoSaveTimer = setTimeout(autoSaveFormData, 2000); // Save after 2 seconds of inactivity
-      });
-
-      form.addEventListener('change', () => {
-        clearTimeout(autoSaveTimer);
-        autoSaveTimer = setTimeout(autoSaveFormData, 1000); // Save after 1 second for dropdowns
-      });
-    }
-
-    // Prevent duplicate submissions
-    function preventDuplicateSubmission() {
-      if (isSubmitting) {
-        alert('Submission in progress. Please wait...');
-        return false;
-      }
-      return true;
-    }
-
-    // Clear backup after successful submission
-    function clearFormBackup() {
-      window.formBackupData = null;
-      console.log('Form backup cleared');
-    }
+    // Function to show success options (download/print)
+    function showSuccessOptions(data, sfpvId) {
       const statusEl = document.getElementById("formStatus");
       
       // Create success options HTML
