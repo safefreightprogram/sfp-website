@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Safe Freight Program</title>
+
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+  <!-- Tailwind CSS + Alpine.js -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="The Safe Freight Program sets the new standard for compliant, safety-driven road freight operations in Australia." />
+  <meta name="author" content="Safe Freight Program" />
+  <meta property="og:title" content="Safe Freight Program" />
+  <meta property="og:description" content="Professional. Compliant. Safe. Get your Safe Freight Passport today." />
+  <meta property="og:image" content="/images/social-preview.jpg" />
+  <meta property="og:type" content="website" />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Safe Freight Program",
+    "url": "https://safefreightprogram.com.au",
+    "logo": "https://safefreightprogram.com.au/logo.png",
+    "sameAs": [],
+    "description": "Australia's standard for safe and compliant freight operations."
+  }
+  </script>
+
+  <style>
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-fadeInUp {
+      animation: fadeInUp 0.6s ease-out both;
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-800 font-sans">
+
+  <!-- SVG Icons -->
+  <svg style="display: none;">
+    <symbol id="icon-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17h6M9 5h11l3 6v6a2 2 0 01-2 2h-1a3 3 0 11-6 0H9a3 3 0 11-6 0H2a2 2 0 01-2-2V7a2 2 0 012-2h7z" />
+    </symbol>
+    <symbol id="icon-driver" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+    </symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19a8 8 0 100-16 8 8 0 000 16zm6.5-1.5L21 21" />
+    </symbol>
+    <symbol id="icon-cap" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6" />
+    </symbol>
+    <symbol id="icon-chain-link" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14L6 18m-2-2a4 4 0 015.66 0l1.41 1.41a4 4 0 005.66 0l2.83-2.83a4 4 0 000-5.66l-1.41-1.41a4 4 0 00-5.66 0L10 10m4-4l4-4" />
+    </symbol>
+    <symbol id="icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+    </symbol>
+  </svg>
+
+  <!-- Clean Header Section with Blue Background -->
+  <div class="bg-gradient-to-br from-blue-800 to-blue-900 pb-20 px-4">
+    <!-- Navigation Bar -->
+    <header class="max-w-6xl mx-auto pt-6 pb-8" x-data="{ open: false }">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <svg class="w-6 h-6 text-white"><use href="#icon-home" /></svg>
+          <h1 class="text-xl font-bold text-white">Safe Freight Program</h1>
+        </div>
+        
+        <!-- Mobile menu button -->
+        <button class="md:hidden text-white" @click="open = !open">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        
+        <!-- Desktop navigation -->
+        <nav class="hidden md:flex space-x-6">
+          <a href="lookup-driver.html" class="text-white hover:text-blue-200 font-medium">Driver Lookup</a>
+          <a href="lookup-vehicle.html" class="text-white hover:text-blue-200 font-medium">Vehicle Lookup</a>
+          <a href="about.html" class="text-white hover:text-blue-200">About</a>
+          <a href="passport.html" class="text-white hover:text-blue-200">Passport</a>
+          <a href="ail.html" class="text-white hover:text-blue-200">AIL</a>
+          <a href="find-ail.html" class="text-white hover:text-blue-200">Find AIL</a>
+          <a href="contact.html" class="text-white hover:text-blue-200">Contact</a>
+        </nav>
+      </div>
+      
+      <!-- Mobile navigation menu -->
+      <div class="md:hidden mt-4" x-show="open" @click.away="open = false"
+           x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+           x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2">
+        <nav class="flex flex-col space-y-3 bg-white rounded-lg shadow-lg p-4">
+          <a href="lookup-driver.html" class="text-gray-700 hover:text-blue-700 font-medium" @click="open = false">Driver Lookup</a>
+          <a href="lookup-vehicle.html" class="text-gray-700 hover:text-blue-700 font-medium" @click="open = false">Vehicle Lookup</a>
+          <a href="about.html" class="text-gray-700 hover:text-blue-700" @click="open = false">About</a>
+          <a href="passport.html" class="text-gray-700 hover:text-blue-700" @click="open = false">Passport</a>
+          <a href="ail.html" class="text-gray-700 hover:text-blue-700" @click="open = false">AIL</a>
+          <a href="find-ail.html" class="text-gray-700 hover:text-blue-700" @click="open = false">Find AIL</a>
+          <a href="contact.html" class="text-gray-700 hover:text-blue-700" @click="open = false">Contact</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero Title -->
+    <div class="max-w-6xl mx-auto text-center">
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-2">Welcome to</h2>
+      <h2 class="text-4xl md:text-5xl font-bold text-white">Safe Freight Program</h2>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="max-w-4xl mx-auto px-4 -mt-16 pb-12">
+    <!-- Quick Actions Cards -->
+    <div class="mb-12 animate-fadeInUp">
+      <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Hi there,</h3>
+      <p class="text-gray-600 text-center mb-8">Enter your details to help us keep track of everyone on site for safety measures.</p>
+      
+      <div class="space-y-4">
+        <a href="lookup-driver.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <div class="bg-blue-100 p-3 rounded-lg">
+                <svg class="w-6 h-6 text-blue-700"><use href="#icon-driver" /></svg>
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-gray-800">I'm a Driver</h4>
+                <p class="text-gray-500 text-sm">Check credentials and get your Safe Freight Passport</p>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </a>
+
+        <a href="lookup-vehicle.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <div class="bg-blue-100 p-3 rounded-lg">
+                <svg class="w-6 h-6 text-blue-700"><use href="#icon-truck" /></svg>
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-gray-800">I'm a Vehicle Operator</h4>
+                <p class="text-gray-500 text-sm">Check vehicle credentials and compliance status</p>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </a>
+
+        <a href="loading.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <div class="bg-blue-100 p-3 rounded-lg">
+                <svg class="w-6 h-6 text-blue-700"><use href="#icon-chain-link" /></svg>
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-gray-800">I'm a Supply Chain Party</h4>
+                <p class="text-gray-500 text-sm">Access driver accreditation and vehicle compliance</p>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Additional Services -->
+    <div class="mb-8">
+      <h3 class="text-xl font-bold text-gray-800 mb-6">Additional Services</h3>
+      
+      <div class="grid md:grid-cols-2 gap-4">
+        <a href="ail.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <div class="bg-gray-100 p-3 rounded-lg">
+                <svg class="w-6 h-6 text-gray-600"><use href="#icon-search" /></svg>
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-gray-800">Inspection Locations</h4>
+                <p class="text-gray-500 text-sm">Find authorized inspection locations</p>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </a>
+
+        <a href="training.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <div class="bg-gray-100 p-3 rounded-lg">
+                <svg class="w-6 h-6 text-gray-600"><use href="#icon-cap" /></svg>
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-gray-800">Training Providers</h4>
+                <p class="text-gray-500 text-sm">Licensed SFP training programs</p>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-200 py-8 px-4">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6 text-sm text-gray-500">
+          <a href="#" class="hover:text-gray-700">Terms & Conditions</a>
+          <a href="#" class="hover:text-gray-700">Privacy Policy</a>
+          <a href="#" class="hover:text-gray-700">Terms of Service</a>
+        </div>
+        <div class="text-center">
+          <p class="text-sm text-gray-500">&copy; 2025 Safe Freight Program</p>
+          <p class="text-xs text-gray-400">safefreightprogram.com.au</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
