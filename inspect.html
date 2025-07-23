@@ -931,6 +931,9 @@
         statusEl.textContent = `✅ Inspection submitted successfully! Vehicle ${fullSFPVId} record updated in spreadsheet.`;
         statusEl.className = "text-sm mt-4 text-center text-green-600 font-semibold";
         
+        // Show download/print options
+        showSuccessOptions(data, fullSFPVId);
+        
         // Reset form
         form.reset();
         uploadedFiles = [];
@@ -973,6 +976,9 @@
           statusEl.textContent = `✅ Inspection submitted via fallback method! Check the new tab for confirmation. Vehicle ${fullSFPVId} should be updated in spreadsheet.`;
           statusEl.className = "text-sm mt-4 text-center text-green-600 font-semibold";
           
+          // Show download/print options
+          showSuccessOptions(data, fullSFPVId);
+          
           // Reset form
           form.reset();
           uploadedFiles = [];
@@ -1002,6 +1008,213 @@
         dateInput.value = today;
       }
     });
+
+    // Function to show success options (download/print)
+    function showSuccessOptions(data, sfpvId) {
+      const statusEl = document.getElementById("formStatus");
+      
+      // Create success options HTML
+      const optionsHtml = `
+        <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div class="flex items-center mb-3">
+            <svg class="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span class="text-green-800 font-semibold">Inspection Successfully Submitted!</span>
+          </div>
+          <p class="text-green-700 text-sm mb-4">
+            ✉️ An email confirmation has been sent to your registered address.<br>
+            📊 Vehicle ${sfpvId} has been updated in the database.
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <button onclick="downloadInspectionReport()" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+              📄 Download Report
+            </button>
+            <button onclick="printInspectionReport()" 
+                    class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+              🖨️ Print Report
+            </button>
+            <button onclick="emailCopyToSelf()" 
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+              📧 Email Copy
+            </button>
+          </div>
+        </div>
+      `;
+      
+      // Add options after the status message
+      statusEl.insertAdjacentHTML('afterend', optionsHtml);
+      
+      // Store data for later use
+      window.lastInspectionData = data;
+    }
+
+    // Function to create inspection report HTML
+    function createInspectionReportHTML(data) {
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>SFP Inspection - ${data.sfpvId}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+            .header { background: #1e40af; color: white; padding: 20px; text-align: center; position: relative; }
+            .success-badge { position: absolute; top: 10px; right: 20px; background: #16a34a; 
+                           color: white; padding: 8px 15px; border-radius: 5px; font-size: 12px; 
+                           font-weight: bold; }
+            .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+            .vehicle-info { background: #f0f9ff; }
+            .inspection-details { background: #f9fafb; }
+            .questions { background: #fefefe; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+            th { background: #f3f4f6; font-weight: bold; }
+            .pass { color: #16a34a; font-weight: bold; }
+            .fail { color: #dc2626; font-weight: bold; }
+            .na { color: #6b7280; }
+            @media print {
+              .no-print { display: none; }
+              body { margin: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="success-badge">✓ SUCCESSFULLY SUBMITTED</div>
+            <h1>SAFE FREIGHT PROGRAM</h1>
+            <h2>Vehicle Inspection Report</h2>
+          </div>
+          
+          <div class="section vehicle-info">
+            <h3>Vehicle Information</h3>
+            <table>
+              <tr><th>SFPV ID</th><td>${data.sfpvId}</td></tr>
+              <tr><th>Registration</th><td>${data.rego || 'N/A'}</td></tr>
+              <tr><th>VIN</th><td>${data.vin || 'N/A'}</td></tr>
+              <tr><th>Vehicle Type</th><td>${data.vehicleType || 'N/A'}</td></tr>
+            </table>
+          </div>
+          
+          <div class="section inspection-details">
+            <h3>Inspection Details</h3>
+            <table>
+              <tr><th>Inspection Date</th><td>${data.inspectionDate}</td></tr>
+              <tr><th>Inspector Email</th><td>${data.inspectorEmail}</td></tr>
+              <tr><th>AIL Name</th><td>${data.ailName || 'N/A'}</td></tr>
+              <tr><th>Outcome</th><td><span class="${data.outcome === 'Pass' ? 'pass' : 'fail'}">${data.outcome}</span></td></tr>
+              <tr><th>Comments</th><td>${data.comments || 'None'}</td></tr>
+              <tr><th>Signature Type</th><td>${data.signatureType || 'N/A'}</td></tr>
+              <tr><th>Submitted</th><td>${new Date().toLocaleString()}</td></tr>
+            </table>
+          </div>
+          
+          ${Object.keys(data.inspectionDetails || {}).length > 0 ? `
+          <div class="section questions">
+            <h3>Detailed Inspection Results</h3>
+            <table>
+              <tr><th>Question</th><th>Result</th><th>Notes</th></tr>
+              ${Object.keys(data.inspectionDetails)
+                .filter(key => key.startsWith('q-'))
+                .sort()
+                .map(qKey => {
+                  const notesKey = qKey.replace('q-', 'notes-');
+                  const result = data.inspectionDetails[qKey];
+                  const resultClass = result === 'Pass' ? 'pass' : (result === 'Fail' ? 'fail' : 'na');
+                  return `
+                    <tr>
+                      <td>${qKey}</td>
+                      <td><span class="${resultClass}">${result}</span></td>
+                      <td>${data.inspectionDetails[notesKey] || ''}</td>
+                    </tr>
+                  `;
+                }).join('')}
+            </table>
+          </div>
+          ` : ''}
+          
+          <div class="section">
+            <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+            <p><em>This report was automatically generated by the Safe Freight Program system.</em></p>
+          </div>
+        </body>
+        </html>
+      `;
+      return html;
+    }
+
+    // Function to download inspection report
+    function downloadInspectionReport() {
+      if (!window.lastInspectionData) {
+        alert('No inspection data available for download.');
+        return;
+      }
+      
+      const html = createInspectionReportHTML(window.lastInspectionData);
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `SFP_Inspection_${window.lastInspectionData.sfpvId}_${window.lastInspectionData.inspectionDate}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Function to print inspection report
+    function printInspectionReport() {
+      if (!window.lastInspectionData) {
+        alert('No inspection data available for printing.');
+        return;
+      }
+      
+      const html = createInspectionReportHTML(window.lastInspectionData);
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(html);
+      printWindow.document.close();
+      
+      // Wait for content to load then print
+      printWindow.onload = function() {
+        printWindow.print();
+        // Close window after printing
+        printWindow.onafterprint = function() {
+          printWindow.close();
+        };
+      };
+    }
+
+    // Function to email copy to self
+    function emailCopyToSelf() {
+      if (!window.lastInspectionData) {
+        alert('No inspection data available.');
+        return;
+      }
+      
+      const data = window.lastInspectionData;
+      const subject = `SFP Inspection Report - ${data.sfpvId}`;
+      const body = `Dear Inspector,
+
+This is a copy of your completed Safe Freight Program inspection:
+
+Vehicle ID: ${data.sfpvId}
+Registration: ${data.rego || 'N/A'}
+Inspection Date: ${data.inspectionDate}
+Outcome: ${data.outcome}
+AIL: ${data.ailName || 'N/A'}
+
+The detailed report has been saved to your system and an email confirmation has been sent.
+
+Thank you for maintaining safety standards.
+
+Safe Freight Program
+Generated: ${new Date().toLocaleString()}`;
+
+      const mailtoLink = `mailto:${data.inspectorEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.open(mailtoLink);
+    }
   </script>
 
 </body>
