@@ -1,87 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-AU">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Find an AIL – Safe Freight Program</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <style>
-    html, body {
-      margin: 0;
-      font-family: sans-serif;
-      height: 100%;
-    }
-    #search-container {
-      padding: 1rem;
-      background: #f1f1f1;
-    }
-    #search {
-      width: 100%;
-      max-width: 400px;
-      padding: 0.5rem;
-      font-size: 1rem;
-    }
     #map {
-      height: 80vh;
-      width: 50vw;
-      margin: auto;
+      width: 100%;
+      height: 600px;
     }
   </style>
 </head>
-<body>
-  <div id="search-container">
-    <input id="search" type="text" placeholder="Search by name or suburb...">
-  </div>
-  <div id="map"></div>
+<body class="bg-gray-50 text-gray-800 font-sans">
+  <!-- Header from your existing site -->
+  <!-- [Same header block as your main page — omitted here for brevity but reuse exactly] -->
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <main class="max-w-6xl mx-auto px-4 py-10">
+    <h1 class="text-3xl font-bold text-blue-800 mb-6">Find an Authorised Inspection Location (AIL)</h1>
+    <p class="mb-4 text-gray-700">Explore the map below to locate Safe Freight Program Authorised Inspection Locations across Australia.</p>
+    <div id="map" class="rounded shadow border border-gray-300"></div>
+  </main>
+
+  <footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-16">
+    &copy; 2025 Safe Freight Program. All rights reserved.
+  </footer>
+
+  <!-- Load Google Maps -->
+  <script async
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPnUqhxYzzgoRJ32Rh6-bg5wmKuXtBmKI&callback=initMap">
+  </script>
+
   <script>
-    const sheetKey = '1q4SFo83xPIysakFXTwIRFq0vDGIib3d0ZqEEP6vQdEs';
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetKey}/gviz/tq?tqx=out:csv`;
-    let map;
-    let markers = [];
-
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: -25.2744, lng: 133.7751 }, // Centre on Australia
-        zoom: 4,
+    async function initMap() {
+      const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSufnnFBLOq9Q5tW_o1Ff2tuEAyEyG_wk2LWZFcKdtzDb4msebfrJ_n8-33eHl2_G-IN4YoPypQtBko/pub?output=csv');
+      const csv = await response.text();
+      const rows = csv.split('\n').slice(1); // Skip header
+      const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 4.8,
+        center: { lat: -25.2744, lng: 133.7751 }, // Australia
       });
 
-      Papa.parse(csvUrl, {
-        download: true,
-        header: true,
-        complete: function(results) {
-          results.data.forEach(entry => {
-            if (entry.Latitude && entry.Longitude) {
-              const marker = new google.maps.Marker({
-                position: {
-                  lat: parseFloat(entry.Latitude),
-                  lng: parseFloat(entry.Longitude)
-                },
-                map,
-                title: entry.Name
-              });
+      rows.forEach(row => {
+        const cols = row.split(',');
 
-              const info = new google.maps.InfoWindow({
-                content: `<strong>${entry.Name}</strong><br>${entry.Suburb || ''}`
-              });
+        const name = cols[1]?.trim(); // Company
+        const address = cols[8]?.trim(); // Combined Address
+        const phone = cols[7]?.trim();
+        const lat = parseFloat(cols[9]);
+        const lng = parseFloat(cols[10]);
 
-              marker.addListener("click", () => info.open(map, marker));
-              marker.entry = entry;
-              markers.push(marker);
-            }
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const marker = new google.maps.Marker({
+            position: { lat, lng },
+            map,
+            title: name
+          });
+
+          const info = new google.maps.InfoWindow({
+            content: `
+              <div class="text-sm">
+                <strong>${name}</strong><br/>
+                ${address}<br/>
+                ${phone ? `<a href="tel:${phone}" class="text-blue-600 underline">${phone}</a>` : ''}
+              </div>`
+          });
+
+          marker.addListener("click", () => {
+            info.open(map, marker);
           });
         }
       });
     }
-
-    document.getElementById("search").addEventListener("input", function(e) {
-      const query = e.target.value.toLowerCase();
-      markers.forEach(marker => {
-        const name = marker.entry.Name?.toLowerCase() || '';
-        const suburb = marker.entry.Suburb?.toLowerCase() || '';
-        const match = name.includes(query) || suburb.includes(query);
-        marker.setVisible(match);
-      });
-    });
   </script>
-
-  <scr
+</body>
+</html>
