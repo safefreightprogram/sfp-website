@@ -11,8 +11,8 @@
   <style>
     #map {
       width: 100%;
-      height: 50vh;
-      min-height: 400px;
+      height: 45vh;
+      min-height: 350px;
     }
     
     .tab-active {
@@ -94,44 +94,56 @@
   </header>
 
   <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-4 py-6" x-data="{ 
+  <main class="max-w-7xl mx-auto px-4 py-4" x-data="{ 
     activeTab: 'map',
     selectedState: 'all', 
+    selectedService: 'all',
     searchText: '',
     filteredLocations: [],
     selectedLocation: null,
     
     init() {
       this.filteredLocations = ailData;
+      console.log('Initialized with', ailData.length, 'locations');
     },
     
     filterLocations() {
       this.filteredLocations = ailData.filter(location => {
         const matchesSearch = !this.searchText || location.company.toLowerCase().includes(this.searchText.toLowerCase());
         const matchesState = this.selectedState === 'all' || location.state === this.selectedState;
-        return matchesSearch && matchesState;
+        const matchesService = this.selectedService === 'all' || this.getServiceType(location.company).includes(this.selectedService);
+        return matchesSearch && matchesState && matchesService;
       });
       if (this.activeTab === 'map' && typeof filterMapMarkers === 'function') {
         filterMapMarkers();
       }
+    },
+    
+    getServiceType(company) {
+      const name = company.toLowerCase();
+      if (name.includes('fuel') || name.includes('refuel') || name.includes('petro')) return 'fuel';
+      if (name.includes('trailer') || name.includes('haulmark')) return 'trailer';
+      if (name.includes('tank') || name.includes('liquip')) return 'tank';
+      if (name.includes('engineering') || name.includes('maintenance') || name.includes('repair')) return 'maintenance';
+      return 'other';
     }
   }">
 
     <!-- Search Header -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
+      <div class="flex flex-col lg:flex-row lg:items-center gap-3">
         <!-- Search Input -->
-        <div class="flex-1 max-w-md">
+        <div class="flex-1 min-w-0">
           <div class="relative">
             <input 
               type="text" 
               x-model="searchText"
               @input="filterLocations()"
               placeholder="Search AIL locations..."
-              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             >
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+              <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -139,12 +151,12 @@
         </div>
 
         <!-- Filters -->
-        <div class="flex gap-4">
+        <div class="flex gap-2 flex-wrap">
           <!-- State Filter -->
           <select 
             x-model="selectedState"
             @change="filterLocations()"
-            class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            class="px-2 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="all">All States</option>
             <option value="NSW">NSW</option>
@@ -156,10 +168,24 @@
             <option value="TAS">TAS</option>
           </select>
 
+          <!-- Service Type Filter -->
+          <select 
+            x-model="selectedService"
+            @change="filterLocations()"
+            class="px-2 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="all">All Services</option>
+            <option value="fuel">Fuel Services</option>
+            <option value="trailer">Trailer Services</option>
+            <option value="tank">Tank Services</option>
+            <option value="maintenance">Maintenance & Repair</option>
+            <option value="other">Other Services</option>
+          </select>
+
           <!-- Clear Button -->
           <button 
-            @click="searchText = ''; selectedState = 'all'; filterLocations()"
-            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors text-sm"
+            @click="searchText = ''; selectedState = 'all'; selectedService = 'all'; filterLocations()"
+            class="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors text-sm"
           >
             Clear
           </button>
@@ -167,7 +193,7 @@
       </div>
 
       <!-- Results Count -->
-      <div class="mt-3 text-sm text-gray-600">
+      <div class="mt-2 text-xs text-gray-600">
         <strong x-text="filteredLocations.length"></strong> AIL locations found
       </div>
     </div>
@@ -223,26 +249,26 @@
         </div>
 
         <!-- List View -->
-        <div x-show="activeTab === 'list'" class="p-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div x-show="activeTab === 'list'" class="p-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
             <template x-for="location in filteredLocations" :key="location.id">
-              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
-                <div class="flex justify-between items-start mb-3">
-                  <h3 class="font-semibold text-gray-800 text-sm leading-tight flex-1 pr-2" x-text="location.company"></h3>
-                  <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded flex-shrink-0" x-text="location.state"></span>
+              <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow bg-white">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="font-semibold text-gray-800 text-xs leading-tight flex-1 pr-2" x-text="location.company"></h3>
+                  <span class="bg-blue-100 text-blue-800 text-xs px-1.5 py-0.5 rounded flex-shrink-0" x-text="location.state"></span>
                 </div>
                 
-                <p class="text-gray-600 text-sm mb-3 leading-relaxed" x-text="location.address"></p>
+                <p class="text-gray-600 text-xs mb-2 leading-relaxed" x-text="location.address"></p>
                 
                 <div class="flex items-center justify-between">
                   <a :href="'tel:' + location.phone" 
-                     class="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center">
+                     class="text-blue-600 hover:text-blue-700 font-medium text-xs flex items-center">
                     📞 <span class="ml-1" x-text="location.phone"></span>
                   </a>
                   <button 
                     @click="activeTab = 'map'; selectedLocation = location; if(window.google && window.map) { setTimeout(() => { google.maps.event.trigger(map, 'resize'); map.setCenter({ lat: location.lat, lng: location.lng }); map.setZoom(12); }, 100); }"
-                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded transition-colors">
-                    View on Map
+                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded transition-colors">
+                    Map
                   </button>
                 </div>
               </div>
@@ -250,10 +276,10 @@
           </div>
           
           <!-- No results -->
-          <div x-show="filteredLocations.length === 0" class="text-center py-12">
-            <div class="text-4xl mb-4">🔍</div>
-            <p class="text-gray-500 text-lg">No AIL locations found</p>
-            <p class="text-gray-400 text-sm mt-2">Try adjusting your search criteria</p>
+          <div x-show="filteredLocations.length === 0" class="text-center py-8">
+            <div class="text-3xl mb-3">🔍</div>
+            <p class="text-gray-500">No AIL locations found</p>
+            <p class="text-gray-400 text-sm mt-1">Try adjusting your search criteria</p>
           </div>
         </div>
       </div>
@@ -337,10 +363,15 @@
       ailData = rawAilData;
       loadMarkers();
       
+      // Debug: Check if data loaded
+      console.log('Map initialized with', ailData.length, 'locations');
+      
       // Close info panel when clicking on map
       map.addListener('click', function() {
         const appComponent = document.querySelector('[x-data]').__x.$data;
-        appComponent.selectedLocation = null;
+        if (appComponent) {
+          appComponent.selectedLocation = null;
+        }
       });
     }
 
