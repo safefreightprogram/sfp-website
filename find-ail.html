@@ -4,111 +4,40 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Find an AIL – Safe Freight Program</title>
-
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
-
-  <!-- Tailwind CSS + Alpine.js -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-
-  <!-- SEO Meta Tags -->
-  <meta name="description" content="Find authorized inspection locations (AILs) for Safe Freight Program across Australia." />
-  <meta name="author" content="Safe Freight Program" />
-
+  
   <style>
-    @keyframes fadeInUp {
-      0% {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    .animate-fadeInUp {
-      animation: fadeInUp 0.6s ease-out both;
-    }
-    
     #map {
       width: 100%;
-      height: 60vh;
+      height: 50vh;
       min-height: 400px;
     }
-
-    .tab-content {
-      min-height: 60vh;
-    }
-
-    .location-card {
-      transition: all 0.2s ease;
-    }
-
-    .location-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    /* Custom scrollbar */
-    .locations-scroll::-webkit-scrollbar {
-      width: 6px;
-    }
-    .locations-scroll::-webkit-scrollbar-track {
-      background: #f1f5f9;
-    }
-    .locations-scroll::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 3px;
-    }
-    .locations-scroll::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-
-    /* Tab styling */
-    .tab-button {
-      position: relative;
-      z-index: 10;
+    
+    .tab-active {
+      background-color: #2563eb;
+      color: white;
+      border-color: #1d4ed8;
     }
     
-    .tab-button.active {
-      z-index: 20;
+    .tab-inactive {
+      background-color: white;
+      color: #374151;
+      border-color: #d1d5db;
     }
-
-    .tab-button.active::after {
-      content: '';
-      position: absolute;
-      bottom: -1px;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: white;
+    
+    .location-pin {
+      background-color: #2563eb;
+      border: 2px solid white;
+      border-radius: 50%;
+      width: 12px;
+      height: 12px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
-
-  <!-- SVG Icons -->
-  <svg style="display: none;">
-    <symbol id="icon-map" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-    </symbol>
-    <symbol id="icon-list" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-    </symbol>
-    <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19a8 8 0 100-16 8 8 0 000 16zm6.5-1.5L21 21" />
-    </symbol>
-    <symbol id="icon-location" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-    </symbol>
-    <symbol id="icon-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-    </symbol>
-    <symbol id="icon-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-    </symbol>
-  </svg>
 
   <!-- Header with Navigation -->
   <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false, showSearch: false }">
@@ -165,72 +94,57 @@
   </header>
 
   <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-4 py-8" x-data="{ 
+  <main class="max-w-7xl mx-auto px-4 py-6" x-data="{ 
     activeTab: 'map',
     selectedState: 'all', 
-    selectedCity: 'all',
     searchText: '',
     filteredLocations: [],
-    states: ['All States', 'NSW', 'QLD', 'VIC', 'SA', 'WA', 'NT', 'TAS'],
-    cities: {
-      'all': ['All Cities'],
-      'NSW': ['All Cities', 'Sydney', 'Newcastle', 'Wagga Wagga', 'Tamworth', 'Albury'],
-      'QLD': ['All Cities', 'Brisbane', 'Townsville', 'Mackay', 'Gladstone', 'Cairns'],
-      'VIC': ['All Cities', 'Melbourne', 'Geelong', 'Horsham', 'Mildura', 'Warrnambool'],
-      'SA': ['All Cities', 'Adelaide', 'Port Lincoln'],
-      'WA': ['All Cities', 'Perth', 'Geraldton', 'Kalgoorlie', 'Esperance'],
-      'NT': ['All Cities', 'Darwin', 'Alice Springs'],
-      'TAS': ['All Cities', 'Hobart', 'Devonport', 'Burnie']
-    },
+    selectedLocation: null,
+    
     init() {
       this.filteredLocations = ailData;
     },
+    
     filterLocations() {
       this.filteredLocations = ailData.filter(location => {
         const matchesSearch = !this.searchText || location.company.toLowerCase().includes(this.searchText.toLowerCase());
         const matchesState = this.selectedState === 'all' || location.state === this.selectedState;
         return matchesSearch && matchesState;
       });
-      if (this.activeTab === 'map') {
+      if (this.activeTab === 'map' && typeof filterMapMarkers === 'function') {
         filterMapMarkers();
       }
     }
   }">
-    
-    <!-- Page Header -->
-    <div class="text-center mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold text-blue-800 mb-4">Find an Authorised Inspection Location</h1>
-      <p class="text-lg text-gray-600 max-w-3xl mx-auto">Locate Safe Freight Program authorized inspection locations across Australia. Use the search filters and choose between map or list view.</p>
-    </div>
 
-    <!-- Search Filters -->
-    <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-        <!-- Search Text -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            <svg class="w-4 h-4 inline mr-1"><use href="#icon-search" /></svg>
-            Search by Name
-          </label>
-          <input 
-            type="text" 
-            x-model="searchText"
-            @input="filterLocations()"
-            placeholder="Company name..."
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
+    <!-- Search Header -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <!-- Search Input -->
+        <div class="flex-1 max-w-md">
+          <div class="relative">
+            <input 
+              type="text" 
+              x-model="searchText"
+              @input="filterLocations()"
+              placeholder="Search AIL locations..."
+              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
         </div>
 
-        <!-- State Filter -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            <svg class="w-4 h-4 inline mr-1"><use href="#icon-location" /></svg>
-            State
-          </label>
+        <!-- Filters -->
+        <div class="flex gap-4">
+          <!-- State Filter -->
           <select 
             x-model="selectedState"
-            @change="selectedCity = 'all'; filterLocations()"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            @change="filterLocations()"
+            class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="all">All States</option>
             <option value="NSW">NSW</option>
@@ -241,102 +155,105 @@
             <option value="NT">NT</option>
             <option value="TAS">TAS</option>
           </select>
-        </div>
 
-        <!-- City Filter -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">City/Region</label>
-          <select 
-            x-model="selectedCity"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <template x-for="city in cities[selectedState] || cities['all']">
-              <option :value="city.toLowerCase().replace(' ', '_')" x-text="city"></option>
-            </template>
-          </select>
-        </div>
-
-        <!-- Clear Filters Button -->
-        <div>
+          <!-- Clear Button -->
           <button 
-            @click="searchText = ''; selectedState = 'all'; selectedCity = 'all'; filterLocations()"
-            class="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center"
+            @click="searchText = ''; selectedState = 'all'; filterLocations()"
+            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors text-sm"
           >
-            <svg class="w-4 h-4 mr-2"><use href="#icon-filter" /></svg>
             Clear
           </button>
         </div>
       </div>
 
-      <!-- Quick Stats -->
-      <div class="mt-4 pt-4 border-t border-gray-200">
-        <div class="flex flex-wrap gap-4 text-sm text-gray-600">
-          <span>📍 <strong x-text="filteredLocations.length"></strong> Locations Found</span>
-          <span>🗺️ <strong>6</strong> States & Territories</span>
-          <span>✅ All Authorized Inspectors</span>
+      <!-- Results Count -->
+      <div class="mt-3 text-sm text-gray-600">
+        <strong x-text="filteredLocations.length"></strong> AIL locations found
+      </div>
+    </div>
+
+    <!-- View Toggle Tabs -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <!-- Tab Headers -->
+      <div class="border-b border-gray-200">
+        <div class="flex">
+          <button 
+            @click="activeTab = 'map'; if(window.google && window.map) { setTimeout(() => { google.maps.event.trigger(map, 'resize'); map.setCenter({ lat: -25.2744, lng: 133.7751 }); }, 100); }"
+            :class="activeTab === 'map' ? 'tab-active' : 'tab-inactive'"
+            class="px-6 py-3 font-medium text-sm border-r border-gray-200 transition-all"
+          >
+            📍 Map view
+          </button>
+          <button 
+            @click="activeTab = 'list'"
+            :class="activeTab === 'list' ? 'tab-active' : 'tab-inactive'"
+            class="px-6 py-3 font-medium text-sm transition-all"
+          >
+            📋 List view
+          </button>
         </div>
       </div>
-    </div>
 
-    <!-- Tab Navigation -->
-    <div class="bg-white rounded-t-lg shadow-lg border border-gray-200 border-b-0">
-      <div class="flex">
-        <button 
-          @click="activeTab = 'map'; if(window.google && window.map) { setTimeout(() => { google.maps.event.trigger(map, 'resize'); map.setCenter({ lat: -25.2744, lng: 133.7751 }); }, 100); }"
-          :class="activeTab === 'map' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-          class="tab-button px-6 py-3 font-medium rounded-t-lg border-b-2 border-transparent transition-all duration-200 flex items-center"
-        >
-          <svg class="w-5 h-5 mr-2"><use href="#icon-map" /></svg>
-          Map View
-        </button>
-        <button 
-          @click="activeTab = 'list'"
-          :class="activeTab === 'list' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-          class="tab-button px-6 py-3 font-medium rounded-t-lg border-b-2 border-transparent transition-all duration-200 flex items-center ml-2"
-        >
-          <svg class="w-5 h-5 mr-2"><use href="#icon-list" /></svg>
-          List View
-        </button>
-      </div>
-    </div>
-
-    <!-- Tab Content -->
-    <div class="bg-white rounded-b-lg rounded-tr-lg shadow-lg border border-gray-200 overflow-hidden">
-      
-      <!-- Map View -->
-      <div x-show="activeTab === 'map'" class="tab-content">
-        <div id="map"></div>
-      </div>
-
-      <!-- List View -->
-      <div x-show="activeTab === 'list'" class="tab-content p-6">
-        <div class="locations-scroll overflow-y-auto max-h-96">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <template x-for="location in filteredLocations" :key="location.id">
-              <div class="location-card bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md">
-                <div class="flex items-start justify-between mb-3">
-                  <h3 class="font-semibold text-gray-800 text-sm leading-tight" x-text="location.company"></h3>
-                  <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded flex-shrink-0 ml-2" x-text="location.state"></span>
+      <!-- Tab Content -->
+      <div class="relative">
+        
+        <!-- Map View -->
+        <div x-show="activeTab === 'map'" class="relative">
+          <div id="map"></div>
+          
+          <!-- Map Info Panel (when location selected) -->
+          <div x-show="selectedLocation" 
+               x-transition
+               @click.away="selectedLocation = null"
+               class="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-sm z-10">
+            <template x-if="selectedLocation">
+              <div>
+                <h3 class="font-semibold text-gray-800 mb-2" x-text="selectedLocation.company"></h3>
+                <p class="text-sm text-gray-600 mb-2" x-text="selectedLocation.address"></p>
+                <div class="flex items-center justify-between">
+                  <a :href="'tel:' + selectedLocation.phone" 
+                     class="text-blue-600 hover:text-blue-700 font-medium text-sm" 
+                     x-text="selectedLocation.phone"></a>
+                  <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded" 
+                        x-text="selectedLocation.state"></span>
                 </div>
-                <div class="space-y-2 text-sm text-gray-600">
-                  <div class="flex items-start">
-                    <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0"><use href="#icon-location" /></svg>
-                    <span x-text="location.address" class="leading-tight"></span>
-                  </div>
-                  <div class="flex items-center">
-                    <svg class="w-4 h-4 mr-2 text-gray-400"><use href="#icon-phone" /></svg>
-                    <a :href="'tel:' + location.phone" class="text-blue-600 hover:text-blue-800 font-medium" x-text="location.phone"></a>
-                  </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- List View -->
+        <div x-show="activeTab === 'list'" class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <template x-for="location in filteredLocations" :key="location.id">
+              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+                <div class="flex justify-between items-start mb-3">
+                  <h3 class="font-semibold text-gray-800 text-sm leading-tight flex-1 pr-2" x-text="location.company"></h3>
+                  <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded flex-shrink-0" x-text="location.state"></span>
+                </div>
+                
+                <p class="text-gray-600 text-sm mb-3 leading-relaxed" x-text="location.address"></p>
+                
+                <div class="flex items-center justify-between">
+                  <a :href="'tel:' + location.phone" 
+                     class="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center">
+                    📞 <span class="ml-1" x-text="location.phone"></span>
+                  </a>
+                  <button 
+                    @click="activeTab = 'map'; selectedLocation = location; if(window.google && window.map) { setTimeout(() => { google.maps.event.trigger(map, 'resize'); map.setCenter({ lat: location.lat, lng: location.lng }); map.setZoom(12); }, 100); }"
+                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded transition-colors">
+                    View on Map
+                  </button>
                 </div>
               </div>
             </template>
           </div>
           
-          <!-- No results message -->
+          <!-- No results -->
           <div x-show="filteredLocations.length === 0" class="text-center py-12">
-            <svg class="w-16 h-16 mx-auto text-gray-300 mb-4"><use href="#icon-search" /></svg>
-            <p class="text-gray-500 text-lg">No locations found matching your search criteria.</p>
-            <p class="text-gray-400 text-sm mt-2">Try adjusting your filters or search terms.</p>
+            <div class="text-4xl mb-4">🔍</div>
+            <p class="text-gray-500 text-lg">No AIL locations found</p>
+            <p class="text-gray-400 text-sm mt-2">Try adjusting your search criteria</p>
           </div>
         </div>
       </div>
@@ -344,7 +261,7 @@
   </main>
 
   <!-- Footer -->
-  <footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-16">
+  <footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
     &copy; 2025 Safe Freight Program. All rights reserved.
   </footer>
 
@@ -357,8 +274,9 @@
     let map;
     let markers = [];
     let ailData = [];
+    let currentInfoWindow = null;
 
-    // AIL Data - embedded directly to avoid CORS issues
+    // AIL Data
     const rawAilData = [
       {id: 239, company: "Aero Refuellers", address: "Hanger 8-11 Ogden Street, East Albury NSW 2640", phone: "02 6041 1599", lat: -36.071665, lng: 146.9537581, state: "NSW"},
       {id: 222, company: "Australian Fuelling Systems & Equip", address: "7-11 Armstrong Street, Tamworth NSW 2340", phone: "02 6760 7816", lat: -31.0791106, lng: 150.8532199, state: "NSW"},
@@ -377,15 +295,6 @@
       {id: 452, company: "CQ Diesel Fitting", address: "23 Bensted Road, Gladstone QLD 4680", phone: "07 4972 7401", lat: -23.8584217, lng: 151.229545, state: "QLD"},
       {id: 460, company: "CQ Diesel Fitting", address: "87 Links Avenue, Eagle Farm QLD 4009", phone: "07 3268 2543", lat: -27.4374068, lng: 153.0867816, state: "QLD"},
       {id: 461, company: "CQ Diesel Fitting", address: "112 Spiller Avenue, Outer Harbour QLD 4740", phone: "07 4955 0324", lat: -21.1007206, lng: 149.2153069, state: "QLD"},
-      {id: 415, company: "Fuel Service Australia", address: "29 Sandmere Road, Pinkenba QLD 4008", phone: "0433 450 603", lat: -27.392153, lng: 153.1418447, state: "QLD"},
-      {id: 411, company: "Haulmark Trailers (Australia)", address: "32 Suscatand Street, Rocklea QLD 4106", phone: "07 3277 8844", lat: -27.5576397, lng: 152.9970275, state: "QLD"},
-      {id: 412, company: "Haulmark Trailers (Australia)", address: "42 Kupfer Drive, Roseneath QLD 4817", phone: "07 4144 2803", lat: -19.3759709, lng: 146.8333008, state: "QLD"},
-      {id: 405, company: "Holmwood Highgate (Aust) Pty Ltd", address: "20 Burchill Street, Loganholme QLD 4129", phone: "07 3440 9000", lat: -27.6821993, lng: 153.191783, state: "QLD"},
-      {id: 401, company: "Liquip Sales (QLD) Pty Ltd", address: "730 Macarthur Avenue, Pinkenba QLD 4008", phone: "07 3633 9100", lat: -27.4403414, lng: 153.0784498, state: "QLD"},
-      {id: 414, company: "Liquip Sales NQ", address: "659-665 Ingham Road, Bohle QLD 4814", phone: "07 4774 8060", lat: -19.260684, lng: 146.73731, state: "QLD"},
-      {id: 407, company: "Northern Refuelling Maintenance Pty Ltd", address: "3 Marsh Street, Woree QLD 4868", phone: "07 4033 2199", lat: -16.9574228, lng: 145.7520655, state: "QLD"},
-      {id: 435, company: "NQ Fuel & Maintenance", address: "485 Woolcock Street, Garbutt QLD 4814", phone: "07 4774 3334", lat: -19.2671514, lng: 146.7543566, state: "QLD"},
-      {id: 432, company: "NQ Petro Pty Ltd", address: "14 Atticus Street, Woree QLD 4868", phone: "07 4054 5100", lat: -16.9549579, lng: 145.7481359, state: "QLD"},
       
       {id: 305, company: "Acme Oil Equipment Services Pty Ltd", address: "32 Greens Road, Dandenong South VIC 3175", phone: "03 9791 3255", lat: -38.015738, lng: 145.2209347, state: "VIC"},
       {id: 320, company: "Australian Tank Engineering", address: "29-31 Vella Drive, Sunshine VIC 3020", phone: "03 9310 2722", lat: -37.8056095, lng: 144.828958, state: "VIC"},
@@ -393,133 +302,78 @@
       {id: 304, company: "Evolution Tanker Repairs", address: "371 Rossiter Road, Koo Wee Rup VIC 3981", phone: "0424 099 314", lat: -38.19564, lng: 145.497366, state: "VIC"},
       {id: 313, company: "G & S Bigham", address: "87 Golf Course Road, Horsham VIC 3400", phone: "03 5382 5893", lat: -36.7376332, lng: 142.1970197, state: "VIC"},
       {id: 303, company: "Holmwood Group VIC", address: "425 Fitzgerald Road, Derrimut VIC 3030", phone: "03 9936 0360", lat: -37.8008048, lng: 144.787899, state: "VIC"},
-      {id: 324, company: "Johnson's Truck & Coach Service Pty Ltd", address: "579 Benetook Avenue, Mildura VIC 3500", phone: "03 5024 4666", lat: -34.2092698, lng: 142.1616144, state: "VIC"},
-      {id: 322, company: "Liquip Victoria (Fuelcraft)", address: "476 Boundary Rd, Derrimut VIC 3030", phone: "03 9311 7822", lat: -37.8104863, lng: 144.759139, state: "VIC"},
-      {id: 302, company: "Marshall Lethlean", address: "20 Whitfield Blvd, Cranbourne West VIC 3977", phone: "03 8788 5400", lat: -38.0804675, lng: 145.2414944, state: "VIC"},
-      {id: 323, company: "Progress Transport Services Pty Ltd", address: "Shed 2, Coghlans Road, Warrnambool VIC 3280", phone: "0429 320 420", lat: -38.3523961, lng: 142.4661686, state: "VIC"},
-      {id: 307, company: "Starworx", address: "5A Westwood Drive, Ravenhall VIC 3029", phone: "0459 839 072", lat: -37.7717246, lng: 144.7551499, state: "VIC"},
-      {id: 326, company: "Tieman Tankers", address: "184-186 Northbourne Road, Campbellfield VIC 3061", phone: "03 9469 6701", lat: -37.6482781, lng: 144.9611406, state: "VIC"},
-      {id: 314, company: "Transport Preventative Maintenance P/Ltd", address: "10-14 Churchill Street, Williamstown VIC 3016", phone: "03 9397 1135", lat: -37.8521501, lng: 144.8627896, state: "VIC"},
       
       {id: 503, company: "Haulmark Trailers Australia", address: "97-99 West Avenue, Edinburgh SA 5111", phone: "08 8283 8585", lat: -34.7327779, lng: 138.6344371, state: "SA"},
-      {id: 506, company: "Hoss Engineering & Maintenance Service", address: "3 Mallee Crescent, Port Lincoln SA 5606", phone: "0427 518 945", lat: -34.7340247, lng: 135.8623913, state: "SA"},
       {id: 502, company: "Liquip (SA) Pty Ltd", address: "10 Creswell Road, Largs North SA 5016", phone: "08 8341 7009", lat: -34.8213309, lng: 138.5037846, state: "SA"},
       {id: 512, company: "Mechanical & Technical Testing", address: "40 Butler Terrace, Naracoorte SA 5271", phone: "08 8762 2379", lat: -36.9624232, lng: 140.7370711, state: "SA"},
-      {id: 501, company: "OES Oil Engineering Services", address: "5 Creswell Road, Largs North SA 5016", phone: "08 8341 5677", lat: -34.8222069, lng: 138.5031614, state: "SA"},
       
       {id: 657, company: "Fuel Maintenance and Engineering", address: "1562 Arthur Road, Geraldton WA 6530", phone: "0409 981 026", lat: -28.8346566, lng: 114.7321136, state: "WA"},
-      {id: 665, company: "J & S Labour and Machinery", address: "40 Moorambine Street, Wedgefield WA 6721", phone: "08 9172 5313", lat: -20.3663216, lng: 118.5870289, state: "WA"},
-      {id: 645, company: "Kip & Steve's Mechanical Repairs", address: "21 Currong Street, Esperance WA 6450", phone: "08 9071 2411", lat: -33.8355027, lng: 121.8958181, state: "WA"},
       {id: 690, company: "Perth Tanker Repairs", address: "30-32 Macedonia St, Naval Base WA 6165", phone: "08 9410 0222", lat: -32.2022035, lng: 115.7831976, state: "WA"},
-      {id: 606, company: "Petroleum Technologies Australia", address: "5 Kybo Street, Kalgoorlie WA 6430", phone: "08 9091 2321", lat: -30.7852563, lng: 121.4429398, state: "WA"},
-      {id: 691, company: "Road Tank Repairs & Services WA", address: "11 Camomile Way, Bibra Lake WA 6163", phone: "08 6166 3860", lat: -32.1084505, lng: 115.8198885, state: "WA"},
       {id: 644, company: "Stevemacs Bulk", address: "27-29 Glassford Road, Kewdale WA 6105", phone: "08 9352 2100", lat: -31.969669, lng: 115.9550175, state: "WA"},
-      {id: 609, company: "WA Transmech", address: "30-32 Macedonia Street, Naval Base WA 6165", phone: "08 9410 0857", lat: -32.2022035, lng: 115.7831976, state: "WA"},
       
       {id: 820, company: "Haulmark Trailers Australia", address: "1 Mettham Road, Berrimah NT 828", phone: "08 8984 3533", lat: -12.4606551, lng: 130.9283392, state: "NT"},
       {id: 809, company: "RGM Maintenance Pty Ltd", address: "9 Matthew Hopkins Rd, Holtze NT 829", phone: "08 8983 0100", lat: -12.4549185, lng: 130.9838449, state: "NT"},
       {id: 811, company: "SWEL Pty Ltd", address: "50 Sargent Street, Alice Springs NT 870", phone: "08 8953 0369", lat: -23.6739621, lng: 133.8676851, state: "NT"},
-      {id: 801, company: "Tanker Repairs Australia", address: "26 McKinnon Rd, Pinelands NT 829", phone: "08 8932 1328", lat: -12.4549857, lng: 130.9620088, state: "NT"},
       
       {id: 704, company: "AJL Heavy Equipment", address: "1-3 Massy-Greene Drive, South Burnie TAS 7320", phone: "03 6430 2777", lat: -41.0674275, lng: 145.9239546, state: "TAS"},
       {id: 701, company: "Kent Engineering", address: "153 Stoney Rise Road, Devonport TAS 7310", phone: "03 6424 9233", lat: -41.1926208, lng: 146.3297592, state: "TAS"},
-      {id: 710, company: "Midland Truck & Bus", address: "42 Crooked Billet Drive, Bridgewater TAS 7030", phone: "03 6263 4333", lat: -42.7210713, lng: 147.2344207, state: "TAS"},
-      {id: 702, company: "Wiggies Radiators", address: "18-22 Hillcrest Road, Devonport TAS 7310", phone: "03 6424 7292", lat: -41.1828568, lng: 146.3302493, state: "TAS"}
+      {id: 710, company: "Midland Truck & Bus", address: "42 Crooked Billet Drive, Bridgewater TAS 7030", phone: "03 6263 4333", lat: -42.7210713, lng: 147.2344207, state: "TAS"}
     ];
 
     function initMap() {
-      // Initialize the map
       map = new google.maps.Map(document.getElementById("map"), {
         zoom: 5,
-        center: { lat: -25.2744, lng: 133.7751 }, // Center of Australia
+        center: { lat: -25.2744, lng: 133.7751 },
         mapTypeId: 'roadmap',
         styles: [
           {
-            featureType: "administrative.country",
-            elementType: "geometry.stroke",
-            stylers: [{ color: "#4285f4" }, { weight: 2 }]
-          },
-          {
-            featureType: "administrative.province",
-            elementType: "geometry.stroke", 
-            stylers: [{ color: "#86b7fe" }, { weight: 1 }]
-          },
-          {
-            featureType: "administrative.province",
-            elementType: "geometry.fill",
-            stylers: [{ color: "#e3f2fd" }, { visibility: "on" }]
+            featureType: "poi",
+            elementType: "labels",
+            stylers: [{ visibility: "off" }]
           }
         ]
       });
 
-      // Load AIL data and create markers
       ailData = rawAilData;
       loadMarkers();
+      
+      // Close info panel when clicking on map
+      map.addListener('click', function() {
+        const appComponent = document.querySelector('[x-data]').__x.$data;
+        appComponent.selectedLocation = null;
+      });
     }
 
     function loadMarkers() {
-      // Clear existing markers
       markers.forEach(marker => marker.setMap(null));
       markers = [];
 
-      // Create markers for each AIL
       ailData.forEach(ail => {
-        createMarker(ail);
-      });
-    }
-
-    function createMarker(ail) {
-      const marker = new google.maps.Marker({
-        position: { lat: ail.lat, lng: ail.lng },
-        map: map,
-        title: ail.company,
-        icon: {
-          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-            <svg width="24" height="32" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 0C7.6 0 4 3.6 4 8c0 5.4 8 24 8 24s8-18.6 8-24c0-4.4-3.6-8-8-8z" fill="#2563eb"/>
-              <circle cx="12" cy="8" r="3" fill="white"/>
-            </svg>
-          `),
-          scaledSize: new google.maps.Size(24, 32),
-          anchor: new google.maps.Point(12, 32)
-        }
-      });
-
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div class="p-3 max-w-xs">
-            <h3 class="font-bold text-blue-800 mb-2">${ail.company}</h3>
-            <p class="text-sm text-gray-600 mb-2">${ail.address}</p>
-            <div class="flex items-center justify-between">
-              <a href="tel:${ail.phone}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                📞 ${ail.phone}
-              </a>
-              <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                ${ail.state}
-              </span>
-            </div>
-          </div>
-        `
-      });
-
-      marker.addListener("click", () => {
-        // Close any open info windows
-        markers.forEach(m => {
-          if (m.infoWindow) {
-            m.infoWindow.close();
+        const marker = new google.maps.Marker({
+          position: { lat: ail.lat, lng: ail.lng },
+          map: map,
+          title: ail.company,
+          icon: {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+              <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="10" cy="10" r="8" fill="#2563eb" stroke="white" stroke-width="2"/>
+              </svg>
+            `),
+            scaledSize: new google.maps.Size(20, 20),
+            anchor: new google.maps.Point(10, 10)
           }
         });
-        infoWindow.open(map, marker);
-      });
 
-      // Store info window reference
-      marker.infoWindow = infoWindow;
-      markers.push(marker);
+        marker.addListener("click", () => {
+          const appComponent = document.querySelector('[x-data]').__x.$data;
+          appComponent.selectedLocation = ail;
+        });
+
+        markers.push(marker);
+      });
     }
 
     function filterMapMarkers() {
-      if (!map) return;
-      
       const activeFilters = document.querySelector('[x-data]').__x.$data;
       
       markers.forEach(marker => {
@@ -528,25 +382,12 @@
           const matchesSearch = !activeFilters.searchText || ail.company.toLowerCase().includes(activeFilters.searchText.toLowerCase());
           const matchesState = activeFilters.selectedState === 'all' || ail.state === activeFilters.selectedState;
           
-          if (matchesSearch && matchesState) {
-            marker.setVisible(true);
-          } else {
-            marker.setVisible(false);
-            if (marker.infoWindow) {
-              marker.infoWindow.close();
-            }
-          }
+          marker.setVisible(matchesSearch && matchesState);
         }
       });
     }
 
-    // Initialize on page load
     window.initMap = initMap;
-
-    // If Google Maps is already loaded, initialize immediately
-    if (window.google && window.google.maps) {
-      initMap();
-    }
   </script>
 </body>
 </html>
