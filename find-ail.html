@@ -26,15 +26,6 @@
       color: #374151;
       border-color: #d1d5db;
     }
-    
-    .location-pin {
-      background-color: #2563eb;
-      border: 2px solid white;
-      border-radius: 50%;
-      width: 12px;
-      height: 12px;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
@@ -94,40 +85,7 @@
   </header>
 
   <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-4 py-4" x-data="{ 
-    activeTab: 'map',
-    selectedState: 'all', 
-    selectedService: 'all',
-    searchText: '',
-    filteredLocations: [],
-    selectedLocation: null,
-    
-    init() {
-      this.filteredLocations = ailData;
-      console.log('Initialized with', ailData.length, 'locations');
-    },
-    
-    filterLocations() {
-      this.filteredLocations = ailData.filter(location => {
-        const matchesSearch = !this.searchText || location.company.toLowerCase().includes(this.searchText.toLowerCase());
-        const matchesState = this.selectedState === 'all' || location.state === this.selectedState;
-        const matchesService = this.selectedService === 'all' || this.getServiceType(location.company).includes(this.selectedService);
-        return matchesSearch && matchesState && matchesService;
-      });
-      if (this.activeTab === 'map' && typeof filterMapMarkers === 'function') {
-        filterMapMarkers();
-      }
-    },
-    
-    getServiceType(company) {
-      const name = company.toLowerCase();
-      if (name.includes('fuel') || name.includes('refuel') || name.includes('petro')) return 'fuel';
-      if (name.includes('trailer') || name.includes('haulmark')) return 'trailer';
-      if (name.includes('tank') || name.includes('liquip')) return 'tank';
-      if (name.includes('engineering') || name.includes('maintenance') || name.includes('repair')) return 'maintenance';
-      return 'other';
-    }
-  }">
+  <main class="max-w-7xl mx-auto px-4 py-4" x-data="ailFinder()">
 
     <!-- Search Header -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
@@ -184,7 +142,7 @@
 
           <!-- Clear Button -->
           <button 
-            @click="searchText = ''; selectedState = 'all'; selectedService = 'all'; filterLocations()"
+            @click="clearFilters()"
             class="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors text-sm"
           >
             Clear
@@ -204,14 +162,14 @@
       <div class="border-b border-gray-200">
         <div class="flex">
           <button 
-            @click="activeTab = 'map'; if(window.google && window.map) { setTimeout(() => { google.maps.event.trigger(map, 'resize'); map.setCenter({ lat: -25.2744, lng: 133.7751 }); }, 100); }"
+            @click="setActiveTab('map')"
             :class="activeTab === 'map' ? 'tab-active' : 'tab-inactive'"
             class="px-6 py-3 font-medium text-sm border-r border-gray-200 transition-all"
           >
             📍 Map view
           </button>
           <button 
-            @click="activeTab = 'list'"
+            @click="setActiveTab('list')"
             :class="activeTab === 'list' ? 'tab-active' : 'tab-inactive'"
             class="px-6 py-3 font-medium text-sm transition-all"
           >
@@ -227,7 +185,7 @@
         <div x-show="activeTab === 'map'" class="relative">
           <div id="map"></div>
           
-          <!-- Map Info Panel (when location selected) -->
+          <!-- Map Info Panel -->
           <div x-show="selectedLocation" 
                x-transition
                @click.away="selectedLocation = null"
@@ -266,7 +224,7 @@
                     📞 <span class="ml-1" x-text="location.phone"></span>
                   </a>
                   <button 
-                    @click="activeTab = 'map'; selectedLocation = location; if(window.google && window.map) { setTimeout(() => { google.maps.event.trigger(map, 'resize'); map.setCenter({ lat: location.lat, lng: location.lng }); map.setZoom(12); }, 100); }"
+                    @click="viewOnMap(location)"
                     class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded transition-colors">
                     Map
                   </button>
@@ -300,7 +258,6 @@
     let map;
     let markers = [];
     let ailData = [];
-    let currentInfoWindow = null;
 
     // AIL Data
     const rawAilData = [
@@ -308,9 +265,11 @@
       {id: 222, company: "Australian Fuelling Systems & Equip", address: "7-11 Armstrong Street, Tamworth NSW 2340", phone: "02 6760 7816", lat: -31.0791106, lng: 150.8532199, state: "NSW"},
       {id: 220, company: "Doug Sutherland Truck Repairs", address: "222 Urana Street, Wagga Wagga NSW 2650", phone: "02 6925 2094", lat: -35.1252742, lng: 147.3413631, state: "NSW"},
       {id: 207, company: "Durham Fabrications", address: "4 Ranton Street, Cardiff NSW 2285", phone: "02 4956 8868", lat: -32.9444557, lng: 151.6476872, state: "NSW"},
+      {id: 208, company: "Durham Fabrications", address: "Cardiff NSW 2285", phone: "02 4956 8868", lat: -32.9110348, lng: 151.6187438, state: "NSW"},
       {id: 241, company: "Engineering, Mining, Petroleum Pty Ltd", address: "1015 Armidale Road, Nemingha NSW 2340", phone: "02 6760 9548", lat: -31.1241211, lng: 150.9866511, state: "NSW"},
       {id: 237, company: "Express Engineering Australia Pty Ltd", address: "20R Yarrandale Road, Dubbo NSW 2830", phone: "02 6884 2723", lat: -32.2238944, lng: 148.6320896, state: "NSW"},
       {id: 201, company: "Fuel Spec Services", address: "13 Hume Road, Smithfield NSW 2164", phone: "1300 113 541", lat: -33.8377348, lng: 150.9312227, state: "NSW"},
+      {id: 205, company: "Fuel Spec Services", address: "Smithfield NSW 2164", phone: "1301 113 541", lat: -33.8492918, lng: 150.9132815, state: "NSW"},
       {id: 221, company: "Hancock & Owen Services Pty Ltd", address: "38 Parker Street, Carrington NSW 2294", phone: "02 4969 5390", lat: -32.905424, lng: 151.7666222, state: "NSW"},
       {id: 235, company: "Heavy Haulage Maintenance", address: "28 Old Punt Road, Tomago NSW 2322", phone: "02 4964 9475", lat: -32.8209927, lng: 151.7028008, state: "NSW"},
       {id: 200, company: "WBG Trailer Repairs", address: "Lot 1 Yarrunga Road, Prestons NSW 2170", phone: "02 9608 2288", lat: -33.9363776, lng: 150.8603357, state: "NSW"},
@@ -321,6 +280,16 @@
       {id: 452, company: "CQ Diesel Fitting", address: "23 Bensted Road, Gladstone QLD 4680", phone: "07 4972 7401", lat: -23.8584217, lng: 151.229545, state: "QLD"},
       {id: 460, company: "CQ Diesel Fitting", address: "87 Links Avenue, Eagle Farm QLD 4009", phone: "07 3268 2543", lat: -27.4374068, lng: 153.0867816, state: "QLD"},
       {id: 461, company: "CQ Diesel Fitting", address: "112 Spiller Avenue, Outer Harbour QLD 4740", phone: "07 4955 0324", lat: -21.1007206, lng: 149.2153069, state: "QLD"},
+      {id: 415, company: "Fuel Service Australia", address: "29 Sandmere Road, Pinkenba QLD 4008", phone: "0433 450 603", lat: -27.392153, lng: 153.1418447, state: "QLD"},
+      {id: 411, company: "Haulmark Trailers (Australia)", address: "32 Suscatand Street, Rocklea QLD 4106", phone: "07 3277 8844", lat: -27.5576397, lng: 152.9970275, state: "QLD"},
+      {id: 412, company: "Haulmark Trailers (Australia)", address: "42 Kupfer Drive, Roseneath QLD 4817", phone: "07 4144 2803", lat: -19.3759709, lng: 146.8333008, state: "QLD"},
+      {id: 405, company: "Holmwood Highgate (Aust) Pty Ltd", address: "20 Burchill Street, Loganholme QLD 4129", phone: "07 3440 9000", lat: -27.6821993, lng: 153.191783, state: "QLD"},
+      {id: 401, company: "Liquip Sales (QLD) Pty Ltd", address: "730 Macarthur Avenue, Pinkenba QLD 4008", phone: "07 3633 9100", lat: -27.4403414, lng: 153.0784498, state: "QLD"},
+      {id: 414, company: "Liquip Sales NQ", address: "659-665 Ingham Road, Bohle QLD 4814", phone: "07 4774 8060", lat: -19.260684, lng: 146.73731, state: "QLD"},
+      {id: 407, company: "Northern Refuelling Maintenance Pty Ltd", address: "3 Marsh Street, Woree QLD 4868", phone: "07 4033 2199", lat: -16.9574228, lng: 145.7520655, state: "QLD"},
+      {id: 435, company: "NQ Fuel & Maintenance", address: "485 Woolcock Street, Garbutt QLD 4814", phone: "07 4774 3334", lat: -19.2671514, lng: 146.7543566, state: "QLD"},
+      {id: 436, company: "NQ Fuel & Maintenance", address: "Garbutt QLD 4814", phone: "07 4774 3334", lat: -19.2878252, lng: 146.7552341, state: "QLD"},
+      {id: 432, company: "NQ Petro Pty Ltd", address: "14 Atticus Street, Woree QLD 4868", phone: "07 4054 5100", lat: -16.9549579, lng: 145.7481359, state: "QLD"},
       
       {id: 305, company: "Acme Oil Equipment Services Pty Ltd", address: "32 Greens Road, Dandenong South VIC 3175", phone: "03 9791 3255", lat: -38.015738, lng: 145.2209347, state: "VIC"},
       {id: 320, company: "Australian Tank Engineering", address: "29-31 Vella Drive, Sunshine VIC 3020", phone: "03 9310 2722", lat: -37.8056095, lng: 144.828958, state: "VIC"},
@@ -328,10 +297,19 @@
       {id: 304, company: "Evolution Tanker Repairs", address: "371 Rossiter Road, Koo Wee Rup VIC 3981", phone: "0424 099 314", lat: -38.19564, lng: 145.497366, state: "VIC"},
       {id: 313, company: "G & S Bigham", address: "87 Golf Course Road, Horsham VIC 3400", phone: "03 5382 5893", lat: -36.7376332, lng: 142.1970197, state: "VIC"},
       {id: 303, company: "Holmwood Group VIC", address: "425 Fitzgerald Road, Derrimut VIC 3030", phone: "03 9936 0360", lat: -37.8008048, lng: 144.787899, state: "VIC"},
+      {id: 324, company: "Johnson's Truck & Coach Service Pty Ltd", address: "579 Benetook Avenue, Mildura VIC 3500", phone: "03 5024 4666", lat: -34.2092698, lng: 142.1616144, state: "VIC"},
+      {id: 322, company: "Liquip Victoria (Fuelcraft)", address: "476 Boundary Rd, Derrimut VIC 3030", phone: "03 9311 7822", lat: -37.8104863, lng: 144.759139, state: "VIC"},
+      {id: 302, company: "Marshall Lethlean", address: "20 Whitfield Blvd, Cranbourne West VIC 3977", phone: "03 8788 5400", lat: -38.0804675, lng: 145.2414944, state: "VIC"},
+      {id: 323, company: "Progress Transport Services Pty Ltd", address: "Shed 2, Coghlans Road, Warrnambool VIC 3280", phone: "0429 320 420", lat: -38.3523961, lng: 142.4661686, state: "VIC"},
+      {id: 307, company: "Starworx", address: "5A Westwood Drive, Ravenhall VIC 3029", phone: "0459 839 072", lat: -37.7717246, lng: 144.7551499, state: "VIC"},
+      {id: 326, company: "Tieman Tankers", address: "184-186 Northbourne Road, Campbellfield VIC 3061", phone: "03 9469 6701", lat: -37.6482781, lng: 144.9611406, state: "VIC"},
+      {id: 314, company: "Transport Preventative Maintenance P/Ltd", address: "10-14 Churchill Street, Williamstown VIC 3016", phone: "03 9397 1135", lat: -37.8521501, lng: 144.8627896, state: "VIC"},
       
       {id: 503, company: "Haulmark Trailers Australia", address: "97-99 West Avenue, Edinburgh SA 5111", phone: "08 8283 8585", lat: -34.7327779, lng: 138.6344371, state: "SA"},
+      {id: 506, company: "Hoss Engineering & Maintenance Service", address: "3 Mallee Crescent, Port Lincoln SA 5606", phone: "0427 518 945", lat: -34.7340247, lng: 135.8623913, state: "SA"},
       {id: 502, company: "Liquip (SA) Pty Ltd", address: "10 Creswell Road, Largs North SA 5016", phone: "08 8341 7009", lat: -34.8213309, lng: 138.5037846, state: "SA"},
       {id: 512, company: "Mechanical & Technical Testing", address: "40 Butler Terrace, Naracoorte SA 5271", phone: "08 8762 2379", lat: -36.9624232, lng: 140.7370711, state: "SA"},
+      {id: 501, company: "OES Oil Engineering Services", address: "5 Creswell Road, Largs North SA 5016", phone: "08 8341 5677", lat: -34.8222069, lng: 138.5031614, state: "SA"},
       
       {id: 657, company: "Fuel Maintenance and Engineering", address: "1562 Arthur Road, Geraldton WA 6530", phone: "0409 981 026", lat: -28.8346566, lng: 114.7321136, state: "WA"},
       {id: 690, company: "Perth Tanker Repairs", address: "30-32 Macedonia St, Naval Base WA 6165", phone: "08 9410 0222", lat: -32.2022035, lng: 115.7831976, state: "WA"},
@@ -345,6 +323,75 @@
       {id: 701, company: "Kent Engineering", address: "153 Stoney Rise Road, Devonport TAS 7310", phone: "03 6424 9233", lat: -41.1926208, lng: 146.3297592, state: "TAS"},
       {id: 710, company: "Midland Truck & Bus", address: "42 Crooked Billet Drive, Bridgewater TAS 7030", phone: "03 6263 4333", lat: -42.7210713, lng: 147.2344207, state: "TAS"}
     ];
+
+    // Alpine.js component
+    function ailFinder() {
+      return {
+        activeTab: 'map',
+        selectedState: 'all',
+        selectedService: 'all',
+        searchText: '',
+        filteredLocations: [],
+        selectedLocation: null,
+
+        init() {
+          ailData = rawAilData;
+          this.filteredLocations = ailData;
+          console.log('Initialized with', ailData.length, 'locations');
+        },
+
+        filterLocations() {
+          this.filteredLocations = ailData.filter(location => {
+            const matchesSearch = !this.searchText || location.company.toLowerCase().includes(this.searchText.toLowerCase());
+            const matchesState = this.selectedState === 'all' || location.state === this.selectedState;
+            const matchesService = this.selectedService === 'all' || this.getServiceType(location.company).includes(this.selectedService);
+            return matchesSearch && matchesState && matchesService;
+          });
+          
+          if (this.activeTab === 'map' && typeof filterMapMarkers === 'function') {
+            filterMapMarkers();
+          }
+        },
+
+        getServiceType(company) {
+          const name = company.toLowerCase();
+          if (name.includes('fuel') || name.includes('refuel') || name.includes('petro')) return 'fuel';
+          if (name.includes('trailer') || name.includes('haulmark')) return 'trailer';
+          if (name.includes('tank') || name.includes('liquip')) return 'tank';
+          if (name.includes('engineering') || name.includes('maintenance') || name.includes('repair')) return 'maintenance';
+          return 'other';
+        },
+
+        clearFilters() {
+          this.searchText = '';
+          this.selectedState = 'all';
+          this.selectedService = 'all';
+          this.filterLocations();
+        },
+
+        setActiveTab(tab) {
+          this.activeTab = tab;
+          if (tab === 'map' && window.google && window.map) {
+            setTimeout(() => {
+              google.maps.event.trigger(map, 'resize');
+              map.setCenter({ lat: -25.2744, lng: 133.7751 });
+            }, 100);
+          }
+        },
+
+        viewOnMap(location) {
+          this.activeTab = 'map';
+          this.selectedLocation = location;
+          if (window.google && window.map) {
+            setTimeout(() => {
+              google.maps.event.trigger(map, 'resize');
+              map.setCenter({ lat: location.lat, lng: location.lng });
+              map.setZoom(12);
+            }, 100);
+          }
+        }
+      }
+    }
 
     function initMap() {
       map = new google.maps.Map(document.getElementById("map"), {
@@ -360,13 +407,9 @@
         ]
       });
 
-      ailData = rawAilData;
       loadMarkers();
-      
-      // Debug: Check if data loaded
       console.log('Map initialized with', ailData.length, 'locations');
       
-      // Close info panel when clicking on map
       map.addListener('click', function() {
         const appComponent = document.querySelector('[x-data]').__x.$data;
         if (appComponent) {
@@ -412,13 +455,18 @@
         if (ail) {
           const matchesSearch = !activeFilters.searchText || ail.company.toLowerCase().includes(activeFilters.searchText.toLowerCase());
           const matchesState = activeFilters.selectedState === 'all' || ail.state === activeFilters.selectedState;
+          const matchesService = activeFilters.selectedService === 'all' || activeFilters.getServiceType(ail.company).includes(activeFilters.selectedService);
           
-          marker.setVisible(matchesSearch && matchesState);
+          marker.setVisible(matchesSearch && matchesState && matchesService);
         }
       });
     }
 
     window.initMap = initMap;
+
+    if (window.google && window.google.maps) {
+      initMap();
+    }
   </script>
 </body>
 </html>
