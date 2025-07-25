@@ -11,8 +11,7 @@
   <style>
     #map {
       width: 100%;
-      height: 45vh;
-      min-height: 350px;
+      height: 400px;
     }
     
     .tab-active {
@@ -87,130 +86,94 @@
   <!-- Main Content -->
   <main class="max-w-7xl mx-auto px-4 py-4" x-data="ailFinder()">
 
-    <!-- Search Header -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
-      <div class="flex flex-col lg:flex-row lg:items-center gap-3">
-        <!-- Search Input -->
-        <div class="flex-1 min-w-0">
-          <div class="relative">
-            <input 
-              type="text" 
-              x-model="searchText"
-              @input="filterLocations()"
-              placeholder="Search AIL locations..."
-              class="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            >
-            <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-              <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+    <!-- Side by Side Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Left Side - Search and Filters -->
+      <div class="lg:col-span-1">
+        <!-- Search Header -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Find AIL Locations</h2>
+          
+          <!-- Search Input -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+            <div class="relative">
+              <input 
+                type="text" 
+                x-model="searchText"
+                @input="filterLocations()"
+                placeholder="Search company names..."
+                class="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+              <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Filters -->
-        <div class="flex gap-2 flex-wrap">
           <!-- State Filter -->
-          <select 
-            x-model="selectedState"
-            @change="filterLocations()"
-            class="px-2 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="all">All States</option>
-            <option value="NSW">NSW</option>
-            <option value="QLD">QLD</option>
-            <option value="VIC">VIC</option>
-            <option value="SA">SA</option>
-            <option value="WA">WA</option>
-            <option value="NT">NT</option>
-            <option value="TAS">TAS</option>
-          </select>
-
-          <!-- Service Type Filter -->
-          <select 
-            x-model="selectedService"
-            @change="filterLocations()"
-            class="px-2 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="all">All Services</option>
-            <option value="fuel">Fuel Services</option>
-            <option value="trailer">Trailer Services</option>
-            <option value="tank">Tank Services</option>
-            <option value="maintenance">Maintenance & Repair</option>
-            <option value="other">Other Services</option>
-          </select>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Filter by State</label>
+            <select 
+              x-model="selectedState"
+              @change="filterLocations()"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All States</option>
+              <option value="NSW">NSW</option>
+              <option value="QLD">QLD</option>
+              <option value="VIC">VIC</option>
+              <option value="SA">SA</option>
+              <option value="WA">WA</option>
+              <option value="NT">NT</option>
+              <option value="TAS">TAS</option>
+            </select>
+          </div>
 
           <!-- Clear Button -->
           <button 
             @click="clearFilters()"
-            class="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors text-sm"
+            class="w-full px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors text-sm mb-4"
           >
-            Clear
+            Clear Filters
           </button>
-        </div>
-      </div>
 
-      <!-- Results Count -->
-      <div class="mt-2 text-xs text-gray-600">
-        <strong x-text="filteredLocations.length"></strong> AIL locations found
-      </div>
-    </div>
-
-    <!-- View Toggle Tabs -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      <!-- Tab Headers -->
-      <div class="border-b border-gray-200">
-        <div class="flex">
-          <button 
-            @click="setActiveTab('map')"
-            :class="activeTab === 'map' ? 'tab-active' : 'tab-inactive'"
-            class="px-6 py-3 font-medium text-sm border-r border-gray-200 transition-all"
-          >
-            📍 Map view
-          </button>
-          <button 
-            @click="setActiveTab('list')"
-            :class="activeTab === 'list' ? 'tab-active' : 'tab-inactive'"
-            class="px-6 py-3 font-medium text-sm transition-all"
-          >
-            📋 List view
-          </button>
-        </div>
-      </div>
-
-      <!-- Tab Content -->
-      <div class="relative">
-        
-        <!-- Map View -->
-        <div x-show="activeTab === 'map'" class="relative">
-          <div id="map"></div>
-          
-          <!-- Map Info Panel -->
-          <div x-show="selectedLocation" 
-               x-transition
-               @click.away="selectedLocation = null"
-               class="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-sm z-10">
-            <template x-if="selectedLocation">
-              <div>
-                <h3 class="font-semibold text-gray-800 mb-2" x-text="selectedLocation.company"></h3>
-                <p class="text-sm text-gray-600 mb-2" x-text="selectedLocation.address"></p>
-                <div class="flex items-center justify-between">
-                  <a :href="'tel:' + selectedLocation.phone" 
-                     class="text-blue-600 hover:text-blue-700 font-medium text-sm" 
-                     x-text="selectedLocation.phone"></a>
-                  <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded" 
-                        x-text="selectedLocation.state"></span>
-                </div>
-              </div>
-            </template>
+          <!-- Results Count -->
+          <div class="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+            <strong x-text="filteredLocations.length"></strong> locations found
           </div>
         </div>
 
-        <!-- List View -->
-        <div x-show="activeTab === 'list'" class="p-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+        <!-- View Toggle Tabs -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-4">
+          <div class="border-b border-gray-200">
+            <div class="flex">
+              <button 
+                @click="setActiveTab('map')"
+                :class="activeTab === 'map' ? 'tab-active' : 'tab-inactive'"
+                class="flex-1 px-4 py-3 font-medium text-sm border-r border-gray-200 transition-all"
+              >
+                📍 Map
+              </button>
+              <button 
+                @click="setActiveTab('list')"
+                :class="activeTab === 'list' ? 'tab-active' : 'tab-inactive'"
+                class="flex-1 px-4 py-3 font-medium text-sm transition-all"
+              >
+                📋 List
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- List View (when active) -->
+        <div x-show="activeTab === 'list'" class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div class="space-y-3 max-h-96 overflow-y-auto">
             <template x-for="location in filteredLocations" :key="location.id">
-              <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow bg-white">
+              <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow bg-gray-50">
                 <div class="flex justify-between items-start mb-2">
                   <h3 class="font-semibold text-gray-800 text-xs leading-tight flex-1 pr-2" x-text="location.company"></h3>
                   <span class="bg-blue-100 text-blue-800 text-xs px-1.5 py-0.5 rounded flex-shrink-0" x-text="location.state"></span>
@@ -226,22 +189,51 @@
                   <button 
                     @click="viewOnMap(location)"
                     class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded transition-colors">
-                    Map
+                    View
                   </button>
                 </div>
               </div>
             </template>
+            
+            <!-- No results -->
+            <div x-show="filteredLocations.length === 0" class="text-center py-8">
+              <div class="text-2xl mb-2">🔍</div>
+              <p class="text-gray-500 text-sm">No locations found</p>
+            </div>
           </div>
-          
-          <!-- No results -->
-          <div x-show="filteredLocations.length === 0" class="text-center py-8">
-            <div class="text-3xl mb-3">🔍</div>
-            <p class="text-gray-500">No AIL locations found</p>
-            <p class="text-gray-400 text-sm mt-1">Try adjusting your search criteria</p>
+        </div>
+      </div>
+
+      <!-- Right Side - Map -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="relative">
+            <div id="map"></div>
+            
+            <!-- Map Info Panel -->
+            <div x-show="selectedLocation" 
+                 x-transition
+                 @click.away="selectedLocation = null"
+                 class="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-sm z-10">
+              <template x-if="selectedLocation">
+                <div>
+                  <h3 class="font-semibold text-gray-800 mb-2" x-text="selectedLocation.company"></h3>
+                  <p class="text-sm text-gray-600 mb-2" x-text="selectedLocation.address"></p>
+                  <div class="flex items-center justify-between">
+                    <a :href="'tel:' + selectedLocation.phone" 
+                       class="text-blue-600 hover:text-blue-700 font-medium text-sm" 
+                       x-text="selectedLocation.phone"></a>
+                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded" 
+                          x-text="selectedLocation.state"></span>
+                  </div>
+                </div>
+              </template>
+            </div>
           </div>
         </div>
       </div>
     </div>
+  </main>
   </main>
 
   <!-- Footer -->
@@ -259,8 +251,9 @@
     let markers = [];
     let ailData = [];
 
-    // AIL Data
+    // Complete AIL Data - All 67 locations
     const rawAilData = [
+      // NSW Locations (12)
       {id: 239, company: "Aero Refuellers", address: "Hanger 8-11 Ogden Street, East Albury NSW 2640", phone: "02 6041 1599", lat: -36.071665, lng: 146.9537581, state: "NSW"},
       {id: 222, company: "Australian Fuelling Systems & Equip", address: "7-11 Armstrong Street, Tamworth NSW 2340", phone: "02 6760 7816", lat: -31.0791106, lng: 150.8532199, state: "NSW"},
       {id: 220, company: "Doug Sutherland Truck Repairs", address: "222 Urana Street, Wagga Wagga NSW 2650", phone: "02 6925 2094", lat: -35.1252742, lng: 147.3413631, state: "NSW"},
@@ -274,6 +267,7 @@
       {id: 235, company: "Heavy Haulage Maintenance", address: "28 Old Punt Road, Tomago NSW 2322", phone: "02 4964 9475", lat: -32.8209927, lng: 151.7028008, state: "NSW"},
       {id: 200, company: "WBG Trailer Repairs", address: "Lot 1 Yarrunga Road, Prestons NSW 2170", phone: "02 9608 2288", lat: -33.9363776, lng: 150.8603357, state: "NSW"},
       
+      // QLD Locations (39)
       {id: 410, company: "Brown & Hurley", address: "2 Central Park Drive, South Mackay QLD 4740", phone: "07 4952 3722", lat: -21.1755649, lng: 149.1661223, state: "QLD"},
       {id: 462, company: "Brown and Hurley", address: "28-30 Carrington Road, Torrington QLD 4350", phone: "07 4690 7300", lat: -27.5487615, lng: 151.8968995, state: "QLD"},
       {id: 424, company: "Central Coast Services Mackay", address: "Lot 1 Presto Avenue, Outer Harbour QLD 4740", phone: "07 4955 4922", lat: -21.1101141, lng: 149.2110353, state: "QLD"},
@@ -290,10 +284,68 @@
       {id: 435, company: "NQ Fuel & Maintenance", address: "485 Woolcock Street, Garbutt QLD 4814", phone: "07 4774 3334", lat: -19.2671514, lng: 146.7543566, state: "QLD"},
       {id: 436, company: "NQ Fuel & Maintenance", address: "Garbutt QLD 4814", phone: "07 4774 3334", lat: -19.2878252, lng: 146.7552341, state: "QLD"},
       {id: 432, company: "NQ Petro Pty Ltd", address: "14 Atticus Street, Woree QLD 4868", phone: "07 4054 5100", lat: -16.9549579, lng: 145.7481359, state: "QLD"},
+      {id: 408, company: "Queensland Tanker Services", address: "3-5 Vennard Street, Townsville QLD 4810", phone: "0417 356 568", lat: -19.2697953, lng: 146.7560216, state: "QLD"},
+      {id: 409, company: "Queensland Tanker Services", address: "Townsville QLD 4810", phone: "0417 356 568", lat: -19.35682, lng: 147.0379125, state: "QLD"},
+      {id: 426, company: "RGM Maintenance Pty Ltd", address: "32 Ashover Road, Rocklea QLD 4106", phone: "07 3277 7616", lat: -27.559777, lng: 153.0085609, state: "QLD"},
+      {id: 427, company: "RGM Maintenance Pty Ltd", address: "24 Curley Circuit, Roseneath QLD 4817", phone: "07 4421 9100", lat: -19.3747045, lng: 146.830337, state: "QLD"},
+      {id: 418, company: "RGM Maintenance Pty Ltd", address: "24 Curley Circuit, Roseneath QLD 4817", phone: "07 4421 9100", lat: -19.3747045, lng: 146.830337, state: "QLD"},
+      {id: 465, company: "RGM Maintenance Pty Ltd", address: "500 Milton Street, Paget QLD 4740", phone: "0406 495 734", lat: -21.1891009, lng: 149.1706871, state: "QLD"},
+      {id: 417, company: "RGM Maintenance Pty Ltd", address: "500 Milton Street, Paget QLD 4740", phone: "0406 495 734", lat: -21.1891009, lng: 149.1706871, state: "QLD"},
+      {id: 470, company: "RGM Maintenance Pty Ltd", address: "351 Main Myrtletown Road, Pinkenba QLD 4008", phone: "07 3260 1224", lat: -27.4159631, lng: 153.1255774, state: "QLD"},
+      {id: 471, company: "RGM Maintenance Pty Ltd", address: "63-67 Aumuller Street, Portsmouth QLD 4868", phone: "07 4080 7500", lat: -16.9409518, lng: 145.7658438, state: "QLD"},
+      {id: 472, company: "RGM Maintenance Pty Ltd", address: "1033 Bruce Hwy, Parkhurst QLD 4701", phone: "07 4923 1000", lat: -23.2861232, lng: 150.5089416, state: "QLD"},
+      {id: 457, company: "Stephen Symes", address: "Mobile Inspector, QLD", phone: "0403 277 637", lat: -22.575197, lng: 144.0847926, state: "QLD"},
+      {id: 416, company: "Sustar Engineering Pty Ltd", address: "Lot 244 Fison Street, Gladstone QLD 4680", phone: "07 4972 5366", lat: -23.8415948, lng: 151.2497708, state: "QLD"},
       
+      // VIC Locations (13)
       {id: 305, company: "Acme Oil Equipment Services Pty Ltd", address: "32 Greens Road, Dandenong South VIC 3175", phone: "03 9791 3255", lat: -38.015738, lng: 145.2209347, state: "VIC"},
       {id: 320, company: "Australian Tank Engineering", address: "29-31 Vella Drive, Sunshine VIC 3020", phone: "03 9310 2722", lat: -37.8056095, lng: 144.828958, state: "VIC"},
       {id: 310, company: "Echuca Engineering", address: "13 Mundarra Road, Echuca VIC 3564", phone: "03 5480 6921", lat: -36.141996, lng: 144.762877, state: "VIC"},
+      {id: 304, company: "Evolution Tanker Repairs", address: "371 Rossiter Road, Koo Wee Rup VIC 3981", phone: "0424 099 314", lat: -38.19564, lng: 145.497366, state: "VIC"},
+      {id: 313, company: "G & S Bigham", address: "87 Golf Course Road, Horsham VIC 3400", phone: "03 5382 5893", lat: -36.7376332, lng: 142.1970197, state: "VIC"},
+      {id: 303, company: "Holmwood Group VIC", address: "425 Fitzgerald Road, Derrimut VIC 3030", phone: "03 9936 0360", lat: -37.8008048, lng: 144.787899, state: "VIC"},
+      {id: 324, company: "Johnson's Truck & Coach Service Pty Ltd", address: "579 Benetook Avenue, Mildura VIC 3500", phone: "03 5024 4666", lat: -34.2092698, lng: 142.1616144, state: "VIC"},
+      {id: 322, company: "Liquip Victoria (Fuelcraft)", address: "476 Boundary Rd, Derrimut VIC 3030", phone: "03 9311 7822", lat: -37.8104863, lng: 144.759139, state: "VIC"},
+      {id: 302, company: "Marshall Lethlean", address: "20 Whitfield Blvd, Cranbourne West VIC 3977", phone: "03 8788 5400", lat: -38.0804675, lng: 145.2414944, state: "VIC"},
+      {id: 323, company: "Progress Transport Services Pty Ltd", address: "Shed 2, Coghlans Road, Warrnambool VIC 3280", phone: "0429 320 420", lat: -38.3523961, lng: 142.4661686, state: "VIC"},
+      {id: 307, company: "Starworx", address: "5A Westwood Drive, Ravenhall VIC 3029", phone: "0459 839 072", lat: -37.7717246, lng: 144.7551499, state: "VIC"},
+      {id: 326, company: "Tieman Tankers", address: "184-186 Northbourne Road, Campbellfield VIC 3061", phone: "03 9469 6701", lat: -37.6482781, lng: 144.9611406, state: "VIC"},
+      {id: 314, company: "Transport Preventative Maintenance P/Ltd", address: "10-14 Churchill Street, Williamstown VIC 3016", phone: "03 9397 1135", lat: -37.8521501, lng: 144.8627896, state: "VIC"},
+      
+      // SA Locations (5)
+      {id: 503, company: "Haulmark Trailers Australia", address: "97-99 West Avenue, Edinburgh SA 5111", phone: "08 8283 8585", lat: -34.7327779, lng: 138.6344371, state: "SA"},
+      {id: 506, company: "Hoss Engineering & Maintenance Service", address: "3 Mallee Crescent, Port Lincoln SA 5606", phone: "0427 518 945", lat: -34.7340247, lng: 135.8623913, state: "SA"},
+      {id: 502, company: "Liquip (SA) Pty Ltd", address: "10 Creswell Road, Largs North SA 5016", phone: "08 8341 7009", lat: -34.8213309, lng: 138.5037846, state: "SA"},
+      {id: 512, company: "Mechanical & Technical Testing", address: "40 Butler Terrace, Naracoorte SA 5271", phone: "08 8762 2379", lat: -36.9624232, lng: 140.7370711, state: "SA"},
+      {id: 501, company: "OES Oil Engineering Services", address: "5 Creswell Road, Largs North SA 5016", phone: "08 8341 5677", lat: -34.8222069, lng: 138.5031614, state: "SA"},
+      
+      // WA Locations (12)
+      {id: 657, company: "Fuel Maintenance and Engineering", address: "1562 Arthur Road, Geraldton WA 6530", phone: "0409 981 026", lat: -28.8346566, lng: 114.7321136, state: "WA"},
+      {id: 623, company: "Integrated Fuel Services", address: "Perth WA 6000", phone: "08 9434 7000", lat: -31.9525739, lng: 115.8610488, state: "WA"},
+      {id: 665, company: "J & S Labour and Machinery", address: "40 Moorambine Street, Wedgefield WA 6721", phone: "08 9172 5313", lat: -20.3663216, lng: 118.5870289, state: "WA"},
+      {id: 645, company: "Kip & Steve's Mechanical Repairs", address: "21 Currong Street, Esperance WA 6450", phone: "08 9071 2411", lat: -33.8355027, lng: 121.8958181, state: "WA"},
+      {id: 690, company: "Perth Tanker Repairs", address: "30-32 Macedonia St, Naval Base WA 6165", phone: "08 9410 0222", lat: -32.2022035, lng: 115.7831976, state: "WA"},
+      {id: 651, company: "Perth Tanker Repairs", address: "Naval Base WA 6165", phone: "08 9410 0222", lat: -32.1964799, lng: 115.798936, state: "WA"},
+      {id: 606, company: "Petroleum Technologies Australia", address: "5 Kybo Street, Kalgoorlie WA 6430", phone: "08 9091 2321", lat: -30.7852563, lng: 121.4429398, state: "WA"},
+      {id: 613, company: "Road Tank Repairs & Services WA", address: "Perth WA 6000", phone: "08 6166 3860", lat: -31.9525739, lng: 115.8610488, state: "WA"},
+      {id: 691, company: "Road Tank Repairs & Services WA", address: "11 Camomile Way, Bibra Lake WA 6163", phone: "08 6166 3860", lat: -32.1084505, lng: 115.8198885, state: "WA"},
+      {id: 644, company: "Stevemacs Bulk", address: "27-29 Glassford Road, Kewdale WA 6105", phone: "08 9352 2100", lat: -31.969669, lng: 115.9550175, state: "WA"},
+      {id: 607, company: "WA Fuel Supplies", address: "Perth WA 6000", phone: "08 9943 8338", lat: -31.9525739, lng: 115.8610488, state: "WA"},
+      {id: 609, company: "WA Transmech", address: "30-32 Macedonia Street, Naval Base WA 6165", phone: "08 9410 0857", lat: -32.2022035, lng: 115.7831976, state: "WA"},
+      
+      // NT Locations (4)
+      {id: 820, company: "Haulmark Trailers Australia", address: "1 Mettham Road, Berrimah NT 828", phone: "08 8984 3533", lat: -12.4606551, lng: 130.9283392, state: "NT"},
+      {id: 809, company: "RGM Maintenance Pty Ltd", address: "9 Matthew Hopkins Rd, Holtze NT 829", phone: "08 8983 0100", lat: -12.4549185, lng: 130.9838449, state: "NT"},
+      {id: 811, company: "SWEL Pty Ltd", address: "50 Sargent Street, Alice Springs NT 870", phone: "08 8953 0369", lat: -23.6739621, lng: 133.8676851, state: "NT"},
+      {id: 801, company: "Tanker Repairs Australia", address: "26 McKinnon Rd, Pinelands NT 829", phone: "08 8932 1328", lat: -12.4549857, lng: 130.9620088, state: "NT"},
+      
+      // TAS Locations (5)
+      {id: 704, company: "AJL Heavy Equipment", address: "1-3 Massy-Greene Drive, South Burnie TAS 7320", phone: "03 6430 2777", lat: -41.0674275, lng: 145.9239546, state: "TAS"},
+      {id: 703, company: "AJL Heavy Equipment", address: "South Burnie TAS 7320", phone: "03 6430 2777", lat: -41.0701328, lng: 145.8962992, state: "TAS"},
+      {id: 701, company: "Kent Engineering", address: "153 Stoney Rise Road, Devonport TAS 7310", phone: "03 6424 9233", lat: -41.1926208, lng: 146.3297592, state: "TAS"},
+      {id: 710, company: "Midland Truck & Bus", address: "42 Crooked Billet Drive, Bridgewater TAS 7030", phone: "03 6263 4333", lat: -42.7210713, lng: 147.2344207, state: "TAS"},
+      {id: 702, company: "Wiggies Radiators", address: "18-22 Hillcrest Road, Devonport TAS 7310", phone: "03 6424 7292", lat: -41.1828568, lng: 146.3302493, state: "TAS"}
+    ];
       {id: 304, company: "Evolution Tanker Repairs", address: "371 Rossiter Road, Koo Wee Rup VIC 3981", phone: "0424 099 314", lat: -38.19564, lng: 145.497366, state: "VIC"},
       {id: 313, company: "G & S Bigham", address: "87 Golf Course Road, Horsham VIC 3400", phone: "03 5382 5893", lat: -36.7376332, lng: 142.1970197, state: "VIC"},
       {id: 303, company: "Holmwood Group VIC", address: "425 Fitzgerald Road, Derrimut VIC 3030", phone: "03 9936 0360", lat: -37.8008048, lng: 144.787899, state: "VIC"},
@@ -329,7 +381,6 @@
       return {
         activeTab: 'map',
         selectedState: 'all',
-        selectedService: 'all',
         searchText: '',
         filteredLocations: [],
         selectedLocation: null,
@@ -344,8 +395,7 @@
           this.filteredLocations = ailData.filter(location => {
             const matchesSearch = !this.searchText || location.company.toLowerCase().includes(this.searchText.toLowerCase());
             const matchesState = this.selectedState === 'all' || location.state === this.selectedState;
-            const matchesService = this.selectedService === 'all' || this.getServiceType(location.company).includes(this.selectedService);
-            return matchesSearch && matchesState && matchesService;
+            return matchesSearch && matchesState;
           });
           
           if (this.activeTab === 'map' && typeof filterMapMarkers === 'function') {
@@ -353,19 +403,9 @@
           }
         },
 
-        getServiceType(company) {
-          const name = company.toLowerCase();
-          if (name.includes('fuel') || name.includes('refuel') || name.includes('petro')) return 'fuel';
-          if (name.includes('trailer') || name.includes('haulmark')) return 'trailer';
-          if (name.includes('tank') || name.includes('liquip')) return 'tank';
-          if (name.includes('engineering') || name.includes('maintenance') || name.includes('repair')) return 'maintenance';
-          return 'other';
-        },
-
         clearFilters() {
           this.searchText = '';
           this.selectedState = 'all';
-          this.selectedService = 'all';
           this.filterLocations();
         },
 
@@ -455,9 +495,8 @@
         if (ail) {
           const matchesSearch = !activeFilters.searchText || ail.company.toLowerCase().includes(activeFilters.searchText.toLowerCase());
           const matchesState = activeFilters.selectedState === 'all' || ail.state === activeFilters.selectedState;
-          const matchesService = activeFilters.selectedService === 'all' || activeFilters.getServiceType(ail.company).includes(activeFilters.selectedService);
           
-          marker.setVisible(matchesSearch && matchesState && matchesService);
+          marker.setVisible(matchesSearch && matchesState);
         }
       });
     }
