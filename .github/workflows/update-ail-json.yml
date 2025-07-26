@@ -22,7 +22,7 @@ jobs:
       run: pip install pandas
 
     - name: Run Script
-      run: python scripts/generate_ail_locations.py
+      run: python scripts/generate-ail-locations.py
 
     - name: Commit & Push Changes
       run: |
