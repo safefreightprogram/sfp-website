@@ -11,7 +11,7 @@
   <style>
     #map {
       width: 100%;
-      height: 400px;
+      height: 500px;
     }
     
     .tab-active {
@@ -25,6 +25,32 @@
       color: #374151;
       border-color: #d1d5db;
     }
+
+    .autocomplete-dropdown {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #d1d5db;
+      border-top: none;
+      background: white;
+      border-radius: 0 0 0.375rem 0.375rem;
+    }
+
+    .autocomplete-item {
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .autocomplete-item:hover,
+    .autocomplete-item.selected {
+      background-color: #eff6ff;
+    }
+
+    .search-hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
@@ -36,6 +62,7 @@
         <a href="index.html" class="transition-transform transform hover:scale-[1.05]">
           <img src="SFP-Logo.png" alt="Safe Freight Program" class="h-8 w-auto">
         </a>
+        <h1 class="text-xl font-semibold">Find AIL</h1>
       </div>
       
       <!-- Controls -->
@@ -93,17 +120,20 @@
       <div class="lg:col-span-1">
         <!-- Search Header -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Find AIL Locations</h2>
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Find an Authorised Inspection Location</h2>
           
-          <!-- Search Input -->
-          <div class="mb-4">
+          <!-- Search Input with Autocomplete -->
+          <div class="mb-4 relative">
             <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
             <div class="relative">
               <input 
                 type="text" 
                 x-model="searchText"
-                @input="filterLocations()"
-                placeholder="Search company names..."
+                @input="handleSearchInput()"
+                @keydown="handleKeyDown($event)"
+                @focus="showAutocomplete = true"
+                @blur="setTimeout(() => showAutocomplete = false, 200)"
+                placeholder="Start typing company name or location..."
                 class="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               >
               <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
@@ -112,6 +142,22 @@
                 </svg>
               </div>
             </div>
+            
+            <!-- Search Hint -->
+            <div class="search-hint">Type and press Enter to search, or select from suggestions</div>
+            
+            <!-- Autocomplete Dropdown -->
+            <div x-show="showAutocomplete && autocompleteItems.length > 0" 
+                 class="absolute z-10 w-full autocomplete-dropdown">
+              <template x-for="(item, index) in autocompleteItems.slice(0, 8)" :key="item.id">
+                <div class="autocomplete-item" 
+                     :class="{ 'selected': index === selectedIndex }"
+                     @click="selectAutocompleteItem(item)">
+                  <div class="font-medium text-sm" x-text="item.company"></div>
+                  <div class="text-xs text-gray-500" x-text="item.address"></div>
+                </div>
+              </template>
+            </div>
           </div>
 
           <!-- State Filter -->
@@ -119,7 +165,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">Filter by State</label>
             <select 
               x-model="selectedState"
-              @change="filterLocations()"
+              @change="handleStateChange()"
               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All States</option>
@@ -146,9 +192,13 @@
             <strong x-text="filteredLocations.length"></strong> locations found
           </div>
         </div>
+      </div>
 
-        <!-- View Toggle Tabs -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-4">
+      <!-- Right Side - Map and List Tabs -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          
+          <!-- Tab Headers -->
           <div class="border-b border-gray-200">
             <div class="flex">
               <button 
@@ -167,68 +217,76 @@
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- List View (when active) -->
-        <div x-show="activeTab === 'list'" class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div class="space-y-3 max-h-96 overflow-y-auto">
-            <template x-for="location in filteredLocations" :key="location.id">
-              <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow bg-gray-50">
-                <div class="flex justify-between items-start mb-2">
-                  <h3 class="font-semibold text-gray-800 text-xs leading-tight flex-1 pr-2" x-text="location.company"></h3>
-                  <span class="bg-blue-100 text-blue-800 text-xs px-1.5 py-0.5 rounded flex-shrink-0" x-text="location.state"></span>
-                </div>
+          <!-- Tab Content Container -->
+          <div class="relative h-[500px]">
+            
+            <!-- Map Tab Content -->
+            <div x-show="activeTab === 'map'" class="absolute inset-0">
+              <div id="map" class="w-full h-full"></div>
+              
+              <!-- Map Info Panel -->
+              <div x-show="selectedLocation" 
+                   x-transition
+                   class="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-sm z-10">
+                <template x-if="selectedLocation">
+                  <div>
+                    <div class="flex justify-between items-start mb-2">
+                      <h3 class="font-semibold text-gray-800 pr-2" x-text="selectedLocation.company"></h3>
+                      <button @click="selectedLocation = null" 
+                              class="text-gray-400 hover:text-gray-600 flex-shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2" x-text="selectedLocation.address"></p>
+                    <div class="flex items-center justify-between">
+                      <a :href="'tel:' + selectedLocation.phone" 
+                         class="text-blue-600 hover:text-blue-700 font-medium text-sm" 
+                         x-text="selectedLocation.phone"></a>
+                      <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded" 
+                            x-text="selectedLocation.state"></span>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- List Tab Content -->
+            <div x-show="activeTab === 'list'" class="absolute inset-0 p-4 overflow-y-auto">
+              <div class="space-y-3">
+                <template x-for="location in filteredLocations" :key="location.id">
+                  <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow bg-gray-50">
+                    <div class="flex justify-between items-start mb-2">
+                      <h3 class="font-semibold text-gray-800 text-sm leading-tight flex-1 pr-2" x-text="location.company"></h3>
+                      <span class="bg-blue-100 text-blue-800 text-xs px-1.5 py-0.5 rounded flex-shrink-0" x-text="location.state"></span>
+                    </div>
+                    
+                    <p class="text-gray-600 text-sm mb-2 leading-relaxed" x-text="location.address"></p>
+                    
+                    <div class="flex items-center justify-between">
+                      <a :href="'tel:' + location.phone" 
+                         class="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center">
+                        📞 <span class="ml-1" x-text="location.phone"></span>
+                      </a>
+                      <button 
+                        @click="viewOnMap(location)"
+                        class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded transition-colors">
+                        View on Map
+                      </button>
+                    </div>
+                  </div>
+                </template>
                 
-                <p class="text-gray-600 text-xs mb-2 leading-relaxed" x-text="location.address"></p>
-                
-                <div class="flex items-center justify-between">
-                  <a :href="'tel:' + location.phone" 
-                     class="text-blue-600 hover:text-blue-700 font-medium text-xs flex items-center">
-                    📞 <span class="ml-1" x-text="location.phone"></span>
-                  </a>
-                  <button 
-                    @click="viewOnMap(location)"
-                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded transition-colors">
-                    View
-                  </button>
+                <!-- No results -->
+                <div x-show="filteredLocations.length === 0" class="text-center py-8">
+                  <div class="text-3xl mb-2">🔍</div>
+                  <p class="text-gray-500">No locations found</p>
                 </div>
               </div>
-            </template>
-            
-            <!-- No results -->
-            <div x-show="filteredLocations.length === 0" class="text-center py-8">
-              <div class="text-2xl mb-2">🔍</div>
-              <p class="text-gray-500 text-sm">No locations found</p>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Right Side - Map -->
-      <div class="lg:col-span-2">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div class="relative">
-            <div id="map"></div>
-            
-            <!-- Map Info Panel -->
-            <div x-show="selectedLocation" 
-                 x-transition
-                 @click.away="selectedLocation = null"
-                 class="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-sm z-10">
-              <template x-if="selectedLocation">
-                <div>
-                  <h3 class="font-semibold text-gray-800 mb-2" x-text="selectedLocation.company"></h3>
-                  <p class="text-sm text-gray-600 mb-2" x-text="selectedLocation.address"></p>
-                  <div class="flex items-center justify-between">
-                    <a :href="'tel:' + selectedLocation.phone" 
-                       class="text-blue-600 hover:text-blue-700 font-medium text-sm" 
-                       x-text="selectedLocation.phone"></a>
-                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded" 
-                          x-text="selectedLocation.state"></span>
-                  </div>
-                </div>
-              </template>
-            </div>
           </div>
         </div>
       </div>
@@ -246,6 +304,25 @@
     let markers = [];
     let ailData = [];
     let mapInitialized = false;
+
+    // Australia bounds for fitting map to country
+    const australiaBounds = {
+      north: -10.0,
+      south: -44.0,
+      west: 112.0,
+      east: 154.0
+    };
+
+    // State/Territory center coordinates for zooming
+    const stateCenters = {
+      NSW: { lat: -33.8688, lng: 151.2093, zoom: 7 },
+      QLD: { lat: -27.4698, lng: 153.0251, zoom: 6 },
+      VIC: { lat: -37.8136, lng: 144.9631, zoom: 7 },
+      SA: { lat: -34.9285, lng: 138.6007, zoom: 7 },
+      WA: { lat: -31.9505, lng: 115.8605, zoom: 6 },
+      NT: { lat: -12.4634, lng: 130.8456, zoom: 6 },
+      TAS: { lat: -41.4545, lng: 145.9707, zoom: 8 }
+    };
 
     // Complete AIL Data from Google Sheet - All 79 locations
     const rawAilData = [
@@ -351,6 +428,9 @@
         searchText: '',
         filteredLocations: [],
         selectedLocation: null,
+        showAutocomplete: false,
+        autocompleteItems: [],
+        selectedIndex: -1,
 
         init() {
           console.log('🚀 Initializing AIL Finder...');
@@ -367,6 +447,80 @@
               console.log('⏳ Waiting for Google Maps to load...');
             }
           }, 500);
+        },
+
+        handleSearchInput() {
+          this.filterLocations();
+          this.updateAutocomplete();
+          this.selectedIndex = -1;
+        },
+
+        handleKeyDown(event) {
+          if (!this.showAutocomplete || this.autocompleteItems.length === 0) {
+            if (event.key === 'Enter') {
+              this.performSearch();
+            }
+            return;
+          }
+
+          switch (event.key) {
+            case 'ArrowDown':
+              event.preventDefault();
+              this.selectedIndex = Math.min(this.selectedIndex + 1, this.autocompleteItems.length - 1);
+              break;
+            case 'ArrowUp':
+              event.preventDefault();
+              this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+              break;
+            case 'Enter':
+              event.preventDefault();
+              if (this.selectedIndex >= 0) {
+                this.selectAutocompleteItem(this.autocompleteItems[this.selectedIndex]);
+              } else {
+                this.performSearch();
+              }
+              break;
+            case 'Escape':
+              this.showAutocomplete = false;
+              this.selectedIndex = -1;
+              break;
+          }
+        },
+
+        updateAutocomplete() {
+          if (!this.searchText || this.searchText.length < 2) {
+            this.autocompleteItems = [];
+            return;
+          }
+
+          const searchLower = this.searchText.toLowerCase();
+          this.autocompleteItems = ailData.filter(location => 
+            location.company.toLowerCase().includes(searchLower) ||
+            location.address.toLowerCase().includes(searchLower)
+          ).slice(0, 8);
+        },
+
+        selectAutocompleteItem(item) {
+          this.searchText = item.company;
+          this.showAutocomplete = false;
+          this.selectedIndex = -1;
+          this.filterLocations();
+          
+          // If single result, zoom to it
+          if (this.filteredLocations.length === 1) {
+            this.zoomToLocation(this.filteredLocations[0]);
+          }
+        },
+
+        performSearch() {
+          this.showAutocomplete = false;
+          this.selectedIndex = -1;
+          this.filterLocations();
+          
+          // If single result, zoom to it
+          if (this.filteredLocations.length === 1) {
+            this.zoomToLocation(this.filteredLocations[0]);
+          }
         },
 
         filterLocations() {
@@ -388,11 +542,29 @@
           }
         },
 
+        handleStateChange() {
+          this.filterLocations();
+          
+          // Zoom to state if specific state selected
+          if (this.selectedState !== 'all' && mapInitialized) {
+            this.zoomToState(this.selectedState);
+          } else if (this.selectedState === 'all' && mapInitialized) {
+            this.fitMapToAustralia();
+          }
+        },
+
         clearFilters() {
           console.log('🧹 Clearing filters...');
           this.searchText = '';
           this.selectedState = 'all';
+          this.showAutocomplete = false;
+          this.autocompleteItems = [];
+          this.selectedIndex = -1;
           this.filterLocations();
+          
+          if (mapInitialized) {
+            this.fitMapToAustralia();
+          }
         },
 
         setActiveTab(tab) {
@@ -402,7 +574,9 @@
           if (tab === 'map' && mapInitialized) {
             setTimeout(() => {
               google.maps.event.trigger(map, 'resize');
-              map.setCenter({ lat: -25.2744, lng: 133.7751 });
+              if (this.selectedState === 'all') {
+                this.fitMapToAustralia();
+              }
             }, 100);
           }
         },
@@ -413,12 +587,43 @@
           this.selectedLocation = location;
           
           if (mapInitialized) {
-            setTimeout(() => {
-              google.maps.event.trigger(map, 'resize');
-              map.setCenter({ lat: location.lat, lng: location.lng });
-              map.setZoom(12);
-            }, 100);
+            this.zoomToLocation(location);
           }
+        },
+
+        zoomToLocation(location) {
+          if (!mapInitialized) return;
+          
+          setTimeout(() => {
+            google.maps.event.trigger(map, 'resize');
+            map.setCenter({ lat: location.lat, lng: location.lng });
+            map.setZoom(12);
+            this.selectedLocation = location;
+          }, 100);
+        },
+
+        zoomToState(state) {
+          if (!mapInitialized || !stateCenters[state]) return;
+          
+          const stateCenter = stateCenters[state];
+          setTimeout(() => {
+            google.maps.event.trigger(map, 'resize');
+            map.setCenter({ lat: stateCenter.lat, lng: stateCenter.lng });
+            map.setZoom(stateCenter.zoom);
+          }, 100);
+        },
+
+        fitMapToAustralia() {
+          if (!mapInitialized) return;
+          
+          setTimeout(() => {
+            google.maps.event.trigger(map, 'resize');
+            const bounds = new google.maps.LatLngBounds(
+              new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
+              new google.maps.LatLng(australiaBounds.north, australiaBounds.east)
+            );
+            map.fitBounds(bounds);
+          }, 100);
         }
       }
     }
@@ -443,6 +648,13 @@
 
         mapInitialized = true;
         console.log('✅ Map created successfully');
+        
+        // Fit map to Australia bounds
+        const bounds = new google.maps.LatLngBounds(
+          new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
+          new google.maps.LatLng(australiaBounds.north, australiaBounds.east)
+        );
+        map.fitBounds(bounds);
         
         // Add markers
         loadMarkers();
@@ -554,7 +766,7 @@
   
   <!-- Load Google Maps with callback -->
   <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAWEYToL4z29KXAMpurP87nV22o4hiIIms&callback=initMap&libraries=geometry">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPnUqhxYzzgoRJ32Rh6-bg5wmKuXtBmKI&callback=initMap&libraries=geometry">
   </script>
 </body>
 </html>
