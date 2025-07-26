@@ -1,4 +1,22 @@
-// Enhanced search functionality with new data structure<!DOCTYPE html>
+init() {
+          ailFinderComponent = this;
+          ailData = rawAilData;
+          this.filteredLocations = [...ailData];
+          
+          setTimeout(() => {
+            if (window.google && window.google.maps && !mapInitialized) {
+              initMap();
+            }
+          }, 500);
+          
+          setTimeout(() => {
+            if (window.google && window.google.maps && mapInitialized && markers.length === 0) {
+              loadMarkers();
+            }
+          }, 2000);
+        },
+
+        // Enhanced search functionality<!DOCTYPE html>
 <html lang="en-AU">
 <head>
   <meta charset="UTF-8" />
@@ -119,7 +137,7 @@
       
       <!-- Centered Title -->
       <div class="absolute left-1/2 transform -translate-x-1/2">
-        <h1 class="text-xl font-semibold">Find AIL</h1>
+        <h1 class="text-xl font-semibold">Find Your Nearest Authorised Inspection Location (AIL)</h1>
       </div>
       
       <!-- Controls -->
@@ -169,12 +187,6 @@
 
   <!-- Main Content -->
   <main class="max-w-7xl mx-auto px-4 py-6" x-data="ailFinder()">
-
-    <!-- Enhanced Header Section -->
-    <div class="text-center mb-8">
-      <h2 class="text-3xl font-bold text-gray-900 mb-2">Find Your Nearest AIL</h2>
-      <p class="text-gray-600 max-w-2xl mx-auto">Locate authorized inspection locations across Australia for your freight compliance needs.</p>
-    </div>
 
     <!-- Side by Side Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1050,8 +1062,8 @@
     function initMap() {
       try {
         map = new google.maps.Map(document.getElementById("map"), {
-          zoom: 5,
-          center: { lat: -25.2744, lng: 133.7751 },
+          zoom: 6, // Closer initial zoom
+          center: { lat: -26.5, lng: 133.7751 }, // Slightly more centered for better view
           mapTypeId: 'roadmap',
           zoomControl: true,
           zoomControlOptions: {
@@ -1077,6 +1089,7 @@
         mapInitialized = true;
         loadMarkers();
         
+        // Set closer initial bounds for better Australia view
         setTimeout(() => {
           const bounds = new google.maps.LatLngBounds(
             new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
@@ -1084,10 +1097,11 @@
           );
           map.fitBounds(bounds);
           
+          // Less zoom reduction for closer view
           setTimeout(() => {
             const currentZoom = map.getZoom();
             if (currentZoom > 5) {
-              map.setZoom(currentZoom - 0.2);
+              map.setZoom(currentZoom - 0.1); // Minimal reduction for closer view
             }
           }, 300);
         }, 100);
