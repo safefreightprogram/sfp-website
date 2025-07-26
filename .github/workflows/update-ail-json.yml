@@ -28,6 +28,6 @@ jobs:
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-        git add ail-locations.json
+        git add data/ail-locations.json
         git commit -m "Auto-update AIL locations JSON" || echo "No changes"
         git push
