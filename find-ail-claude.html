@@ -383,22 +383,73 @@
           ailFinderComponent = this;
           
           try {
-            // Load AIL data from JSON file
+            // Load AIL data from JSON file - try multiple paths
             console.log('🔄 Loading AIL data from JSON...');
-            const response = await fetch('./data/ail-locations.json');
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
+            let response;
+            
+            // Try different possible paths
+            const possiblePaths = [
+              './data/ail-locations.json',
+              'data/ail-locations.json',
+              '/data/ail-locations.json',
+              './ail-locations.json'
+            ];
+            
+            for (const path of possiblePaths) {
+              try {
+                response = await fetch(path);
+                if (response.ok) {
+                  console.log(`✅ Found JSON file at: ${path}`);
+                  break;
+                }
+              } catch (e) {
+                console.log(`❌ Failed to load from: ${path}`);
+              }
             }
             
-            ailData = await response.json();
-            console.log(`✅ Loaded ${ailData.length} AIL locations`);
+            if (!response || !response.ok) {
+              throw new Error(`Could not find ail-locations.json in any expected location`);
+            }
             
-            // Handle NaN values in data
-            ailData = ailData.map(location => ({
-              ...location,
-              address: location.address === null || String(location.address) === 'NaN' ? null : location.address,
-              suburb: location.suburb === null || String(location.suburb) === 'NaN' ? null : location.suburb
-            }));
+            const jsonText = await response.text();
+            console.log('📄 Raw JSON response length:', jsonText.length);
+            
+            // Parse JSON with better error handling
+            let rawData;
+            try {
+              rawData = JSON.parse(jsonText);
+            } catch (parseError) {
+              console.error('❌ JSON Parse Error:', parseError);
+              throw new Error('Invalid JSON format in ail-locations.json');
+            }
+            
+            console.log(`✅ Loaded ${rawData.length} AIL locations`);
+            
+            // Clean and validate the data
+            ailData = rawData.map(location => {
+              // Handle various representations of null/undefined values
+              const cleanValue = (value) => {
+                if (value === null || value === undefined) return null;
+                const str = String(value).toLowerCase();
+                if (str === 'nan' || str === 'null' || str === 'undefined' || str === '') return null;
+                return value;
+              };
+              
+              return {
+                ...location,
+                address: cleanValue(location.address),
+                suburb: cleanValue(location.suburb),
+                inspector: cleanValue(location.inspector) || '-'
+              };
+            });
+            
+            // Filter out any locations without coordinates
+            ailData = ailData.filter(location => 
+              location.lat && location.lng && 
+              !isNaN(location.lat) && !isNaN(location.lng)
+            );
+            
+            console.log(`✅ Cleaned data: ${ailData.length} valid locations`);
             
             this.filteredLocations = [...ailData];
             this.loading = false;
@@ -419,8 +470,13 @@
           } catch (error) {
             console.error('❌ Error loading AIL data:', error);
             this.loading = false;
-            // Show error message to user
-            alert('Unable to load AIL location data. Please refresh the page or try again later.');
+            
+            // Provide more helpful error message
+            const errorMessage = error.message.includes('JSON') 
+              ? 'The AIL location data file has formatting issues. Please contact support.'
+              : 'Unable to load AIL location data. Please check your internet connection and try again.';
+              
+            alert(errorMessage);
           }
         },
 
