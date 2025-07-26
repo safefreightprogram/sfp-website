@@ -1,0 +1,21 @@
+[
+  {
+    "id": 239,
+    "company": "Aero Refuellers",
+    "address": "Hanger 8-11 Ogden Street, East Albury NSW 2640",
+    "phone": "02 6041 1599",
+    "lat": -36.071665,
+    "lng": 146.9537581,
+    "state": "NSW"
+  },
+  {
+    "id": 222,
+    "company": "Australian Fuelling Systems & Equip",
+    "address": "7-11 Armstrong Street, Tamworth NSW 2340",
+    "phone": "02 6760 7816",
+    "lat": -31.0791106,
+    "lng": 150.8532199,
+    "state": "NSW"
+  }
+  // … continue the rest of your AIL entries here exactly as they were in `rawAilData`
+]
