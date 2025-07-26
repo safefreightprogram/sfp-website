@@ -267,8 +267,8 @@
               <template x-for="state in stateOptions" :key="state.value">
                 <button 
                   @click="selectedState = state.value; handleStateChange()"
-                  :class="selectedState === state.value ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'"
-                  class="px-3 py-2 text-sm border rounded-lg transition-all font-medium"
+                  :class="selectedState === state.value ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-md transform scale-105' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700'"
+                  class="px-3 py-2 text-sm border rounded-lg transition-all font-medium duration-200 ease-in-out"
                   x-text="state.label"
                 ></button>
               </template>
@@ -837,21 +837,31 @@
         smartZoomToResults() {
           if (!mapInitialized || this.filteredLocations.length === 0) return;
           
+          // If a specific state is selected, ALWAYS zoom to that state (don't override with result-based zooming)
           if (this.selectedState !== 'all') {
-            return;
+            console.log('🎯 State filter active, maintaining state zoom for:', this.selectedState);
+            return; // Let handleStateChange handle the zooming
           }
           
+          console.log('🔍 Smart zooming based on', this.filteredLocations.length, 'results');
+          
+          // If 1 result, zoom to that specific location
           if (this.filteredLocations.length === 1) {
+            console.log('📍 Single result - zooming to location');
             this.zoomToLocation(this.filteredLocations[0]);
             return;
           }
           
+          // If 2-10 results, fit bounds to show all results
           if (this.filteredLocations.length >= 2 && this.filteredLocations.length <= 10) {
+            console.log('📊 Multiple results (2-10) - fitting bounds to results');
             this.fitBoundsToResults();
             return;
           }
           
+          // Default: show all of Australia for many results
           if (this.filteredLocations.length > 10) {
+            console.log('🌏 Many results (>10) - showing all Australia');
             this.fitMapToAustralia();
           }
         },
@@ -881,16 +891,20 @@
         },
 
         handleStateChange() {
+          console.log('🗺️ State filter changed to:', this.selectedState);
           this.filterLocations();
           
+          // Always zoom to state when state is selected, regardless of result count
           if (this.selectedState !== 'all' && mapInitialized) {
+            console.log('🎯 Zooming to state:', this.selectedState);
             setTimeout(() => {
               this.zoomToState(this.selectedState);
-            }, 300);
+            }, 100); // Reduced delay for more responsive feel
           } else if (this.selectedState === 'all' && mapInitialized) {
+            console.log('🌏 Zooming to Australia (All states)');
             setTimeout(() => {
               this.fitMapToAustralia();
-            }, 300);
+            }, 100);
           }
         },
 
@@ -942,9 +956,19 @@
         },
 
         zoomToState(state) {
-          if (!mapInitialized || !stateBounds[state]) return;
+          console.log('🎯 zoomToState called for:', state);
+          if (!mapInitialized || !stateBounds[state]) {
+            console.log('❌ Map not ready or state bounds not found for:', state);
+            return;
+          }
           
           const bounds = stateBounds[state];
+          console.log('📍 Using bounds for', state, ':', bounds);
+          
+          // Switch to map tab if not already active
+          if (this.activeTab !== 'map') {
+            this.activeTab = 'map';
+          }
           
           setTimeout(() => {
             google.maps.event.trigger(map, 'resize');
@@ -953,14 +977,25 @@
               new google.maps.LatLng(bounds.north, bounds.east)
             );
             map.fitBounds(mapBounds);
+            console.log('✅ Fitted bounds for state:', state);
             
+            // Add padding by slightly reducing zoom after fitting
             setTimeout(() => {
               const currentZoom = map.getZoom();
-              if (currentZoom > 6) {
-                map.setZoom(currentZoom - 0.3);
+              console.log('📏 Current zoom level:', currentZoom);
+              // Adjust zoom based on state size - smaller states get less reduction
+              let zoomReduction = 0.5;
+              if (['TAS', 'NT'].includes(state)) zoomReduction = 0.3;
+              if (['SA', 'VIC'].includes(state)) zoomReduction = 0.4;
+              if (['NSW', 'QLD', 'WA'].includes(state)) zoomReduction = 0.5;
+              
+              if (currentZoom > 5) {
+                const newZoom = Math.max(currentZoom - zoomReduction, 5);
+                map.setZoom(newZoom);
+                console.log('🔧 Adjusted zoom to:', newZoom, 'for better padding');
               }
-            }, 300);
-          }, 100);
+            }, 200);
+          }, 50);
         },
 
         fitMapToAustralia() {
