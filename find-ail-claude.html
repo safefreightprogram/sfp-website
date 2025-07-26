@@ -361,12 +361,12 @@
     let mapInitialized = false;
     let ailFinderComponent = null;
 
-    // Australia bounds for better centered view
+    // Australia bounds for better wider view
     const australiaBounds = {
-      north: -8.0,     
-      south: -44.0,    
-      west: 112.0,     
-      east: 154.0      
+      north: -5.0,     // Include more ocean to the north
+      south: -47.0,    // Include more ocean to the south  
+      west: 108.0,     // Include more ocean to the west
+      east: 158.0      // Include more ocean to the east
     };
 
     // Alpine.js component
@@ -386,6 +386,7 @@
             // Load AIL data from JSON file - try multiple paths
             console.log('🔄 Loading AIL data from JSON...');
             let response;
+            let jsonText;
             
             // Try different possible paths
             const possiblePaths = [
@@ -400,6 +401,7 @@
                 response = await fetch(path);
                 if (response.ok) {
                   console.log(`✅ Found JSON file at: ${path}`);
+                  jsonText = await response.text();
                   break;
                 }
               } catch (e) {
@@ -407,19 +409,26 @@
               }
             }
             
-            if (!response || !response.ok) {
+            if (!response || !response.ok || !jsonText) {
               throw new Error(`Could not find ail-locations.json in any expected location`);
             }
             
-            const jsonText = await response.text();
             console.log('📄 Raw JSON response length:', jsonText.length);
+            
+            // Clean the JSON text to handle NaN values before parsing
+            const cleanedJsonText = jsonText
+              .replace(/:\s*NaN\s*,/g, ': null,')
+              .replace(/:\s*NaN\s*}/g, ': null}')
+              .replace(/:\s*NaN\s*]/g, ': null]')
+              .replace(/"\s*NaN\s*"/g, 'null');
             
             // Parse JSON with better error handling
             let rawData;
             try {
-              rawData = JSON.parse(jsonText);
+              rawData = JSON.parse(cleanedJsonText);
             } catch (parseError) {
               console.error('❌ JSON Parse Error:', parseError);
+              console.log('🔍 Problematic JSON snippet:', cleanedJsonText.substring(0, 500));
               throw new Error('Invalid JSON format in ail-locations.json');
             }
             
@@ -619,11 +628,11 @@
             );
             map.fitBounds(bounds);
             
-            // Apply better zoom for centered Australia view
+            // Apply less aggressive zoom for wider view
             setTimeout(() => {
               const currentZoom = map.getZoom();
-              // Ensure good zoom level that shows Australia properly centered
-              map.setZoom(Math.max(currentZoom + 0.5, 5.5));
+              // Reduce zoom slightly for better overview
+              map.setZoom(Math.max(currentZoom - 0.3, 4.5));
             }, 300);
           }, 100);
         }
@@ -666,7 +675,7 @@
           loadMarkers();
         }
         
-        // Set better initial bounds for Australia
+        // Set better initial bounds for Australia with wider view
         setTimeout(() => {
           const bounds = new google.maps.LatLngBounds(
             new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
@@ -674,11 +683,11 @@
           );
           map.fitBounds(bounds);
           
-          // Apply slight zoom adjustment for optimal view
+          // Apply zoom adjustment for wider overview
           setTimeout(() => {
             const currentZoom = map.getZoom();
-            // Set a good zoom level that shows Australia well
-            map.setZoom(Math.max(currentZoom + 0.5, 5.5));
+            // Reduce zoom for wider view of Australia
+            map.setZoom(Math.max(currentZoom - 0.3, 4.5));
           }, 300);
         }, 100);
         
