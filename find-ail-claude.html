@@ -11,7 +11,7 @@
   <style>
     #map {
       width: 100%;
-      height: 500px;
+      height: 400px;  /* Reduced from 500px to 400px */
       border-radius: 0.5rem;
     }
     
@@ -180,6 +180,31 @@
             </button>
           </div>
 
+          <!-- State Filter -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-3">Filter by State/Territory</label>
+            <div class="grid grid-cols-2 gap-2">
+              <template x-for="state in stateOptions" :key="state.value">
+                <button 
+                  @click="selectedState = state.value; handleStateChange()"
+                  :class="selectedState === state.value ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-md transform scale-105' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700'"
+                  class="px-3 py-2 text-sm border rounded-lg transition-all font-medium duration-200 ease-in-out"
+                  x-text="state.label"
+                ></button>
+              </template>
+            </div>
+          </div>
+
+          <!-- Clear Filter Button -->
+          <div x-show="selectedState !== 'all'" class="mb-4">
+            <button 
+              @click="clearStateFilter()"
+              class="w-full px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
+            >
+              🔄 Show All States
+            </button>
+          </div>
+
           <!-- Results Count -->
           <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
             <div class="flex items-center justify-between">
@@ -232,7 +257,7 @@
           </div>
 
           <!-- Tab Content Container -->
-          <div class="relative h-[500px]">
+          <div class="relative h-[400px]">  <!-- Reduced from 500px to 400px -->
             
             <!-- Map Tab Content -->
             <div x-show="activeTab === 'map'" class="absolute inset-0 p-4">
@@ -361,12 +386,23 @@
     let mapInitialized = false;
     let ailFinderComponent = null;
 
-    // Australia bounds for better wider view
+    // Australia bounds for better wider view including Tasmania
     const australiaBounds = {
       north: -5.0,
-      south: -47.0,
+      south: -48.0,
       west: 108.0,
       east: 158.0
+    };
+
+    // State/Territory bounds for proper fitting
+    const stateBounds = {
+      NSW: { north: -28.15, south: -37.5, west: 140.9, east: 153.6 },
+      QLD: { north: -10.0, south: -29.2, west: 137.9, east: 154.0 },
+      VIC: { north: -33.9, south: -39.2, west: 140.9, east: 150.0 },
+      SA: { north: -25.9, south: -38.1, west: 129.0, east: 141.0 },
+      WA: { north: -13.7, south: -35.1, west: 112.9, east: 129.0 },
+      NT: { north: -10.9, south: -26.0, west: 129.0, east: 138.0 },
+      TAS: { north: -39.2, south: -43.6, west: 143.8, east: 148.4 }
     };
 
     // Alpine.js component
@@ -378,6 +414,19 @@
         loadingLocation: false,
         loading: true,
         userLocation: null,
+        selectedState: 'all',
+
+        // State options for filter
+        stateOptions: [
+          { value: 'all', label: 'All' },
+          { value: 'NSW', label: 'NSW' },
+          { value: 'QLD', label: 'QLD' },
+          { value: 'VIC', label: 'VIC' },
+          { value: 'SA', label: 'SA' },
+          { value: 'WA', label: 'WA' },
+          { value: 'NT', label: 'NT' },
+          { value: 'TAS', label: 'TAS' }
+        ],
 
         async init() {
           ailFinderComponent = this;
@@ -542,6 +591,101 @@
           return [...new Set(this.filteredLocations.map(loc => loc.state))];
         },
 
+        // State filtering functionality
+        handleStateChange() {
+          console.log('🗺️ State filter changed to:', this.selectedState);
+          this.filterByState();
+          
+          // Always zoom to state when state is selected
+          if (this.selectedState !== 'all' && mapInitialized) {
+            console.log('🎯 Zooming to state:', this.selectedState);
+            setTimeout(() => {
+              this.zoomToState(this.selectedState);
+            }, 100);
+          } else if (this.selectedState === 'all' && mapInitialized) {
+            console.log('🌏 Zooming to Australia (All states)');
+            setTimeout(() => {
+              this.fitMapToAustralia();
+            }, 100);
+          }
+        },
+
+        filterByState() {
+          if (this.selectedState === 'all') {
+            this.filteredLocations = [...ailData];
+          } else {
+            this.filteredLocations = ailData.filter(location => location.state === this.selectedState);
+          }
+          
+          console.log(`📊 Filtered to ${this.filteredLocations.length} locations in ${this.selectedState}`);
+          
+          // Update map markers
+          if (mapInitialized) {
+            this.updateMapMarkers();
+          }
+        },
+
+        clearStateFilter() {
+          this.selectedState = 'all';
+          this.handleStateChange();
+        },
+
+        updateMapMarkers() {
+          // Hide all markers first
+          markers.forEach(marker => marker.setVisible(false));
+          
+          // Show only markers for filtered locations
+          markers.forEach(marker => {
+            const shouldShow = marker.ailsAtLocation.some(ail => 
+              this.filteredLocations.some(filtered => filtered.id === ail.id)
+            );
+            marker.setVisible(shouldShow);
+          });
+        },
+
+        zoomToState(state) {
+          console.log('🎯 zoomToState called for:', state);
+          if (!mapInitialized || !stateBounds[state]) {
+            console.log('❌ Map not ready or state bounds not found for:', state);
+            return;
+          }
+          
+          const bounds = stateBounds[state];
+          console.log('📍 Using bounds for', state, ':', bounds);
+          
+          // Switch to map tab if not already active
+          if (this.activeTab !== 'map') {
+            this.activeTab = 'map';
+          }
+          
+          setTimeout(() => {
+            google.maps.event.trigger(map, 'resize');
+            const mapBounds = new google.maps.LatLngBounds(
+              new google.maps.LatLng(bounds.south, bounds.west),
+              new google.maps.LatLng(bounds.north, bounds.east)
+            );
+            map.fitBounds(mapBounds);
+            console.log('✅ Fitted bounds for state:', state);
+            
+            // Add padding by slightly reducing zoom after fitting
+            setTimeout(() => {
+              const currentZoom = map.getZoom();
+              console.log('📏 Current zoom level:', currentZoom);
+              // Adjust zoom based on state size - smaller states get less reduction
+              let zoomReduction = 0.5;
+              if (['TAS', 'NT'].includes(state)) zoomReduction = 0.3;
+              if (['SA', 'VIC'].includes(state)) zoomReduction = 0.4;
+              if (['NSW', 'QLD', 'WA'].includes(state)) zoomReduction = 0.5;
+              
+              if (currentZoom > 5) {
+                const newZoom = Math.max(currentZoom - zoomReduction, 5);
+                map.setZoom(newZoom);
+                console.log('🔧 Adjusted zoom to:', newZoom, 'for better padding');
+              }
+            }, 200);
+          }, 50);
+        },
+
         setActiveTab(tab) {
           this.activeTab = tab;
           
@@ -586,7 +730,7 @@
             
             setTimeout(() => {
               const currentZoom = map.getZoom();
-              map.setZoom(Math.max(currentZoom - 0.3, 4.5));
+              map.setZoom(Math.max(currentZoom - 0.5, 4.0));  // More zoom out and lower minimum
             }, 300);
           }, 100);
         }
@@ -637,7 +781,7 @@
           
           setTimeout(() => {
             const currentZoom = map.getZoom();
-            map.setZoom(Math.max(currentZoom - 0.3, 4.5));
+            map.setZoom(Math.max(currentZoom - 0.5, 4.0));  // More zoom out and lower minimum
           }, 300);
         }, 100);
         
