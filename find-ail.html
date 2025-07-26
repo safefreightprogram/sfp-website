@@ -115,7 +115,7 @@
   </header>
 
   <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-4 py-4" x-data="ailFinder()" @marker-clicked="selectedLocation = $event.detail.ail">
+  <main class="max-w-7xl mx-auto px-4 py-4" x-data="ailFinder()">
 
     <!-- Side by Side Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -308,6 +308,9 @@
     let markers = [];
     let ailData = [];
     let mapInitialized = false;
+    
+    // Global reference to Alpine component for Google Maps callbacks
+    let ailFinderComponent = null;
 
     // Australia bounds for fitting map to country (tighter bounds focused on Australia only)
     const australiaBounds = {
@@ -472,6 +475,9 @@
         selectedIndex: -1,
 
         init() {
+          // Store reference to this component globally
+          ailFinderComponent = this;
+          
           ailData = rawAilData;
           this.filteredLocations = [...ailData];
           
@@ -628,17 +634,20 @@
         },
 
         handleStateChange() {
+          console.log('State changed to:', this.selectedState);
           this.filterLocations();
           
           // Always zoom to state when state is selected, regardless of result count
           if (this.selectedState !== 'all' && mapInitialized) {
+            console.log('Zooming to state:', this.selectedState);
             setTimeout(() => {
               this.zoomToState(this.selectedState);
-            }, 200);
+            }, 300);
           } else if (this.selectedState === 'all' && mapInitialized) {
+            console.log('Zooming to Australia');
             setTimeout(() => {
               this.fitMapToAustralia();
-            }, 200);
+            }, 300);
           }
         },
 
@@ -699,9 +708,14 @@
         },
 
         zoomToState(state) {
-          if (!mapInitialized || !stateBounds[state]) return;
+          console.log('zoomToState called for:', state);
+          if (!mapInitialized || !stateBounds[state]) {
+            console.log('Map not ready or state bounds not found');
+            return;
+          }
           
           const bounds = stateBounds[state];
+          console.log('Using bounds:', bounds);
           
           setTimeout(() => {
             google.maps.event.trigger(map, 'resize');
@@ -710,12 +724,15 @@
               new google.maps.LatLng(bounds.north, bounds.east)
             );
             map.fitBounds(mapBounds);
+            console.log('Fitted bounds for state:', state);
             
             // Add padding by slightly reducing zoom after fitting
             setTimeout(() => {
               const currentZoom = map.getZoom();
+              console.log('Current zoom:', currentZoom);
               if (currentZoom > 6) {
                 map.setZoom(currentZoom - 0.3); // Add some padding around the state
+                console.log('Adjusted zoom to:', currentZoom - 0.3);
               }
             }, 300);
           }, 100);
@@ -789,15 +806,10 @@
         }, 100);
         
         // Close info panel when clicking on map
-        map.addListener('click', function(event) {
-          console.log('Map clicked');
-          const mapElement = document.querySelector('[x-data]');
-          if (mapElement && mapElement._x_dataStack) {
-            const appComponent = mapElement._x_dataStack[0];
-            if (appComponent && appComponent.selectedLocation) {
-              console.log('Closing popup');
-              appComponent.selectedLocation = null;
-            }
+        map.addListener('click', function() {
+          console.log('🗺️ Map clicked - closing popup');
+          if (ailFinderComponent && ailFinderComponent.selectedLocation) {
+            ailFinderComponent.selectedLocation = null;
           }
         });
         
@@ -850,50 +862,20 @@
           // Store reference to all AILs at this location
           marker.ailsAtLocation = ailsAtLocation;
 
-          marker.addListener("click", (event) => {
-            console.log('Marker clicked for:', primaryAIL.company);
+          marker.addListener("click", () => {
+            console.log('🖱️ Marker clicked for:', primaryAIL.company);
             
-            // Stop event propagation to prevent map click
-            if (event && event.stop) {
-              event.stop();
-            }
-            
-            // Try multiple methods to access Alpine.js component
-            const mapElement = document.querySelector('[x-data]');
-            
-            // Method 1: Try Alpine's direct access
-            try {
-              if (window.Alpine && mapElement._x_dataStack) {
-                const appComponent = mapElement._x_dataStack[0];
-                appComponent.selectedLocation = primaryAIL;
-                console.log('Method 1 success - selectedLocation set');
-                return;
-              }
-            } catch (e) {
-              console.log('Method 1 failed:', e);
-            }
-            
-            // Method 2: Try direct property access
-            try {
-              if (mapElement.__x) {
-                const appComponent = mapElement.__x.$data;
-                appComponent.selectedLocation = primaryAIL;
-                console.log('Method 2 success - selectedLocation set');
-                return;
-              }
-            } catch (e) {
-              console.log('Method 2 failed:', e);
-            }
-            
-            // Method 3: Dispatch custom event as fallback
-            try {
-              const customEvent = new CustomEvent('markerClicked', {
-                detail: { ail: primaryAIL }
+            // Use global reference to Alpine component
+            if (ailFinderComponent) {
+              console.log('✅ Setting selectedLocation via global reference');
+              ailFinderComponent.selectedLocation = primaryAIL;
+              
+              // Force Alpine to update the UI
+              ailFinderComponent.$nextTick(() => {
+                console.log('✅ Alpine UI updated, popup should be visible');
               });
-              mapElement.dispatchEvent(customEvent);
-              console.log('Method 3 - dispatched custom event');
-            } catch (e) {
-              console.log('Method 3 failed:', e);
+            } else {
+              console.error('❌ Global ailFinderComponent not available');
             }
           });
 
