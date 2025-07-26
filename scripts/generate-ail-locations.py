@@ -29,7 +29,5 @@ def convert_sheet_to_json(csv_url, output_file='ail-locations.json'):
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
-    print(f"✅ JSON file written with {len(data)} records to {output_file}")
-
-# Example usage:
+# Run the function
 convert_sheet_to_json("https://docs.google.com/spreadsheets/d/1q4SFo83xPIysakFXTwIRFq0vDGIib3d0ZqEEP6vQdEs/export?format=csv")
