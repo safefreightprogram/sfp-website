@@ -778,8 +778,12 @@
           return degrees * (Math.PI/180);
         },
 
-        // Enhanced filtering with new data structure
+        // Enhanced filtering with immediate marker updates
         filterLocations() {
+          console.log('🔍 Filtering locations...');
+          console.log('📝 Search text:', this.searchText);
+          console.log('🏛️ Selected state:', this.selectedState);
+          
           this.filteredLocations = ailData.filter(location => {
             // Enhanced search across multiple fields
             const searchFields = [
@@ -797,11 +801,17 @@
             return matchesSearch && matchesState;
           });
           
+          console.log('📊 Filtered results:', this.filteredLocations.length, 'out of', ailData.length);
+          
+          // Update map markers immediately when filtering
           if (this.activeTab === 'map' && mapInitialized) {
+            console.log('🗺️ Updating map markers for current filters');
             filterMapMarkers();
+            
+            // Smart zoom after marker filtering
             setTimeout(() => {
               this.smartZoomToResults();
-            }, 200);
+            }, 150);
           }
         },
 
@@ -909,27 +919,43 @@
         },
 
         clearFilters() {
+          console.log('🧹 Clearing all filters');
           this.searchText = '';
           this.selectedState = 'all';
           this.showAutocomplete = false;
           this.autocompleteItems = [];
           this.selectedIndex = -1;
           this.userLocation = null;
+          
+          // Filter locations and update markers
           this.filterLocations();
           
           if (mapInitialized) {
-            this.fitMapToAustralia();
+            console.log('🌏 Resetting map to show all Australia');
+            // Small delay to ensure markers are updated first
+            setTimeout(() => {
+              this.fitMapToAustralia();
+            }, 100);
           }
         },
 
         setActiveTab(tab) {
+          console.log('📋 Switching to tab:', tab);
           this.activeTab = tab;
           
           if (tab === 'map' && mapInitialized) {
             setTimeout(() => {
               google.maps.event.trigger(map, 'resize');
+              
+              // Apply current filters to map when switching to map view
+              console.log('🗺️ Applying current filters to map view');
+              filterMapMarkers();
+              
+              // Determine appropriate zoom based on current state
               if (this.selectedState === 'all') {
                 this.fitMapToAustralia();
+              } else {
+                this.zoomToState(this.selectedState);
               }
             }, 100);
           }
@@ -1141,7 +1167,15 @@
       const appComponent = document.querySelector('[x-data]').__x.$data;
       if (!appComponent) return;
       
-      markers.forEach(marker => {
+      console.log('🗺️ Filtering map markers based on current filters...');
+      console.log('📍 Search text:', appComponent.searchText);
+      console.log('🏛️ Selected state:', appComponent.selectedState);
+      
+      let visibleCount = 0;
+      let hiddenCount = 0;
+      
+      markers.forEach((marker, index) => {
+        // Check if any AIL at this marker location matches the current filters
         const shouldShow = marker.ailsAtLocation.some(ail => {
           // Enhanced search across multiple fields
           const searchFields = [
@@ -1160,8 +1194,27 @@
           return matchesSearch && matchesState;
         });
         
+        // Show/hide marker based on filter results
         marker.setVisible(shouldShow);
+        
+        if (shouldShow) {
+          visibleCount++;
+        } else {
+          hiddenCount++;
+        }
       });
+      
+      console.log(`✅ Marker filtering complete: ${visibleCount} visible, ${hiddenCount} hidden`);
+      
+      // If we're filtering by state and have results, ensure the map shows the state bounds
+      if (appComponent.selectedState !== 'all' && visibleCount > 0) {
+        console.log('🎯 State filter active with results - ensuring state bounds are visible');
+        setTimeout(() => {
+          if (ailFinderComponent) {
+            ailFinderComponent.zoomToState(appComponent.selectedState);
+          }
+        }, 100);
+      }
     }
 
     window.initMap = initMap;
