@@ -115,7 +115,7 @@
   </header>
 
   <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-4 py-4" x-data="ailFinder()">
+  <main class="max-w-7xl mx-auto px-4 py-4" x-data="ailFinder()" @marker-clicked="selectedLocation = $event.detail.ail">
 
     <!-- Side by Side Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -577,6 +577,11 @@
         smartZoomToResults() {
           if (!mapInitialized || this.filteredLocations.length === 0) return;
           
+          // If a specific state is selected, always zoom to that state (don't override with result-based zooming)
+          if (this.selectedState !== 'all') {
+            return; // Let handleStateChange handle the zooming
+          }
+          
           // If 1 result, zoom to that specific location
           if (this.filteredLocations.length === 1) {
             this.zoomToLocation(this.filteredLocations[0]);
@@ -589,14 +594,8 @@
             return;
           }
           
-          // If more than 10 results and state is selected, zoom to state
-          if (this.filteredLocations.length > 10 && this.selectedState !== 'all') {
-            this.zoomToState(this.selectedState);
-            return;
-          }
-          
-          // Default: show all of Australia
-          if (this.filteredLocations.length > 10 && this.selectedState === 'all') {
+          // Default: show all of Australia for many results
+          if (this.filteredLocations.length > 10) {
             this.fitMapToAustralia();
           }
         },
@@ -631,11 +630,15 @@
         handleStateChange() {
           this.filterLocations();
           
-          // Zoom to state if specific state selected
+          // Always zoom to state when state is selected, regardless of result count
           if (this.selectedState !== 'all' && mapInitialized) {
-            this.zoomToState(this.selectedState);
+            setTimeout(() => {
+              this.zoomToState(this.selectedState);
+            }, 200);
           } else if (this.selectedState === 'all' && mapInitialized) {
-            this.fitMapToAustralia();
+            setTimeout(() => {
+              this.fitMapToAustralia();
+            }, 200);
           }
         },
 
@@ -707,6 +710,14 @@
               new google.maps.LatLng(bounds.north, bounds.east)
             );
             map.fitBounds(mapBounds);
+            
+            // Add padding by slightly reducing zoom after fitting
+            setTimeout(() => {
+              const currentZoom = map.getZoom();
+              if (currentZoom > 6) {
+                map.setZoom(currentZoom - 0.3); // Add some padding around the state
+              }
+            }, 300);
           }, 100);
         },
 
@@ -779,10 +790,14 @@
         
         // Close info panel when clicking on map
         map.addListener('click', function(event) {
-          const appComponent = document.querySelector('[x-data]').__x.$data;
-          if (appComponent && appComponent.selectedLocation) {
-            appComponent.selectedLocation = null;
-            console.log('Map clicked, closing info popup');
+          console.log('Map clicked');
+          const mapElement = document.querySelector('[x-data]');
+          if (mapElement && mapElement._x_dataStack) {
+            const appComponent = mapElement._x_dataStack[0];
+            if (appComponent && appComponent.selectedLocation) {
+              console.log('Closing popup');
+              appComponent.selectedLocation = null;
+            }
           }
         });
         
@@ -836,21 +851,49 @@
           marker.ailsAtLocation = ailsAtLocation;
 
           marker.addListener("click", (event) => {
-            // Stop event propagation to prevent map click
-            event.stop();
+            console.log('Marker clicked for:', primaryAIL.company);
             
-            const appComponent = document.querySelector('[x-data]').__x.$data;
-            if (appComponent) {
-              // Show the primary AIL, but the popup will display all AILs at location
-              appComponent.selectedLocation = primaryAIL;
-              
-              // Force a UI update
-              appComponent.$nextTick(() => {
-                // Ensure the popup is visible
-                if (appComponent.selectedLocation) {
-                  console.log('Marker clicked, showing info for:', appComponent.selectedLocation.company);
-                }
+            // Stop event propagation to prevent map click
+            if (event && event.stop) {
+              event.stop();
+            }
+            
+            // Try multiple methods to access Alpine.js component
+            const mapElement = document.querySelector('[x-data]');
+            
+            // Method 1: Try Alpine's direct access
+            try {
+              if (window.Alpine && mapElement._x_dataStack) {
+                const appComponent = mapElement._x_dataStack[0];
+                appComponent.selectedLocation = primaryAIL;
+                console.log('Method 1 success - selectedLocation set');
+                return;
+              }
+            } catch (e) {
+              console.log('Method 1 failed:', e);
+            }
+            
+            // Method 2: Try direct property access
+            try {
+              if (mapElement.__x) {
+                const appComponent = mapElement.__x.$data;
+                appComponent.selectedLocation = primaryAIL;
+                console.log('Method 2 success - selectedLocation set');
+                return;
+              }
+            } catch (e) {
+              console.log('Method 2 failed:', e);
+            }
+            
+            // Method 3: Dispatch custom event as fallback
+            try {
+              const customEvent = new CustomEvent('markerClicked', {
+                detail: { ail: primaryAIL }
               });
+              mapElement.dispatchEvent(customEvent);
+              console.log('Method 3 - dispatched custom event');
+            } catch (e) {
+              console.log('Method 3 failed:', e);
             }
           });
 
