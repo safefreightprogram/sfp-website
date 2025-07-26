@@ -309,12 +309,12 @@
     let ailData = [];
     let mapInitialized = false;
 
-    // Australia bounds for fitting map to country (more generous bounds)
+    // Australia bounds for fitting map to country (tighter bounds focused on Australia only)
     const australiaBounds = {
-      north: -9.0,    // Further north to include all of Queensland/NT
-      south: -44.0,   // Include all of Tasmania
-      west: 112.0,    // Include all of Western Australia
-      east: 154.0     // Include all of Queensland/NSW coast
+      north: -9.5,    // Northern Australia (exclude Indonesia)
+      south: -43.5,   // Include Tasmania but not too much ocean
+      west: 113.0,    // Western Australia (exclude Indian Ocean islands)
+      east: 153.0     // Eastern Australia (exclude too much Pacific)
     };
 
     // State/Territory bounds for proper fitting
@@ -481,6 +481,13 @@
               initMap();
             }
           }, 500);
+          
+          // Backup initialization - try again if map isn't ready
+          setTimeout(() => {
+            if (window.google && window.google.maps && mapInitialized && markers.length === 0) {
+              loadMarkers();
+            }
+          }, 2000);
         },
 
         handleSearchInput() {
@@ -717,9 +724,9 @@
             // Fine-tune the padding for better fit
             setTimeout(() => {
               const currentZoom = map.getZoom();
-              // Add slight padding by reducing zoom a bit
-              if (currentZoom > 4) {
-                map.setZoom(currentZoom - 0.3);
+              // Add slight padding by reducing zoom a bit, but keep it focused
+              if (currentZoom > 5) {
+                map.setZoom(currentZoom - 0.2);
               }
             }, 300);
           }, 100);
@@ -734,6 +741,10 @@
           zoom: 5,
           center: { lat: -25.2744, lng: 133.7751 }, // Center of Australia
           mapTypeId: 'roadmap',
+          zoomControl: true, // Enable zoom controls (+/- buttons)
+          zoomControlOptions: {
+            position: google.maps.ControlPosition.RIGHT_CENTER
+          },
           styles: [
             {
               featureType: "poi",
@@ -745,30 +756,33 @@
 
         mapInitialized = true;
         
-        // Fit map to Australia bounds on initial load
-        const bounds = new google.maps.LatLngBounds(
-          new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
-          new google.maps.LatLng(australiaBounds.north, australiaBounds.east)
-        );
-        map.fitBounds(bounds);
-        
-        // Fine-tune after initial fit
-        setTimeout(() => {
-          const currentZoom = map.getZoom();
-          // Reduce zoom slightly for better padding
-          if (currentZoom > 4) {
-            map.setZoom(currentZoom - 0.3);
-          }
-        }, 500);
-        
-        // Add markers
+        // Add markers first, before fitting bounds
         loadMarkers();
         
+        // Then fit map to Australia bounds
+        setTimeout(() => {
+          const bounds = new google.maps.LatLngBounds(
+            new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
+            new google.maps.LatLng(australiaBounds.north, australiaBounds.east)
+          );
+          map.fitBounds(bounds);
+          
+          // Fine-tune after initial fit
+          setTimeout(() => {
+            const currentZoom = map.getZoom();
+            // Reduce zoom slightly for better padding, but not too much
+            if (currentZoom > 5) {
+              map.setZoom(currentZoom - 0.2);
+            }
+          }, 300);
+        }, 100);
+        
         // Close info panel when clicking on map
-        map.addListener('click', function() {
+        map.addListener('click', function(event) {
           const appComponent = document.querySelector('[x-data]').__x.$data;
-          if (appComponent) {
+          if (appComponent && appComponent.selectedLocation) {
             appComponent.selectedLocation = null;
+            console.log('Map clicked, closing info popup');
           }
         });
         
@@ -821,11 +835,22 @@
           // Store reference to all AILs at this location
           marker.ailsAtLocation = ailsAtLocation;
 
-          marker.addListener("click", () => {
+          marker.addListener("click", (event) => {
+            // Stop event propagation to prevent map click
+            event.stop();
+            
             const appComponent = document.querySelector('[x-data]').__x.$data;
             if (appComponent) {
               // Show the primary AIL, but the popup will display all AILs at location
               appComponent.selectedLocation = primaryAIL;
+              
+              // Force a UI update
+              appComponent.$nextTick(() => {
+                // Ensure the popup is visible
+                if (appComponent.selectedLocation) {
+                  console.log('Marker clicked, showing info for:', appComponent.selectedLocation.company);
+                }
+              });
             }
           });
 
