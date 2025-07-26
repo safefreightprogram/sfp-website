@@ -1,6 +1,6 @@
 [
   {
-    "id": 239,
+    "id": "239",
     "name": "Aero Refuellers",
     "address": "Hanger 8-11 Ogden Street",
     "suburb": "East Albury",
@@ -8,11 +8,11 @@
     "postcode": "2640",
     "inspector": "-",
     "phone": "02 6041 1599",
-    "lat": -36.071665,
-    "lng": 146.9537581
+    "lat": "-36.071665",
+    "lng": "146.9537581"
   },
   {
-    "id": 222,
+    "id": "222",
     "name": "Australian Fuelling Systems & Equip",
     "address": "7-11 Armstrong Street",
     "suburb": "Tamworth",
@@ -20,11 +20,11 @@
     "postcode": "2340",
     "inspector": "-",
     "phone": "02 6760 7816",
-    "lat": -31.0791106,
-    "lng": 150.8532199
+    "lat": "-31.0791106",
+    "lng": "150.8532199"
   },
   {
-    "id": 220,
+    "id": "220",
     "name": "Doug Sutherland Truck Repairs",
     "address": "222 Urana Street",
     "suburb": "Wagga Wagga",
@@ -32,11 +32,11 @@
     "postcode": "2650",
     "inspector": "-",
     "phone": "02 6925 2094",
-    "lat": -35.1252742,
-    "lng": 147.3413631
+    "lat": "-35.1252742",
+    "lng": "147.3413631"
   },
   {
-    "id": 207,
+    "id": "207",
     "name": "Durham Fabrications",
     "address": "4 Ranton Street",
     "suburb": "Cardiff",
@@ -44,23 +44,23 @@
     "postcode": "2285",
     "inspector": "-",
     "phone": "02 4956 8868",
-    "lat": -32.9444557,
-    "lng": 151.6476872
+    "lat": "-32.9444557",
+    "lng": "151.6476872"
   },
   {
-    "id": 208,
+    "id": "208",
     "name": "Durham Fabrications",
-    "address": NaN,
-    "suburb": NaN,
+    "address": null,
+    "suburb": null,
     "state": "NSW",
     "postcode": "2285",
     "inspector": "Luke Howson",
     "phone": "02 4956 8868",
-    "lat": -32.9110348,
-    "lng": 151.6187438
+    "lat": "-32.9110348",
+    "lng": "151.6187438"
   },
   {
-    "id": 241,
+    "id": "241",
     "name": "Engineering, Mining, Petroleum Pty Ltd",
     "address": "1015 Armidale Road ",
     "suburb": "Nemingha",
@@ -68,11 +68,11 @@
     "postcode": "2340",
     "inspector": "-",
     "phone": "02 6760 9548",
-    "lat": -31.1241211,
-    "lng": 150.9866511
+    "lat": "-31.1241211",
+    "lng": "150.9866511"
   },
   {
-    "id": 237,
+    "id": "237",
     "name": "Express Engineering Australia Pty Ltd",
     "address": "20R Yarrandale Road",
     "suburb": "Dubbo",
@@ -80,11 +80,11 @@
     "postcode": "2830",
     "inspector": "-",
     "phone": "02 6884 2723",
-    "lat": -32.2238944,
-    "lng": 148.6320896
+    "lat": "-32.2238944",
+    "lng": "148.6320896"
   },
   {
-    "id": 201,
+    "id": "201",
     "name": "Fuel Spec Services",
     "address": "13 Hume Road ",
     "suburb": "Smithfield",
@@ -92,23 +92,23 @@
     "postcode": "2164",
     "inspector": "-",
     "phone": "1300 113 541",
-    "lat": -33.8377348,
-    "lng": 150.9312227
+    "lat": "-33.8377348",
+    "lng": "150.9312227"
   },
   {
-    "id": 205,
+    "id": "205",
     "name": "Fuel Spec Services",
-    "address": NaN,
-    "suburb": NaN,
+    "address": null,
+    "suburb": null,
     "state": "NSW",
     "postcode": "2164",
     "inspector": "Steve Hudson",
     "phone": "1301 113 541",
-    "lat": -33.8492918,
-    "lng": 150.9132815
+    "lat": "-33.8492918",
+    "lng": "150.9132815"
   },
   {
-    "id": 221,
+    "id": "221",
     "name": "Hancock & Owen Services Pty Ltd",
     "address": "38 Parker Street",
     "suburb": "Carrington",
@@ -116,11 +116,11 @@
     "postcode": "2294",
     "inspector": "-",
     "phone": "02 4969 5390",
-    "lat": -32.905424,
-    "lng": 151.7666222
+    "lat": "-32.905424",
+    "lng": "151.7666222"
   },
   {
-    "id": 235,
+    "id": "235",
     "name": "Heavy Haulage Maintenance",
     "address": "28 Old Punt Road",
     "suburb": "Tomago",
@@ -128,11 +128,11 @@
     "postcode": "2322",
     "inspector": "-",
     "phone": "02 4964 9475",
-    "lat": -32.8209927,
-    "lng": 151.7028008
+    "lat": "-32.8209927",
+    "lng": "151.7028008"
   },
   {
-    "id": 200,
+    "id": "200",
     "name": "WBG Trailer Repairs",
     "address": "Lot 1 Yarrunga Road",
     "suburb": "Prestons",
@@ -140,11 +140,11 @@
     "postcode": "2170",
     "inspector": "-",
     "phone": "02 9608 2288",
-    "lat": -33.9363776,
-    "lng": 150.8603357
+    "lat": "-33.9363776",
+    "lng": "150.8603357"
   },
   {
-    "id": 410,
+    "id": "410",
     "name": "Brown & Hurley",
     "address": "2 Central Park Drive",
     "suburb": "South Mackay",
@@ -152,11 +152,11 @@
     "postcode": "4740",
     "inspector": "-",
     "phone": "07 4952 3722",
-    "lat": -21.1755649,
-    "lng": 149.1661223
+    "lat": "-21.1755649",
+    "lng": "149.1661223"
   },
   {
-    "id": 462,
+    "id": "462",
     "name": "Brown and Hurley",
     "address": "28-30 Carrington Road",
     "suburb": "Torrington",
@@ -164,11 +164,11 @@
     "postcode": "4350",
     "inspector": "-",
     "phone": "07 4690 7300",
-    "lat": -27.5487615,
-    "lng": 151.8968995
+    "lat": "-27.5487615",
+    "lng": "151.8968995"
   },
   {
-    "id": 424,
+    "id": "424",
     "name": "Central Coast Services Mackay",
     "address": "Lot 1 Presto Avenue",
     "suburb": "Outer Harbour",
@@ -176,11 +176,11 @@
     "postcode": "4740",
     "inspector": "-",
     "phone": "07 4955 4922",
-    "lat": -21.1101141,
-    "lng": 149.2110353
+    "lat": "-21.1101141",
+    "lng": "149.2110353"
   },
   {
-    "id": 452,
+    "id": "452",
     "name": "CQ Diesel Fitting",
     "address": "23 Bensted Road",
     "suburb": "Gladstone",
@@ -188,11 +188,11 @@
     "postcode": "4680",
     "inspector": "-",
     "phone": "07 4972 7401",
-    "lat": -23.8584217,
-    "lng": 151.229545
+    "lat": "-23.8584217",
+    "lng": "151.229545"
   },
   {
-    "id": 460,
+    "id": "460",
     "name": "CQ Diesel Fitting",
     "address": "87 Links Avenue ",
     "suburb": "Eagle Farm",
@@ -200,11 +200,11 @@
     "postcode": "4009",
     "inspector": "-",
     "phone": "07 3268 2543",
-    "lat": -27.4374068,
-    "lng": 153.0867816
+    "lat": "-27.4374068",
+    "lng": "153.0867816"
   },
   {
-    "id": 461,
+    "id": "461",
     "name": "CQ Diesel Fitting",
     "address": "112 Spiller Avenue",
     "suburb": "Outer Harbour",
@@ -212,11 +212,11 @@
     "postcode": "4740",
     "inspector": "-",
     "phone": "07 4955 0324",
-    "lat": -21.1007206,
-    "lng": 149.2153069
+    "lat": "-21.1007206",
+    "lng": "149.2153069"
   },
   {
-    "id": 415,
+    "id": "415",
     "name": "Fuel Service Australia",
     "address": "29 Sandmere Road ",
     "suburb": "Pinkenba",
@@ -224,11 +224,11 @@
     "postcode": "4008",
     "inspector": "Kent Frantz",
     "phone": "0433 450 603",
-    "lat": -27.392153,
-    "lng": 153.1418447
+    "lat": "-27.392153",
+    "lng": "153.1418447"
   },
   {
-    "id": 411,
+    "id": "411",
     "name": "Haulmark Trailers (Australia)",
     "address": "32 Suscatand Street ",
     "suburb": "Rocklea",
@@ -236,11 +236,11 @@
     "postcode": "4106",
     "inspector": "-",
     "phone": "07 3277 8844",
-    "lat": -27.5576397,
-    "lng": 152.9970275
+    "lat": "-27.5576397",
+    "lng": "152.9970275"
   },
   {
-    "id": 412,
+    "id": "412",
     "name": "Haulmark Trailers (Australia)",
     "address": "42 Kupfer Drive ",
     "suburb": "Roseneath",
@@ -248,11 +248,11 @@
     "postcode": "4817",
     "inspector": "-",
     "phone": "07 4144 2803",
-    "lat": -19.3759709,
-    "lng": 146.8333008
+    "lat": "-19.3759709",
+    "lng": "146.8333008"
   },
   {
-    "id": 405,
+    "id": "405",
     "name": "Holmwood Highgate (Aust) Pty Ltd",
     "address": "20 Burchill Street",
     "suburb": "Loganholme",
@@ -260,11 +260,11 @@
     "postcode": "4129",
     "inspector": "-",
     "phone": "07 3440 9000",
-    "lat": -27.6821993,
-    "lng": 153.191783
+    "lat": "-27.6821993",
+    "lng": "153.191783"
   },
   {
-    "id": 401,
+    "id": "401",
     "name": "Liquip Sales (QLD) Pty Ltd",
     "address": "730 Macarthur Avenue",
     "suburb": "Pinkenba",
@@ -272,11 +272,11 @@
     "postcode": "4008",
     "inspector": "-",
     "phone": "07 3633 9100",
-    "lat": -27.4403414,
-    "lng": 153.0784498
+    "lat": "-27.4403414",
+    "lng": "153.0784498"
   },
   {
-    "id": 414,
+    "id": "414",
     "name": "Liquip Sales NQ",
     "address": "659-665 Ingham Road",
     "suburb": "Bohle",
@@ -284,11 +284,11 @@
     "postcode": "4814",
     "inspector": "-",
     "phone": "07 4774 8060",
-    "lat": -19.260684,
-    "lng": 146.73731
+    "lat": "-19.260684",
+    "lng": "146.73731"
   },
   {
-    "id": 407,
+    "id": "407",
     "name": "Northern Refuelling Maintenance Pty Ltd",
     "address": "3 Marsh Street",
     "suburb": "Woree",
@@ -296,11 +296,11 @@
     "postcode": "4868",
     "inspector": "-",
     "phone": "07 4033 2199",
-    "lat": -16.9574228,
-    "lng": 145.7520655
+    "lat": "-16.9574228",
+    "lng": "145.7520655"
   },
   {
-    "id": 435,
+    "id": "435",
     "name": "NQ Fuel & Maintenance",
     "address": "485 Woolcock Street",
     "suburb": "Garbutt",
@@ -308,23 +308,23 @@
     "postcode": "4814",
     "inspector": "-",
     "phone": "07 4774 3334",
-    "lat": -19.2671514,
-    "lng": 146.7543566
+    "lat": "-19.2671514",
+    "lng": "146.7543566"
   },
   {
-    "id": 436,
+    "id": "436",
     "name": "NQ Fuel & Maintenance",
-    "address": NaN,
-    "suburb": NaN,
+    "address": null,
+    "suburb": null,
     "state": "QLD",
     "postcode": "4814",
     "inspector": "Ray Lowth",
     "phone": "07 4774 3334",
-    "lat": -19.2878252,
-    "lng": 146.7552341
+    "lat": "-19.2878252",
+    "lng": "146.7552341"
   },
   {
-    "id": 432,
+    "id": "432",
     "name": "NQ Petro Pty Ltd",
     "address": "14 Atticus Street",
     "suburb": "Woree",
@@ -332,11 +332,11 @@
     "postcode": "4868",
     "inspector": "-",
     "phone": "07 4054 5100",
-    "lat": -16.9549579,
-    "lng": 145.7481359
+    "lat": "-16.9549579",
+    "lng": "145.7481359"
   },
   {
-    "id": 408,
+    "id": "408",
     "name": "Queensland Tanker Services",
     "address": "3-5 Vennard Street",
     "suburb": "Townsville",
@@ -344,23 +344,23 @@
     "postcode": "4810",
     "inspector": "-",
     "phone": "0417 356 568",
-    "lat": -19.2697953,
-    "lng": 146.7560216
+    "lat": "-19.2697953",
+    "lng": "146.7560216"
   },
   {
-    "id": 409,
+    "id": "409",
     "name": "Queensland Tanker Services",
-    "address": NaN,
-    "suburb": NaN,
+    "address": null,
+    "suburb": null,
     "state": "QLD",
     "postcode": "4810",
     "inspector": "Andrew Bates",
     "phone": "0417 356 568",
-    "lat": -19.35682,
-    "lng": 147.0379125
+    "lat": "-19.35682",
+    "lng": "147.0379125"
   },
   {
-    "id": 426,
+    "id": "426",
     "name": "RGM Maintenance Pty Ltd",
     "address": "32 Ashover Road",
     "suburb": "Rocklea",
@@ -368,11 +368,11 @@
     "postcode": "4106",
     "inspector": "-",
     "phone": "07 3277 7616",
-    "lat": -27.559777,
-    "lng": 153.0085609
+    "lat": "-27.559777",
+    "lng": "153.0085609"
   },
   {
-    "id": 427,
+    "id": "427",
     "name": "RGM Maintenance Pty Ltd",
     "address": "24 Curley Circuit",
     "suburb": "Roseneath",
@@ -380,11 +380,11 @@
     "postcode": "4817",
     "inspector": "-",
     "phone": "07 4421 9100",
-    "lat": -19.3747045,
-    "lng": 146.830337
+    "lat": "-19.3747045",
+    "lng": "146.830337"
   },
   {
-    "id": 418,
+    "id": "418",
     "name": "RGM Maintenance Pty Ltd",
     "address": "24 Curley Circuit",
     "suburb": "Roseneath",
@@ -392,11 +392,11 @@
     "postcode": "4817",
     "inspector": "Rob Peace",
     "phone": "07 4421 9100",
-    "lat": -19.3747045,
-    "lng": 146.830337
+    "lat": "-19.3747045",
+    "lng": "146.830337"
   },
   {
-    "id": 465,
+    "id": "465",
     "name": "RGM Maintenance Pty Ltd",
     "address": "500 Milton Street",
     "suburb": "Paget",
@@ -404,11 +404,11 @@
     "postcode": "4740",
     "inspector": "-",
     "phone": "0406 495 734",
-    "lat": -21.1891009,
-    "lng": 149.1706871
+    "lat": "-21.1891009",
+    "lng": "149.1706871"
   },
   {
-    "id": 417,
+    "id": "417",
     "name": "RGM Maintenance Pty Ltd",
     "address": "500 Milton Street",
     "suburb": "Paget",
@@ -416,11 +416,11 @@
     "postcode": "4740",
     "inspector": "Lachlan Drew",
     "phone": "0406 495 734",
-    "lat": -21.1891009,
-    "lng": 149.1706871
+    "lat": "-21.1891009",
+    "lng": "149.1706871"
   },
   {
-    "id": 470,
+    "id": "470",
     "name": "RGM Maintenance Pty Ltd",
     "address": "351 Main Myrtletown Road ",
     "suburb": "Pinkenba",
@@ -428,11 +428,11 @@
     "postcode": "4008",
     "inspector": "-",
     "phone": "07 3260 1224",
-    "lat": -27.4159631,
-    "lng": 153.1255774
+    "lat": "-27.4159631",
+    "lng": "153.1255774"
   },
   {
-    "id": 471,
+    "id": "471",
     "name": "RGM Maintenance Pty Ltd",
     "address": "63-67 Aumuller Street ",
     "suburb": "Portsmouth",
@@ -440,11 +440,11 @@
     "postcode": "4868",
     "inspector": "-",
     "phone": "07 4080 7500",
-    "lat": -16.9409518,
-    "lng": 145.7658438
+    "lat": "-16.9409518",
+    "lng": "145.7658438"
   },
   {
-    "id": 472,
+    "id": "472",
     "name": "RGM Maintenance Pty Ltd",
     "address": "1033 Bruce Hwy",
     "suburb": "Parkhurst",
@@ -452,23 +452,23 @@
     "postcode": "4701",
     "inspector": "-",
     "phone": "07 4923 1000",
-    "lat": -23.2861232,
-    "lng": 150.5089416
+    "lat": "-23.2861232",
+    "lng": "150.5089416"
   },
   {
-    "id": 457,
+    "id": "457",
     "name": "Stephen Symes",
     "address": "Mobile Inspector",
-    "suburb": NaN,
+    "suburb": null,
     "state": "QLD",
     "postcode": "-",
     "inspector": "Stephen Symes",
     "phone": "0403 277 637",
-    "lat": -22.575197,
-    "lng": 144.0847926
+    "lat": "-22.575197",
+    "lng": "144.0847926"
   },
   {
-    "id": 416,
+    "id": "416",
     "name": "Sustar Engineering Pty Ltd",
     "address": "Lot 244 Fison Street",
     "suburb": "Gladstone",
@@ -476,11 +476,11 @@
     "postcode": "4680",
     "inspector": "-",
     "phone": "07 4972 5366",
-    "lat": -23.8415948,
-    "lng": 151.2497708
+    "lat": "-23.8415948",
+    "lng": "151.2497708"
   },
   {
-    "id": 305,
+    "id": "305",
     "name": "Acme Oil Equipment Services Pty Ltd",
     "address": "32 Greens Road",
     "suburb": "Dandenong South",
@@ -488,11 +488,11 @@
     "postcode": "3175",
     "inspector": "-",
     "phone": "03 9791 3255",
-    "lat": -38.015738,
-    "lng": 145.2209347
+    "lat": "-38.015738",
+    "lng": "145.2209347"
   },
   {
-    "id": 320,
+    "id": "320",
     "name": "Australian Tank Engineering",
     "address": "29-31 Vella Drive",
     "suburb": "Sunshine",
@@ -500,11 +500,11 @@
     "postcode": "3020",
     "inspector": "-",
     "phone": "03 9310 2722",
-    "lat": -37.8056095,
-    "lng": 144.828958
+    "lat": "-37.8056095",
+    "lng": "144.828958"
   },
   {
-    "id": 310,
+    "id": "310",
     "name": "Echuca Engineering",
     "address": "13 Mundarra Road",
     "suburb": "Echuca",
@@ -512,11 +512,11 @@
     "postcode": "3564",
     "inspector": "-",
     "phone": "03 5480 6921",
-    "lat": -36.141996,
-    "lng": 144.762877
+    "lat": "-36.141996",
+    "lng": "144.762877"
   },
   {
-    "id": 304,
+    "id": "304",
     "name": "Evolution Tanker Repairs",
     "address": "371 Rossiter Road",
     "suburb": "Koo Wee Rup",
@@ -524,11 +524,11 @@
     "postcode": "3981",
     "inspector": "-",
     "phone": "0424 099 314",
-    "lat": -38.19564,
-    "lng": 145.497366
+    "lat": "-38.19564",
+    "lng": "145.497366"
   },
   {
-    "id": 313,
+    "id": "313",
     "name": "G & S Bigham",
     "address": "87 Golf Course Road",
     "suburb": "Horsham",
@@ -536,11 +536,11 @@
     "postcode": "3400",
     "inspector": "-",
     "phone": "03 5382 5893",
-    "lat": -36.7376332,
-    "lng": 142.1970197
+    "lat": "-36.7376332",
+    "lng": "142.1970197"
   },
   {
-    "id": 303,
+    "id": "303",
     "name": "Holmwood Group VIC",
     "address": "425 Fitzgerald Road",
     "suburb": "Derrimut",
@@ -548,11 +548,11 @@
     "postcode": "3030",
     "inspector": "-",
     "phone": "03 9936 0360",
-    "lat": -37.8008048,
-    "lng": 144.787899
+    "lat": "-37.8008048",
+    "lng": "144.787899"
   },
   {
-    "id": 324,
+    "id": "324",
     "name": "Johnson's Truck & Coach Service Pty Ltd",
     "address": "579 Benetook Avenue",
     "suburb": "Mildura",
@@ -560,11 +560,11 @@
     "postcode": "3500",
     "inspector": "-",
     "phone": "03 5024 4666",
-    "lat": -34.2092698,
-    "lng": 142.1616144
+    "lat": "-34.2092698",
+    "lng": "142.1616144"
   },
   {
-    "id": 322,
+    "id": "322",
     "name": "Liquip Victoria (Fuelcraft)",
     "address": "476 Boundary Rd",
     "suburb": "Derrimut",
@@ -572,11 +572,11 @@
     "postcode": "3030",
     "inspector": "-",
     "phone": "03 9311 7822",
-    "lat": -37.8104863,
-    "lng": 144.759139
+    "lat": "-37.8104863",
+    "lng": "144.759139"
   },
   {
-    "id": 302,
+    "id": "302",
     "name": "Marshall Lethlean",
     "address": "20 Whitfield Blvd",
     "suburb": "Cranbourne West",
@@ -584,11 +584,11 @@
     "postcode": "3977",
     "inspector": "-",
     "phone": "03 8788 5400",
-    "lat": -38.0804675,
-    "lng": 145.2414944
+    "lat": "-38.0804675",
+    "lng": "145.2414944"
   },
   {
-    "id": 323,
+    "id": "323",
     "name": "Progress Transport Services Pty Ltd",
     "address": "Shed 2, Coghlans Road",
     "suburb": "Warrnambool",
@@ -596,11 +596,11 @@
     "postcode": "3280",
     "inspector": "-",
     "phone": "0429 320 420",
-    "lat": -38.3523961,
-    "lng": 142.4661686
+    "lat": "-38.3523961",
+    "lng": "142.4661686"
   },
   {
-    "id": 307,
+    "id": "307",
     "name": "Starworx",
     "address": "5A Westwood Drive",
     "suburb": "Ravenhall",
@@ -608,11 +608,11 @@
     "postcode": "3029",
     "inspector": "-",
     "phone": "0459 839 072",
-    "lat": -37.7717246,
-    "lng": 144.7551499
+    "lat": "-37.7717246",
+    "lng": "144.7551499"
   },
   {
-    "id": 326,
+    "id": "326",
     "name": "Tieman Tankers",
     "address": "184-186 Northbourne Road ",
     "suburb": "Campbellfield",
@@ -620,11 +620,11 @@
     "postcode": "3061",
     "inspector": "-",
     "phone": "03 9469 6701",
-    "lat": -37.6482781,
-    "lng": 144.9611406
+    "lat": "-37.6482781",
+    "lng": "144.9611406"
   },
   {
-    "id": 314,
+    "id": "314",
     "name": "Transport Preventative Maintenance P/Ltd",
     "address": "10-14 Churchill Street ",
     "suburb": "Williamstown",
@@ -632,11 +632,11 @@
     "postcode": "3016",
     "inspector": "-",
     "phone": "03 9397 1135",
-    "lat": -37.8521501,
-    "lng": 144.8627896
+    "lat": "-37.8521501",
+    "lng": "144.8627896"
   },
   {
-    "id": 503,
+    "id": "503",
     "name": "Haulmark Trailers Australia",
     "address": "97-99 West Avenue ",
     "suburb": "Edinburgh",
@@ -644,11 +644,11 @@
     "postcode": "5111",
     "inspector": "-",
     "phone": "08 8283 8585",
-    "lat": -34.7327779,
-    "lng": 138.6344371
+    "lat": "-34.7327779",
+    "lng": "138.6344371"
   },
   {
-    "id": 506,
+    "id": "506",
     "name": "Hoss Engineering & Maintenance Service",
     "address": "3 Mallee Crescent",
     "suburb": "Port Lincoln",
@@ -656,11 +656,11 @@
     "postcode": "5606",
     "inspector": "-",
     "phone": "0427 518 945",
-    "lat": -34.7340247,
-    "lng": 135.8623913
+    "lat": "-34.7340247",
+    "lng": "135.8623913"
   },
   {
-    "id": 502,
+    "id": "502",
     "name": "Liquip (SA) Pty Ltd",
     "address": "10 Creswell Road ",
     "suburb": "Largs North",
@@ -668,11 +668,11 @@
     "postcode": "5016",
     "inspector": "-",
     "phone": "08 8341 7009",
-    "lat": -34.8213309,
-    "lng": 138.5037846
+    "lat": "-34.8213309",
+    "lng": "138.5037846"
   },
   {
-    "id": 512,
+    "id": "512",
     "name": "Mechanical & Technical Testing",
     "address": "40 Butler Terrace",
     "suburb": "Naracoorte",
@@ -680,11 +680,11 @@
     "postcode": "5271",
     "inspector": "-",
     "phone": "08 8762 2379",
-    "lat": -36.9624232,
-    "lng": 140.7370711
+    "lat": "-36.9624232",
+    "lng": "140.7370711"
   },
   {
-    "id": 501,
+    "id": "501",
     "name": "OES Oil Engineering Services",
     "address": "5 Creswell Road",
     "suburb": "Largs North",
@@ -692,11 +692,11 @@
     "postcode": "5016",
     "inspector": "-",
     "phone": "08 8341 5677",
-    "lat": -34.8222069,
-    "lng": 138.5031614
+    "lat": "-34.8222069",
+    "lng": "138.5031614"
   },
   {
-    "id": 657,
+    "id": "657",
     "name": "Fuel Maintenance and Engineering",
     "address": "1562 Arthur Road",
     "suburb": "Geraldton",
@@ -704,23 +704,23 @@
     "postcode": "6530",
     "inspector": "-",
     "phone": "0409 981 026",
-    "lat": -28.8346566,
-    "lng": 114.7321136
+    "lat": "-28.8346566",
+    "lng": "114.7321136"
   },
   {
-    "id": 623,
+    "id": "623",
     "name": "Integrated Fuel Services",
-    "address": NaN,
-    "suburb": NaN,
+    "address": null,
+    "suburb": null,
     "state": "WA",
     "postcode": "6000",
     "inspector": "JP Van Loenhout",
     "phone": "08 9434 7000",
-    "lat": -31.9525739,
-    "lng": 115.8610488
+    "lat": "-31.9525739",
+    "lng": "115.8610488"
   },
   {
-    "id": 665,
+    "id": "665",
     "name": "J & S Labour and Machinery",
     "address": "40 Moorambine Street ",
     "suburb": "Wedgefield",
@@ -728,11 +728,11 @@
     "postcode": "6721",
     "inspector": "-",
     "phone": "08 9172 5313",
-    "lat": -20.3663216,
-    "lng": 118.5870289
+    "lat": "-20.3663216",
+    "lng": "118.5870289"
   },
   {
-    "id": 645,
+    "id": "645",
     "name": "Kip & Steve's Mechanical Repairs",
     "address": "21 Currong Street",
     "suburb": "Esperance",
@@ -740,11 +740,11 @@
     "postcode": "6450",
     "inspector": "-",
     "phone": "08 9071 2411",
-    "lat": -33.8355027,
-    "lng": 121.8958181
+    "lat": "-33.8355027",
+    "lng": "121.8958181"
   },
   {
-    "id": 690,
+    "id": "690",
     "name": "Perth Tanker Repairs",
     "address": "30-32 Macedonia St",
     "suburb": "Naval Base",
@@ -752,23 +752,23 @@
     "postcode": "6165",
     "inspector": "-",
     "phone": "08 9410 0222",
-    "lat": -32.2022035,
-    "lng": 115.7831976
+    "lat": "-32.2022035",
+    "lng": "115.7831976"
   },
   {
-    "id": 651,
+    "id": "651",
     "name": "Perth Tanker Repairs",
-    "address": NaN,
-    "suburb": NaN,
+    "address": null,
+    "suburb": null,
     "state": "WA",
     "postcode": "6165",
     "inspector": "Steve Albertini",
     "phone": "08 9410 0222",
-    "lat": -32.1964799,
-    "lng": 115.798936
+    "lat": "-32.1964799",
+    "lng": "115.798936"
   },
   {
-    "id": 606,
+    "id": "606",
     "name": "Petroleum Technologies Australia",
     "address": "5 Kybo Street",
     "suburb": "Kalgoorlie",
@@ -776,23 +776,23 @@
     "postcode": "6430",
     "inspector": "-",
     "phone": "08 9091 2321",
-    "lat": -30.7852563,
-    "lng": 121.4429398
+    "lat": "-30.7852563",
+    "lng": "121.4429398"
   },
   {
-    "id": 613,
+    "id": "613",
     "name": "Road Tank Repairs & Services WA",
-    "address": NaN,
-    "suburb": NaN,
+    "address": null,
+    "suburb": null,
     "state": "WA",
     "postcode": "6000",
     "inspector": "Brad Onley",
     "phone": "08 6166 3860",
-    "lat": -31.9525739,
-    "lng": 115.8610488
+    "lat": "-31.9525739",
+    "lng": "115.8610488"
   },
   {
-    "id": 691,
+    "id": "691",
     "name": "Road Tank Repairs & Services WA",
     "address": "11 Camomile Way",
     "suburb": "Bibra Lake",
@@ -800,11 +800,11 @@
     "postcode": "6163",
     "inspector": "-",
     "phone": "08 6166 3860",
-    "lat": -32.1084505,
-    "lng": 115.8198885
+    "lat": "-32.1084505",
+    "lng": "115.8198885"
   },
   {
-    "id": 644,
+    "id": "644",
     "name": "Stevemacs Bulk",
     "address": "27-29 Glassford Road",
     "suburb": "Kewdale",
@@ -812,23 +812,23 @@
     "postcode": "6105",
     "inspector": "-",
     "phone": "08 9352 2100",
-    "lat": -31.969669,
-    "lng": 115.9550175
+    "lat": "-31.969669",
+    "lng": "115.9550175"
   },
   {
-    "id": 607,
+    "id": "607",
     "name": "WA Fuel Supplies",
-    "address": NaN,
-    "suburb": NaN,
+    "address": null,
+    "suburb": null,
     "state": "WA",
     "postcode": "6000",
     "inspector": "Grant Geary",
     "phone": "08 9943 8338",
-    "lat": -31.9525739,
-    "lng": 115.8610488
+    "lat": "-31.9525739",
+    "lng": "115.8610488"
   },
   {
-    "id": 609,
+    "id": "609",
     "name": "WA Transmech",
     "address": "30-32 Macedonia Street",
     "suburb": "Naval Base",
@@ -836,11 +836,11 @@
     "postcode": "6165",
     "inspector": "-",
     "phone": "08 9410 0857",
-    "lat": -32.2022035,
-    "lng": 115.7831976
+    "lat": "-32.2022035",
+    "lng": "115.7831976"
   },
   {
-    "id": 820,
+    "id": "820",
     "name": "Haulmark Trailers Australia",
     "address": "1 Mettham Road",
     "suburb": "Berrimah",
@@ -848,11 +848,11 @@
     "postcode": "828",
     "inspector": "-",
     "phone": "08 8984 3533",
-    "lat": -12.4606551,
-    "lng": 130.9283392
+    "lat": "-12.4606551",
+    "lng": "130.9283392"
   },
   {
-    "id": 809,
+    "id": "809",
     "name": "RGM Maintenance Pty Ltd",
     "address": "9 Matthew Hopkins Rd ",
     "suburb": "Holtze",
@@ -860,11 +860,11 @@
     "postcode": "829",
     "inspector": "-",
     "phone": "08 8983 0100",
-    "lat": -12.4549185,
-    "lng": 130.9838449
+    "lat": "-12.4549185",
+    "lng": "130.9838449"
   },
   {
-    "id": 811,
+    "id": "811",
     "name": "SWEL Pty Ltd",
     "address": "50 Sargent Street",
     "suburb": "Alice Springs",
@@ -872,11 +872,11 @@
     "postcode": "870",
     "inspector": "-",
     "phone": "08 8953 0369",
-    "lat": -23.6739621,
-    "lng": 133.8676851
+    "lat": "-23.6739621",
+    "lng": "133.8676851"
   },
   {
-    "id": 801,
+    "id": "801",
     "name": "Tanker Repairs Australia",
     "address": "26 McKinnon Rd",
     "suburb": "Pinelands",
@@ -884,11 +884,11 @@
     "postcode": "829",
     "inspector": "-",
     "phone": "08 8932 1328",
-    "lat": -12.4549857,
-    "lng": 130.9620088
+    "lat": "-12.4549857",
+    "lng": "130.9620088"
   },
   {
-    "id": 704,
+    "id": "704",
     "name": "AJL Heavy Equipment",
     "address": "1-3 Massy-Greene Drive",
     "suburb": "South Burnie",
@@ -896,23 +896,23 @@
     "postcode": "7320",
     "inspector": "-",
     "phone": "03 6430 2777",
-    "lat": -41.0674275,
-    "lng": 145.9239546
+    "lat": "-41.0674275",
+    "lng": "145.9239546"
   },
   {
-    "id": 703,
+    "id": "703",
     "name": "AJL Heavy Equipment",
-    "address": NaN,
-    "suburb": NaN,
+    "address": null,
+    "suburb": null,
     "state": "TAS",
     "postcode": "7320",
     "inspector": "James Grogan",
     "phone": "03 6430 2777",
-    "lat": -41.0701328,
-    "lng": 145.8962992
+    "lat": "-41.0701328",
+    "lng": "145.8962992"
   },
   {
-    "id": 701,
+    "id": "701",
     "name": "Kent Engineering",
     "address": "153 Stoney Rise Road",
     "suburb": "Devonport",
@@ -920,11 +920,11 @@
     "postcode": "7310",
     "inspector": "-",
     "phone": "03 6424 9233",
-    "lat": -41.1926208,
-    "lng": 146.3297592
+    "lat": "-41.1926208",
+    "lng": "146.3297592"
   },
   {
-    "id": 710,
+    "id": "710",
     "name": "Midland Truck & Bus",
     "address": "42 Crooked Billet Drive",
     "suburb": "Bridgewater",
@@ -932,11 +932,11 @@
     "postcode": "7030",
     "inspector": "-",
     "phone": "03 6263 4333",
-    "lat": -42.7210713,
-    "lng": 147.2344207
+    "lat": "-42.7210713",
+    "lng": "147.2344207"
   },
   {
-    "id": 702,
+    "id": "702",
     "name": "Wiggies Radiators",
     "address": "18-22 Hillcrest Road",
     "suburb": "Devonport",
@@ -944,7 +944,7 @@
     "postcode": "7310",
     "inspector": "-",
     "phone": "03 6424 7292",
-    "lat": -41.1828568,
-    "lng": 146.3302493
+    "lat": "-41.1828568",
+    "lng": "146.3302493"
   }
 ]
