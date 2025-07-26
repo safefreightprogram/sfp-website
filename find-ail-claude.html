@@ -1,22 +1,4 @@
-init() {
-          ailFinderComponent = this;
-          ailData = rawAilData;
-          this.filteredLocations = [...ailData];
-          
-          setTimeout(() => {
-            if (window.google && window.google.maps && !mapInitialized) {
-              initMap();
-            }
-          }, 500);
-          
-          setTimeout(() => {
-            if (window.google && window.google.maps && mapInitialized && markers.length === 0) {
-              loadMarkers();
-            }
-          }, 2000);
-        },
-
-        // Enhanced search functionality<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en-AU">
 <head>
   <meta charset="UTF-8" />
@@ -52,32 +34,9 @@ init() {
       border-color: #9ca3af;
     }
 
-    .autocomplete-dropdown {
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid #d1d5db;
-      border-top: none;
-      background: white;
-      border-radius: 0 0 0.5rem 0.5rem;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-
-    .autocomplete-item {
-      padding: 0.75rem;
-      cursor: pointer;
-      border-bottom: 1px solid #f3f4f6;
-      transition: background-color 0.15s ease;
-    }
-
-    .autocomplete-item:hover,
-    .autocomplete-item.selected {
-      background-color: #eff6ff;
-    }
-
-    .search-hint {
-      font-size: 0.75rem;
-      color: #6b7280;
-      margin-top: 0.25rem;
+    .info-panel {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
     }
     
     .location-card {
@@ -89,20 +48,6 @@ init() {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
       border-color: #2563eb;
-    }
-    
-    .info-panel {
-      backdrop-filter: blur(10px);
-      background: rgba(255, 255, 255, 0.95);
-    }
-    
-    .filter-badge {
-      animation: fadeIn 0.3s ease;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.8); }
-      to { opacity: 1; transform: scale(1); }
     }
     
     .loading-spinner {
@@ -121,6 +66,10 @@ init() {
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.7; }
+    }
+    
+    .loading-overlay {
+      background: rgba(255, 255, 255, 0.9);
     }
   </style>
 </head>
@@ -188,12 +137,22 @@ init() {
   <!-- Main Content -->
   <main class="max-w-7xl mx-auto px-4 py-6" x-data="ailFinder()">
 
+    <!-- Loading Overlay -->
+    <div x-show="loading" class="fixed inset-0 loading-overlay flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 shadow-xl">
+        <div class="flex items-center space-x-3">
+          <div class="loading-spinner w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+          <span class="text-gray-700">Loading AIL locations...</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Side by Side Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
-      <!-- Left Side - Enhanced Search and Filters -->
+      <!-- Left Side - Simple Controls -->
       <div class="lg:col-span-1">
-        <!-- Search Header -->
+        <!-- Simple Control Panel -->
         <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
           <div class="flex items-center mb-4">
             <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,59 +162,8 @@ init() {
             <h3 class="text-lg font-semibold text-gray-800">Find Locations</h3>
           </div>
           
-          <!-- Enhanced Search Input -->
-          <div class="mb-6 relative">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Search by Company or Location</label>
-            <div class="relative">
-              <input 
-                type="text" 
-                x-model="searchText"
-                @input="handleSearchInput()"
-                @keydown="handleKeyDown($event)"
-                @focus="showAutocomplete = true"
-                @blur="setTimeout(() => showAutocomplete = false, 200)"
-                placeholder="Company name, suburb, or postcode..."
-                class="w-full pl-10 pr-4 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              >
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <div x-show="searchText" @click="searchText = ''; filterLocations()" class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer">
-                <svg class="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </div>
-            </div>
-            
-            <!-- Search Hint -->
-            <div class="search-hint">Press Enter to search or select from suggestions</div>
-            
-            <!-- Enhanced Autocomplete Dropdown -->
-            <div x-show="showAutocomplete && autocompleteItems.length > 0" 
-                 class="absolute z-20 w-full autocomplete-dropdown">
-              <template x-for="(item, index) in autocompleteItems.slice(0, 8)" :key="item.id">
-                <div class="autocomplete-item" 
-                     :class="{ 'selected': index === selectedIndex }"
-                     @click="selectAutocompleteItem(item)">
-                  <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                      <div class="font-medium text-sm text-gray-900" x-text="item.name"></div>
-                      <div class="text-xs text-gray-500 mt-1" x-text="getDisplayAddress(item)"></div>
-                      <div x-show="hasNamedInspector(item)" class="text-xs text-blue-600 mt-1">
-                        Inspector: <span x-text="item.inspector"></span>
-                      </div>
-                    </div>
-                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded ml-2" x-text="item.state"></span>
-                  </div>
-                </div>
-              </template>
-            </div>
-          </div>
-
           <!-- Find Nearest Button -->
-          <div class="mb-6">
+          <div class="mb-4">
             <button 
               @click="findNearest()"
               :disabled="loadingLocation"
@@ -272,57 +180,20 @@ init() {
             </button>
           </div>
 
-          <!-- Enhanced State Filter -->
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-3">Filter by State/Territory</label>
-            <div class="grid grid-cols-2 gap-2">
-              <template x-for="state in stateOptions" :key="state.value">
-                <button 
-                  @click="selectedState = state.value; handleStateChange()"
-                  :class="selectedState === state.value ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-md transform scale-105' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700'"
-                  class="px-3 py-2 text-sm border rounded-lg transition-all font-medium duration-200 ease-in-out"
-                  x-text="state.label"
-                ></button>
-              </template>
-            </div>
-          </div>
-
-          <!-- Active Filters Display -->
-          <div x-show="searchText || selectedState !== 'all'" class="mb-4">
-            <div class="flex flex-wrap gap-2">
-              <span x-show="searchText" class="filter-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                Search: <span x-text="searchText" class="ml-1 font-semibold"></span>
-                <button @click="searchText = ''; filterLocations()" class="ml-2 hover:text-blue-600">×</button>
-              </span>
-              <span x-show="selectedState !== 'all'" class="filter-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                State: <span x-text="selectedState" class="ml-1 font-semibold"></span>
-                <button @click="selectedState = 'all'; handleStateChange()" class="ml-2 hover:text-green-600">×</button>
-              </span>
-            </div>
-          </div>
-
-          <!-- Clear All Button -->
-          <button 
-            @click="clearFilters()"
-            class="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium mb-4"
-          >
-            🔄 Clear All Filters
-          </button>
-
-          <!-- Enhanced Results Count -->
+          <!-- Results Count -->
           <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-sm font-medium text-gray-900">
                   <span x-text="filteredLocations.length" class="text-lg font-bold text-blue-600"></span>
-                  <span class="text-gray-600">locations found</span>
+                  <span class="text-gray-600">locations available</span>
                 </div>
                 <div class="text-xs text-gray-500 mt-1">
                   Across <span x-text="getUniqueStates().length"></span> states/territories
                 </div>
               </div>
               <div class="text-2xl">
-                <span x-show="filteredLocations.length > 0">🎯</span>
+                <span x-show="filteredLocations.length > 0">📍</span>
                 <span x-show="filteredLocations.length === 0">🔍</span>
               </div>
             </div>
@@ -330,11 +201,11 @@ init() {
         </div>
       </div>
 
-      <!-- Right Side - Enhanced Map and List Tabs -->
+      <!-- Right Side - Map and List Tabs -->
       <div class="lg:col-span-2">
         <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
           
-          <!-- Enhanced Tab Headers -->
+          <!-- Tab Headers -->
           <div class="border-b border-gray-200 bg-gray-50">
             <div class="flex">
               <button 
@@ -367,7 +238,7 @@ init() {
             <div x-show="activeTab === 'map'" class="absolute inset-0 p-4">
               <div id="map" class="w-full h-full shadow-md"></div>
               
-              <!-- Enhanced Map Info Panel -->
+              <!-- Map Info Panel -->
               <div x-show="selectedLocation" 
                    x-transition
                    class="absolute top-8 left-8 info-panel rounded-xl shadow-xl border border-gray-200 p-6 max-w-sm z-10">
@@ -415,7 +286,7 @@ init() {
               </div>
             </div>
 
-            <!-- Enhanced List Tab Content -->
+            <!-- List Tab Content -->
             <div x-show="activeTab === 'list'" class="absolute inset-0 p-6 overflow-y-auto">
               <div class="space-y-4">
                 <template x-for="location in filteredLocations" :key="location.id">
@@ -459,14 +330,11 @@ init() {
                   </div>
                 </template>
                 
-                <!-- Enhanced No results -->
-                <div x-show="filteredLocations.length === 0" class="text-center py-12">
+                <!-- No results -->
+                <div x-show="filteredLocations.length === 0 && !loading" class="text-center py-12">
                   <div class="text-6xl mb-4">🔍</div>
                   <h3 class="text-xl font-semibold text-gray-900 mb-2">No locations found</h3>
-                  <p class="text-gray-500 mb-6">Try adjusting your search criteria or clearing filters</p>
-                  <button @click="clearFilters()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                    Clear All Filters
-                  </button>
+                  <p class="text-gray-500 mb-6">Try using the "Find Nearest to Me" feature</p>
                 </div>
               </div>
             </div>
@@ -477,252 +345,86 @@ init() {
     </div>
   </main>
 
-  <!-- Enhanced Footer -->
+  <!-- Footer -->
   <footer class="bg-white border-t border-gray-200 text-sm text-center text-gray-600 p-6 mt-12">
     <div class="max-w-7xl mx-auto">
       <p>&copy; 2025 Safe Freight Program. All rights reserved.</p>
-      <p class="text-xs text-gray-500 mt-2">Authorised Inspection Locations data updated regularly</p>
+      <p class="text-xs text-gray-500 mt-2">Authorised Inspection Locations data updated weekly</p>
     </div>
   </footer>
 
   <script>
-    // Global variables (same as original)
+    // Global variables
     let map;
     let markers = [];
     let ailData = [];
     let mapInitialized = false;
     let ailFinderComponent = null;
 
-    // Australia bounds and state bounds (same as original)
+    // Australia bounds for better centered view
     const australiaBounds = {
-      north: -9.5,
-      south: -43.5,
-      west: 113.0,
-      east: 153.0
+      north: -8.0,     
+      south: -44.0,    
+      west: 112.0,     
+      east: 154.0      
     };
 
-    const stateBounds = {
-      NSW: { north: -28.15, south: -37.5, west: 140.9, east: 153.6 },
-      QLD: { north: -10.0, south: -29.2, west: 137.9, east: 154.0 },
-      VIC: { north: -33.9, south: -39.2, west: 140.9, east: 150.0 },
-      SA: { north: -25.9, south: -38.1, west: 129.0, east: 141.0 },
-      WA: { north: -13.7, south: -35.1, west: 112.9, east: 129.0 },
-      NT: { north: -10.9, south: -26.0, west: 129.0, east: 138.0 },
-      TAS: { north: -39.2, south: -43.6, west: 143.8, east: 148.4 }
-    };
-
-    // Complete AIL Data from Google Sheets - Updated structure
-    const rawAilData = [
-      {id: 239, name: "Aero Refuellers", address: "Hanger 8-11 Ogden Street", suburb: "East Albury", state: "NSW", postcode: "2640", inspector: "-", phone: "02 6041 1599", lat: -36.071665, lng: 146.9537581},
-      {id: 222, name: "Australian Fuelling Systems & Equip", address: "7-11 Armstrong Street", suburb: "Tamworth", state: "NSW", postcode: "2340", inspector: "-", phone: "02 6760 7816", lat: -31.0791106, lng: 150.8532199},
-      {id: 220, name: "Doug Sutherland Truck Repairs", address: "222 Urana Street", suburb: "Wagga Wagga", state: "NSW", postcode: "2650", inspector: "-", phone: "02 6925 2094", lat: -35.1252742, lng: 147.3413631},
-      {id: 207, name: "Durham Fabrications", address: "4 Ranton Street", suburb: "Cardiff", state: "NSW", postcode: "2285", inspector: "-", phone: "02 4956 8868", lat: -32.9444557, lng: 151.6476872},
-      {id: 208, name: "Durham Fabrications", address: null, suburb: null, state: "NSW", postcode: "2285", inspector: "Luke Howson", phone: "02 4956 8868", lat: -32.9110348, lng: 151.6187438},
-      {id: 241, name: "Engineering, Mining, Petroleum Pty Ltd", address: "1015 Armidale Road ", suburb: "Nemingha", state: "NSW", postcode: "2340", inspector: "-", phone: "02 6760 9548", lat: -31.1241211, lng: 150.9866511},
-      {id: 237, name: "Express Engineering Australia Pty Ltd", address: "20R Yarrandale Road", suburb: "Dubbo", state: "NSW", postcode: "2830", inspector: "-", phone: "02 6884 2723", lat: -32.2238944, lng: 148.6320896},
-      {id: 201, name: "Fuel Spec Services", address: "13 Hume Road ", suburb: "Smithfield", state: "NSW", postcode: "2164", inspector: "-", phone: "1300 113 541", lat: -33.8377348, lng: 150.9312227},
-      {id: 205, name: "Fuel Spec Services", address: null, suburb: null, state: "NSW", postcode: "2164", inspector: "Steve Hudson", phone: "1301 113 541", lat: -33.8492918, lng: 150.9132815},
-      {id: 221, name: "Hancock & Owen Services Pty Ltd", address: "38 Parker Street", suburb: "Carrington", state: "NSW", postcode: "2294", inspector: "-", phone: "02 4969 5390", lat: -32.905424, lng: 151.7666222},
-      {id: 235, name: "Heavy Haulage Maintenance", address: "28 Old Punt Road", suburb: "Tomago", state: "NSW", postcode: "2322", inspector: "-", phone: "02 4964 9475", lat: -32.8209927, lng: 151.7028008},
-      {id: 200, name: "WBG Trailer Repairs", address: "Lot 1 Yarrunga Road", suburb: "Prestons", state: "NSW", postcode: "2170", inspector: "-", phone: "02 9608 2288", lat: -33.9363776, lng: 150.8603357},
-      
-      // QLD Locations
-      {id: 410, name: "Brown & Hurley", address: "2 Central Park Drive", suburb: "South Mackay", state: "QLD", postcode: "4740", inspector: "-", phone: "07 4952 3722", lat: -21.1755649, lng: 149.1661223},
-      {id: 462, name: "Brown and Hurley", address: "28-30 Carrington Road", suburb: "Torrington", state: "QLD", postcode: "4350", inspector: "-", phone: "07 4690 7300", lat: -27.5487615, lng: 151.8968995},
-      {id: 424, name: "Central Coast Services Mackay", address: "Lot 1 Presto Avenue", suburb: "Outer Harbour", state: "QLD", postcode: "4740", inspector: "-", phone: "07 4955 4922", lat: -21.1101141, lng: 149.2110353},
-      {id: 452, name: "CQ Diesel Fitting", address: "23 Bensted Road", suburb: "Gladstone", state: "QLD", postcode: "4680", inspector: "-", phone: "07 4972 7401", lat: -23.8584217, lng: 151.229545},
-      {id: 460, name: "CQ Diesel Fitting", address: "87 Links Avenue ", suburb: "Eagle Farm", state: "QLD", postcode: "4009", inspector: "-", phone: "07 3268 2543", lat: -27.4374068, lng: 153.0867816},
-      {id: 461, name: "CQ Diesel Fitting", address: "112 Spiller Avenue", suburb: "Outer Harbour", state: "QLD", postcode: "4740", inspector: "-", phone: "07 4955 0324", lat: -21.1007206, lng: 149.2153069},
-      {id: 415, name: "Fuel Service Australia", address: "29 Sandmere Road ", suburb: "Pinkenba", state: "QLD", postcode: "4008", inspector: "Kent Frantz", phone: "0433 450 603", lat: -27.392153, lng: 153.1418447},
-      {id: 411, name: "Haulmark Trailers (Australia)", address: "32 Suscatand Street ", suburb: "Rocklea", state: "QLD", postcode: "4106", inspector: "-", phone: "07 3277 8844", lat: -27.5576397, lng: 152.9970275},
-      {id: 412, name: "Haulmark Trailers (Australia)", address: "42 Kupfer Drive ", suburb: "Roseneath", state: "QLD", postcode: "4817", inspector: "-", phone: "07 4144 2803", lat: -19.3759709, lng: 146.8333008},
-      {id: 405, name: "Holmwood Highgate (Aust) Pty Ltd", address: "20 Burchill Street", suburb: "Loganholme", state: "QLD", postcode: "4129", inspector: "-", phone: "07 3440 9000", lat: -27.6821993, lng: 153.191783},
-      {id: 401, name: "Liquip Sales (QLD) Pty Ltd", address: "730 Macarthur Avenue", suburb: "Pinkenba", state: "QLD", postcode: "4008", inspector: "-", phone: "07 3633 9100", lat: -27.4403414, lng: 153.0784498},
-      {id: 414, name: "Liquip Sales NQ", address: "659-665 Ingham Road", suburb: "Bohle", state: "QLD", postcode: "4814", inspector: "-", phone: "07 4774 8060", lat: -19.260684, lng: 146.73731},
-      {id: 407, name: "Northern Refuelling Maintenance Pty Ltd", address: "3 Marsh Street", suburb: "Woree", state: "QLD", postcode: "4868", inspector: "-", phone: "07 4033 2199", lat: -16.9574228, lng: 145.7520655},
-      {id: 435, name: "NQ Fuel & Maintenance", address: "485 Woolcock Street", suburb: "Garbutt", state: "QLD", postcode: "4814", inspector: "-", phone: "07 4774 3334", lat: -19.2671514, lng: 146.7543566},
-      {id: 436, name: "NQ Fuel & Maintenance", address: null, suburb: null, state: "QLD", postcode: "4814", inspector: "Ray Lowth", phone: "07 4774 3334", lat: -19.2878252, lng: 146.7552341},
-      {id: 432, name: "NQ Petro Pty Ltd", address: "14 Atticus Street", suburb: "Woree", state: "QLD", postcode: "4868", inspector: "-", phone: "07 4054 5100", lat: -16.9549579, lng: 145.7481359},
-      {id: 408, name: "Queensland Tanker Services", address: "3-5 Vennard Street", suburb: "Townsville", state: "QLD", postcode: "4810", inspector: "-", phone: "0417 356 568", lat: -19.2697953, lng: 146.7560216},
-      {id: 409, name: "Queensland Tanker Services", address: null, suburb: null, state: "QLD", postcode: "4810", inspector: "Andrew Bates", phone: "0417 356 568", lat: -19.35682, lng: 147.0379125},
-      {id: 426, name: "RGM Maintenance Pty Ltd", address: "32 Ashover Road", suburb: "Rocklea", state: "QLD", postcode: "4106", inspector: "-", phone: "07 3277 7616", lat: -27.559777, lng: 153.0085609},
-      {id: 427, name: "RGM Maintenance Pty Ltd", address: "24 Curley Circuit", suburb: "Roseneath", state: "QLD", postcode: "4817", inspector: "-", phone: "07 4421 9100", lat: -19.3747045, lng: 146.830337},
-      {id: 418, name: "RGM Maintenance Pty Ltd", address: "24 Curley Circuit", suburb: "Roseneath", state: "QLD", postcode: "4817", inspector: "Rob Peace", phone: "07 4421 9100", lat: -19.3747045, lng: 146.830337},
-      {id: 465, name: "RGM Maintenance Pty Ltd", address: "500 Milton Street", suburb: "Paget", state: "QLD", postcode: "4740", inspector: "-", phone: "0406 495 734", lat: -21.1891009, lng: 149.1706871},
-      {id: 417, name: "RGM Maintenance Pty Ltd", address: "500 Milton Street", suburb: "Paget", state: "QLD", postcode: "4740", inspector: "Lachlan Drew", phone: "0406 495 734", lat: -21.1891009, lng: 149.1706871},
-      {id: 470, name: "RGM Maintenance Pty Ltd", address: "351 Main Myrtletown Road ", suburb: "Pinkenba", state: "QLD", postcode: "4008", inspector: "-", phone: "07 3260 1224", lat: -27.4159631, lng: 153.1255774},
-      {id: 471, name: "RGM Maintenance Pty Ltd", address: "63-67 Aumuller Street ", suburb: "Portsmouth", state: "QLD", postcode: "4868", inspector: "-", phone: "07 4080 7500", lat: -16.9409518, lng: 145.7658438},
-      {id: 472, name: "RGM Maintenance Pty Ltd", address: "1033 Bruce Hwy", suburb: "Parkhurst", state: "QLD", postcode: "4701", inspector: "-", phone: "07 4923 1000", lat: -23.2861232, lng: 150.5089416},
-      {id: 457, name: "Stephen Symes", address: "Mobile Inspector", suburb: null, state: "QLD", postcode: "-", inspector: "Stephen Symes", phone: "0403 277 637", lat: -22.575197, lng: 144.0847926},
-      {id: 416, name: "Sustar Engineering Pty Ltd", address: "Lot 244 Fison Street", suburb: "Gladstone", state: "QLD", postcode: "4680", inspector: "-", phone: "07 4972 5366", lat: -23.8415948, lng: 151.2497708},
-      
-      // VIC Locations
-      {id: 305, name: "Acme Oil Equipment Services Pty Ltd", address: "32 Greens Road", suburb: "Dandenong South", state: "VIC", postcode: "3175", inspector: "-", phone: "03 9791 3255", lat: -38.015738, lng: 145.2209347},
-      {id: 320, name: "Australian Tank Engineering", address: "29-31 Vella Drive", suburb: "Sunshine", state: "VIC", postcode: "3020", inspector: "-", phone: "03 9310 2722", lat: -37.8056095, lng: 144.828958},
-      {id: 310, name: "Echuca Engineering", address: "13 Mundarra Road", suburb: "Echuca", state: "VIC", postcode: "3564", inspector: "-", phone: "03 5480 6921", lat: -36.141996, lng: 144.762877},
-      {id: 304, name: "Evolution Tanker Repairs", address: "371 Rossiter Road", suburb: "Koo Wee Rup", state: "VIC", postcode: "3981", inspector: "-", phone: "0424 099 314", lat: -38.19564, lng: 145.497366},
-      {id: 313, name: "G & S Bigham", address: "87 Golf Course Road", suburb: "Horsham", state: "VIC", postcode: "3400", inspector: "-", phone: "03 5382 5893", lat: -36.7376332, lng: 142.1970197},
-      {id: 303, name: "Holmwood Group VIC", address: "425 Fitzgerald Road", suburb: "Derrimut", state: "VIC", postcode: "3030", inspector: "-", phone: "03 9936 0360", lat: -37.8008048, lng: 144.787899},
-      {id: 324, name: "Johnson's Truck & Coach Service Pty Ltd", address: "579 Benetook Avenue", suburb: "Mildura", state: "VIC", postcode: "3500", inspector: "-", phone: "03 5024 4666", lat: -34.2092698, lng: 142.1616144},
-      {id: 322, name: "Liquip Victoria (Fuelcraft)", address: "476 Boundary Rd", suburb: "Derrimut", state: "VIC", postcode: "3030", inspector: "-", phone: "03 9311 7822", lat: -37.8104863, lng: 144.759139},
-      {id: 302, name: "Marshall Lethlean", address: "20 Whitfield Blvd", suburb: "Cranbourne West", state: "VIC", postcode: "3977", inspector: "-", phone: "03 8788 5400", lat: -38.0804675, lng: 145.2414944},
-      {id: 323, name: "Progress Transport Services Pty Ltd", address: "Shed 2, Coghlans Road", suburb: "Warrnambool", state: "VIC", postcode: "3280", inspector: "-", phone: "0429 320 420", lat: -38.3523961, lng: 142.4661686},
-      {id: 307, name: "Starworx", address: "5A Westwood Drive", suburb: "Ravenhall", state: "VIC", postcode: "3029", inspector: "-", phone: "0459 839 072", lat: -37.7717246, lng: 144.7551499},
-      {id: 326, name: "Tieman Tankers", address: "184-186 Northbourne Road ", suburb: "Campbellfield", state: "VIC", postcode: "3061", inspector: "-", phone: "03 9469 6701", lat: -37.6482781, lng: 144.9611406},
-      {id: 314, name: "Transport Preventative Maintenance P/Ltd", address: "10-14 Churchill Street ", suburb: "Williamstown", state: "VIC", postcode: "3016", inspector: "-", phone: "03 9397 1135", lat: -37.8521501, lng: 144.8627896},
-      
-      // SA Locations
-      {id: 503, name: "Haulmark Trailers Australia", address: "97-99 West Avenue ", suburb: "Edinburgh", state: "SA", postcode: "5111", inspector: "-", phone: "08 8283 8585", lat: -34.7327779, lng: 138.6344371},
-      {id: 506, name: "Hoss Engineering & Maintenance Service", address: "3 Mallee Crescent", suburb: "Port Lincoln", state: "SA", postcode: "5606", inspector: "-", phone: "0427 518 945", lat: -34.7340247, lng: 135.8623913},
-      {id: 502, name: "Liquip (SA) Pty Ltd", address: "10 Creswell Road ", suburb: "Largs North", state: "SA", postcode: "5016", inspector: "-", phone: "08 8341 7009", lat: -34.8213309, lng: 138.5037846},
-      {id: 512, name: "Mechanical & Technical Testing", address: "40 Butler Terrace", suburb: "Naracoorte", state: "SA", postcode: "5271", inspector: "-", phone: "08 8762 2379", lat: -36.9624232, lng: 140.7370711},
-      {id: 501, name: "OES Oil Engineering Services", address: "5 Creswell Road", suburb: "Largs North", state: "SA", postcode: "5016", inspector: "-", phone: "08 8341 5677", lat: -34.8222069, lng: 138.5031614},
-      
-      // WA Locations
-      {id: 657, name: "Fuel Maintenance and Engineering", address: "1562 Arthur Road", suburb: "Geraldton", state: "WA", postcode: "6530", inspector: "-", phone: "0409 981 026", lat: -28.8346566, lng: 114.7321136},
-      {id: 623, name: "Integrated Fuel Services", address: null, suburb: null, state: "WA", postcode: "6000", inspector: "JP Van Loenhout", phone: "08 9434 7000", lat: -31.9525739, lng: 115.8610488},
-      {id: 665, name: "J & S Labour and Machinery", address: "40 Moorambine Street ", suburb: "Wedgefield", state: "WA", postcode: "6721", inspector: "-", phone: "08 9172 5313", lat: -20.3663216, lng: 118.5870289},
-      {id: 645, name: "Kip & Steve's Mechanical Repairs", address: "21 Currong Street", suburb: "Esperance", state: "WA", postcode: "6450", inspector: "-", phone: "08 9071 2411", lat: -33.8355027, lng: 121.8958181},
-      {id: 690, name: "Perth Tanker Repairs", address: "30-32 Macedonia St", suburb: "Naval Base", state: "WA", postcode: "6165", inspector: "-", phone: "08 9410 0222", lat: -32.2022035, lng: 115.7831976},
-      {id: 651, name: "Perth Tanker Repairs", address: null, suburb: null, state: "WA", postcode: "6165", inspector: "Steve Albertini", phone: "08 9410 0222", lat: -32.1964799, lng: 115.798936},
-      {id: 606, name: "Petroleum Technologies Australia", address: "5 Kybo Street", suburb: "Kalgoorlie", state: "WA", postcode: "6430", inspector: "-", phone: "08 9091 2321", lat: -30.7852563, lng: 121.4429398},
-      {id: 613, name: "Road Tank Repairs & Services WA", address: null, suburb: null, state: "WA", postcode: "6000", inspector: "Brad Onley", phone: "08 6166 3860", lat: -31.9525739, lng: 115.8610488},
-      {id: 691, name: "Road Tank Repairs & Services WA", address: "11 Camomile Way", suburb: "Bibra Lake", state: "WA", postcode: "6163", inspector: "-", phone: "08 6166 3860", lat: -32.1084505, lng: 115.8198885},
-      {id: 644, name: "Stevemacs Bulk", address: "27-29 Glassford Road", suburb: "Kewdale", state: "WA", postcode: "6105", inspector: "-", phone: "08 9352 2100", lat: -31.969669, lng: 115.9550175},
-      {id: 607, name: "WA Fuel Supplies", address: null, suburb: null, state: "WA", postcode: "6000", inspector: "Grant Geary", phone: "08 9943 8338", lat: -31.9525739, lng: 115.8610488},
-      {id: 609, name: "WA Transmech", address: "30-32 Macedonia Street", suburb: "Naval Base", state: "WA", postcode: "6165", inspector: "-", phone: "08 9410 0857", lat: -32.2022035, lng: 115.7831976},
-      
-      // NT Locations
-      {id: 820, name: "Haulmark Trailers Australia", address: "1 Mettham Road", suburb: "Berrimah", state: "NT", postcode: "828", inspector: "-", phone: "08 8984 3533", lat: -12.4606551, lng: 130.9283392},
-      {id: 809, name: "RGM Maintenance Pty Ltd", address: "9 Matthew Hopkins Rd ", suburb: "Holtze", state: "NT", postcode: "829", inspector: "-", phone: "08 8983 0100", lat: -12.4549185, lng: 130.9838449},
-      {id: 811, name: "SWEL Pty Ltd", address: "50 Sargent Street", suburb: "Alice Springs", state: "NT", postcode: "870", inspector: "-", phone: "08 8953 0369", lat: -23.6739621, lng: 133.8676851},
-      {id: 801, name: "Tanker Repairs Australia", address: "26 McKinnon Rd", suburb: "Pinelands", state: "NT", postcode: "829", inspector: "-", phone: "08 8932 1328", lat: -12.4549857, lng: 130.9620088},
-      
-      // TAS Locations
-      {id: 704, name: "AJL Heavy Equipment", address: "1-3 Massy-Greene Drive", suburb: "South Burnie", state: "TAS", postcode: "7320", inspector: "-", phone: "03 6430 2777", lat: -41.0674275, lng: 145.9239546},
-      {id: 703, name: "AJL Heavy Equipment", address: null, suburb: null, state: "TAS", postcode: "7320", inspector: "James Grogan", phone: "03 6430 2777", lat: -41.0701328, lng: 145.8962992},
-      {id: 701, name: "Kent Engineering", address: "153 Stoney Rise Road", suburb: "Devonport", state: "TAS", postcode: "7310", inspector: "-", phone: "03 6424 9233", lat: -41.1926208, lng: 146.3297592},
-      {id: 710, name: "Midland Truck & Bus", address: "42 Crooked Billet Drive", suburb: "Bridgewater", state: "TAS", postcode: "7030", inspector: "-", phone: "03 6263 4333", lat: -42.7210713, lng: 147.2344207},
-      {id: 702, name: "Wiggies Radiators", address: "18-22 Hillcrest Road", suburb: "Devonport", state: "TAS", postcode: "7310", inspector: "-", phone: "03 6424 7292", lat: -41.1828568, lng: 146.3302493}
-    ];
-
-    // Enhanced Alpine.js component
+    // Alpine.js component
     function ailFinder() {
       return {
         activeTab: 'map',
-        selectedState: 'all',
-        searchText: '',
         filteredLocations: [],
         selectedLocation: null,
-        showAutocomplete: false,
-        autocompleteItems: [],
-        selectedIndex: -1,
         loadingLocation: false,
+        loading: true,
         userLocation: null,
 
-        // State options for enhanced UI
-        stateOptions: [
-          { value: 'all', label: 'All' },
-          { value: 'NSW', label: 'NSW' },
-          { value: 'QLD', label: 'QLD' },
-          { value: 'VIC', label: 'VIC' },
-          { value: 'SA', label: 'SA' },
-          { value: 'WA', label: 'WA' },
-          { value: 'NT', label: 'NT' },
-          { value: 'TAS', label: 'TAS' }
-        ],
-
-        init() {
+        async init() {
           ailFinderComponent = this;
-          ailData = rawAilData;
-          this.filteredLocations = [...ailData];
           
-          setTimeout(() => {
-            if (window.google && window.google.maps && !mapInitialized) {
-              initMap();
+          try {
+            // Load AIL data from JSON file
+            console.log('🔄 Loading AIL data from JSON...');
+            const response = await fetch('data/ail-locations.json');
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
             }
-          }, 500);
-          
-          setTimeout(() => {
-            if (window.google && window.google.maps && mapInitialized && markers.length === 0) {
-              loadMarkers();
-            }
-          }, 2000);
-        },
-
-        // Enhanced search functionality
-        handleSearchInput() {
-          this.filterLocations();
-          this.updateAutocomplete();
-          this.selectedIndex = -1;
-        },
-
-        handleKeyDown(event) {
-          if (!this.showAutocomplete || this.autocompleteItems.length === 0) {
-            if (event.key === 'Enter') {
-              this.performSearch();
-            }
-            return;
-          }
-
-          switch (event.key) {
-            case 'ArrowDown':
-              event.preventDefault();
-              this.selectedIndex = Math.min(this.selectedIndex + 1, this.autocompleteItems.length - 1);
-              break;
-            case 'ArrowUp':
-              event.preventDefault();
-              this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
-              break;
-            case 'Enter':
-              event.preventDefault();
-              if (this.selectedIndex >= 0) {
-                this.selectAutocompleteItem(this.autocompleteItems[this.selectedIndex]);
-              } else {
-                this.performSearch();
-              }
-              break;
-            case 'Escape':
-              this.showAutocomplete = false;
-              this.selectedIndex = -1;
-              break;
-          }
-        },
-
-        updateAutocomplete() {
-          if (!this.searchText || this.searchText.length < 2) {
-            this.autocompleteItems = [];
-            return;
-          }
-
-          const searchLower = this.searchText.toLowerCase();
-          this.autocompleteItems = ailData.filter(location => {
-            const searchFields = [
-              location.name,
-              location.address,
-              location.suburb,
-              location.postcode,
-              location.inspector !== '-' ? location.inspector : null
-            ].filter(field => field).join(' ').toLowerCase();
             
-            return searchFields.includes(searchLower);
-          }).slice(0, 8);
+            ailData = await response.json();
+            console.log(`✅ Loaded ${ailData.length} AIL locations`);
+            
+            // Handle NaN values in data
+            ailData = ailData.map(location => ({
+              ...location,
+              address: location.address === null || String(location.address) === 'NaN' ? null : location.address,
+              suburb: location.suburb === null || String(location.suburb) === 'NaN' ? null : location.suburb
+            }));
+            
+            this.filteredLocations = [...ailData];
+            this.loading = false;
+            
+            // Initialize map
+            setTimeout(() => {
+              if (window.google && window.google.maps && !mapInitialized) {
+                initMap();
+              }
+            }, 500);
+            
+            setTimeout(() => {
+              if (window.google && window.google.maps && mapInitialized && markers.length === 0) {
+                loadMarkers();
+              }
+            }, 2000);
+            
+          } catch (error) {
+            console.error('❌ Error loading AIL data:', error);
+            this.loading = false;
+            // Show error message to user
+            alert('Unable to load AIL location data. Please refresh the page or try again later.');
+          }
         },
 
-        selectAutocompleteItem(item) {
-          this.searchText = item.name;
-          this.showAutocomplete = false;
-          this.selectedIndex = -1;
-          this.filterLocations();
-        },
-
-        performSearch() {
-          this.showAutocomplete = false;
-          this.selectedIndex = -1;
-          this.filterLocations();
-        },
-
-        // New geolocation functionality
+        // Geolocation functionality
         findNearest() {
           if (!navigator.geolocation) {
             alert('Geolocation is not supported by this browser.');
@@ -790,43 +492,6 @@ init() {
           return degrees * (Math.PI/180);
         },
 
-        // Enhanced filtering with immediate marker updates
-        filterLocations() {
-          console.log('🔍 Filtering locations...');
-          console.log('📝 Search text:', this.searchText);
-          console.log('🏛️ Selected state:', this.selectedState);
-          
-          this.filteredLocations = ailData.filter(location => {
-            // Enhanced search across multiple fields
-            const searchFields = [
-              location.name,
-              location.address,
-              location.suburb,
-              location.postcode,
-              location.inspector !== '-' ? location.inspector : null
-            ].filter(field => field).join(' ').toLowerCase();
-            
-            const matchesSearch = !this.searchText || 
-              searchFields.includes(this.searchText.toLowerCase());
-            
-            const matchesState = this.selectedState === 'all' || location.state === this.selectedState;
-            return matchesSearch && matchesState;
-          });
-          
-          console.log('📊 Filtered results:', this.filteredLocations.length, 'out of', ailData.length);
-          
-          // Update map markers immediately when filtering
-          if (this.activeTab === 'map' && mapInitialized) {
-            console.log('🗺️ Updating map markers for current filters');
-            filterMapMarkers();
-            
-            // Smart zoom after marker filtering
-            setTimeout(() => {
-              this.smartZoomToResults();
-            }, 150);
-          }
-        },
-
         // Helper function to format full address
         getFullAddress(location) {
           const parts = [];
@@ -856,119 +521,13 @@ init() {
           return [...new Set(this.filteredLocations.map(loc => loc.state))];
         },
 
-        smartZoomToResults() {
-          if (!mapInitialized || this.filteredLocations.length === 0) return;
-          
-          // If a specific state is selected, ALWAYS zoom to that state (don't override with result-based zooming)
-          if (this.selectedState !== 'all') {
-            console.log('🎯 State filter active, maintaining state zoom for:', this.selectedState);
-            return; // Let handleStateChange handle the zooming
-          }
-          
-          console.log('🔍 Smart zooming based on', this.filteredLocations.length, 'results');
-          
-          // If 1 result, zoom to that specific location
-          if (this.filteredLocations.length === 1) {
-            console.log('📍 Single result - zooming to location');
-            this.zoomToLocation(this.filteredLocations[0]);
-            return;
-          }
-          
-          // If 2-10 results, fit bounds to show all results
-          if (this.filteredLocations.length >= 2 && this.filteredLocations.length <= 10) {
-            console.log('📊 Multiple results (2-10) - fitting bounds to results');
-            this.fitBoundsToResults();
-            return;
-          }
-          
-          // Default: show all of Australia for many results
-          if (this.filteredLocations.length > 10) {
-            console.log('🌏 Many results (>10) - showing all Australia');
-            this.fitMapToAustralia();
-          }
-        },
-
-        fitBoundsToResults() {
-          if (!mapInitialized || this.filteredLocations.length === 0) return;
-          
-          const bounds = new google.maps.LatLngBounds();
-          
-          this.filteredLocations.forEach(location => {
-            bounds.extend(new google.maps.LatLng(location.lat, location.lng));
-          });
-          
-          setTimeout(() => {
-            google.maps.event.trigger(map, 'resize');
-            map.fitBounds(bounds);
-            
-            setTimeout(() => {
-              const currentZoom = map.getZoom();
-              if (currentZoom > 12) {
-                map.setZoom(Math.min(currentZoom - 0.5, 14));
-              } else if (currentZoom > 8) {
-                map.setZoom(currentZoom - 0.3);
-              }
-            }, 300);
-          }, 100);
-        },
-
-        handleStateChange() {
-          console.log('🗺️ State filter changed to:', this.selectedState);
-          this.filterLocations();
-          
-          // Always zoom to state when state is selected, regardless of result count
-          if (this.selectedState !== 'all' && mapInitialized) {
-            console.log('🎯 Zooming to state:', this.selectedState);
-            setTimeout(() => {
-              this.zoomToState(this.selectedState);
-            }, 100); // Reduced delay for more responsive feel
-          } else if (this.selectedState === 'all' && mapInitialized) {
-            console.log('🌏 Zooming to Australia (All states)');
-            setTimeout(() => {
-              this.fitMapToAustralia();
-            }, 100);
-          }
-        },
-
-        clearFilters() {
-          console.log('🧹 Clearing all filters');
-          this.searchText = '';
-          this.selectedState = 'all';
-          this.showAutocomplete = false;
-          this.autocompleteItems = [];
-          this.selectedIndex = -1;
-          this.userLocation = null;
-          
-          // Filter locations and update markers
-          this.filterLocations();
-          
-          if (mapInitialized) {
-            console.log('🌏 Resetting map to show all Australia');
-            // Small delay to ensure markers are updated first
-            setTimeout(() => {
-              this.fitMapToAustralia();
-            }, 100);
-          }
-        },
-
         setActiveTab(tab) {
-          console.log('📋 Switching to tab:', tab);
           this.activeTab = tab;
           
           if (tab === 'map' && mapInitialized) {
             setTimeout(() => {
               google.maps.event.trigger(map, 'resize');
-              
-              // Apply current filters to map when switching to map view
-              console.log('🗺️ Applying current filters to map view');
-              filterMapMarkers();
-              
-              // Determine appropriate zoom based on current state
-              if (this.selectedState === 'all') {
-                this.fitMapToAustralia();
-              } else {
-                this.zoomToState(this.selectedState);
-              }
+              this.fitMapToAustralia();
             }, 100);
           }
         },
@@ -993,49 +552,6 @@ init() {
           }, 100);
         },
 
-        zoomToState(state) {
-          console.log('🎯 zoomToState called for:', state);
-          if (!mapInitialized || !stateBounds[state]) {
-            console.log('❌ Map not ready or state bounds not found for:', state);
-            return;
-          }
-          
-          const bounds = stateBounds[state];
-          console.log('📍 Using bounds for', state, ':', bounds);
-          
-          // Switch to map tab if not already active
-          if (this.activeTab !== 'map') {
-            this.activeTab = 'map';
-          }
-          
-          setTimeout(() => {
-            google.maps.event.trigger(map, 'resize');
-            const mapBounds = new google.maps.LatLngBounds(
-              new google.maps.LatLng(bounds.south, bounds.west),
-              new google.maps.LatLng(bounds.north, bounds.east)
-            );
-            map.fitBounds(mapBounds);
-            console.log('✅ Fitted bounds for state:', state);
-            
-            // Add padding by slightly reducing zoom after fitting
-            setTimeout(() => {
-              const currentZoom = map.getZoom();
-              console.log('📏 Current zoom level:', currentZoom);
-              // Adjust zoom based on state size - smaller states get less reduction
-              let zoomReduction = 0.5;
-              if (['TAS', 'NT'].includes(state)) zoomReduction = 0.3;
-              if (['SA', 'VIC'].includes(state)) zoomReduction = 0.4;
-              if (['NSW', 'QLD', 'WA'].includes(state)) zoomReduction = 0.5;
-              
-              if (currentZoom > 5) {
-                const newZoom = Math.max(currentZoom - zoomReduction, 5);
-                map.setZoom(newZoom);
-                console.log('🔧 Adjusted zoom to:', newZoom, 'for better padding');
-              }
-            }, 200);
-          }, 50);
-        },
-
         fitMapToAustralia() {
           if (!mapInitialized) return;
           
@@ -1047,23 +563,23 @@ init() {
             );
             map.fitBounds(bounds);
             
+            // Apply better zoom for centered Australia view
             setTimeout(() => {
               const currentZoom = map.getZoom();
-              if (currentZoom > 5) {
-                map.setZoom(currentZoom - 0.2);
-              }
+              // Ensure good zoom level that shows Australia properly centered
+              map.setZoom(Math.max(currentZoom + 0.5, 5.5));
             }, 300);
           }, 100);
         }
       }
     }
 
-    // Google Maps initialization (enhanced)
+    // Google Maps initialization
     function initMap() {
       try {
         map = new google.maps.Map(document.getElementById("map"), {
-          zoom: 6, // Closer initial zoom
-          center: { lat: -26.5, lng: 133.7751 }, // Slightly more centered for better view
+          zoom: 5,
+          center: { lat: -25.0, lng: 134.0 },
           mapTypeId: 'roadmap',
           zoomControl: true,
           zoomControlOptions: {
@@ -1087,9 +603,14 @@ init() {
         });
 
         mapInitialized = true;
-        loadMarkers();
+        console.log('✅ Google Maps initialized');
         
-        // Set closer initial bounds for better Australia view
+        // Load markers if data is ready
+        if (ailData.length > 0) {
+          loadMarkers();
+        }
+        
+        // Set better initial bounds for Australia
         setTimeout(() => {
           const bounds = new google.maps.LatLngBounds(
             new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
@@ -1097,12 +618,11 @@ init() {
           );
           map.fitBounds(bounds);
           
-          // Less zoom reduction for closer view
+          // Apply slight zoom adjustment for optimal view
           setTimeout(() => {
             const currentZoom = map.getZoom();
-            if (currentZoom > 5) {
-              map.setZoom(currentZoom - 0.1); // Minimal reduction for closer view
-            }
+            // Set a good zoom level that shows Australia well
+            map.setZoom(Math.max(currentZoom + 0.5, 5.5));
           }, 300);
         }, 100);
         
@@ -1113,15 +633,24 @@ init() {
         });
         
       } catch (error) {
-        console.error('Error initializing map:', error);
+        console.error('❌ Error initializing map:', error);
       }
     }
 
-    // Enhanced marker loading
+    // Load markers
     function loadMarkers() {
+      if (!mapInitialized || !ailData.length) {
+        console.log('⏳ Waiting for map and data to be ready...');
+        return;
+      }
+      
+      console.log(`🗺️ Loading ${ailData.length} markers...`);
+      
+      // Clear existing markers
       markers.forEach(marker => marker.setMap(null));
       markers = [];
 
+      // Group AILs by location to handle clusters
       const locationGroups = {};
       
       ailData.forEach(ail => {
@@ -1132,6 +661,7 @@ init() {
         locationGroups[key].push(ail);
       });
 
+      // Create markers for each unique location
       Object.values(locationGroups).forEach(ailsAtLocation => {
         const primaryAIL = ailsAtLocation[0];
         const isCluster = ailsAtLocation.length > 1;
@@ -1162,77 +692,22 @@ init() {
           marker.addListener("click", () => {
             if (ailFinderComponent) {
               ailFinderComponent.selectedLocation = primaryAIL;
-              ailFinderComponent.$nextTick(() => {
-                console.log('Location selected:', primaryAIL.name);
-              });
             }
           });
 
           markers.push(marker);
         } catch (error) {
-          console.error(`Error creating marker for ${primaryAIL.name}:`, error);
-        }
-      });
-    }
-
-    function filterMapMarkers() {
-      if (!mapInitialized) return;
-      
-      const appComponent = document.querySelector('[x-data]').__x.$data;
-      if (!appComponent) return;
-      
-      console.log('🗺️ Filtering map markers based on current filters...');
-      console.log('📍 Search text:', appComponent.searchText);
-      console.log('🏛️ Selected state:', appComponent.selectedState);
-      
-      let visibleCount = 0;
-      let hiddenCount = 0;
-      
-      markers.forEach((marker, index) => {
-        // Check if any AIL at this marker location matches the current filters
-        const shouldShow = marker.ailsAtLocation.some(ail => {
-          // Enhanced search across multiple fields
-          const searchFields = [
-            ail.name,
-            ail.address,
-            ail.suburb,
-            ail.postcode,
-            ail.inspector !== '-' ? ail.inspector : null
-          ].filter(field => field).join(' ').toLowerCase();
-          
-          const matchesSearch = !appComponent.searchText || 
-            searchFields.includes(appComponent.searchText.toLowerCase());
-          
-          const matchesState = appComponent.selectedState === 'all' || ail.state === appComponent.selectedState;
-          
-          return matchesSearch && matchesState;
-        });
-        
-        // Show/hide marker based on filter results
-        marker.setVisible(shouldShow);
-        
-        if (shouldShow) {
-          visibleCount++;
-        } else {
-          hiddenCount++;
+          console.error(`❌ Error creating marker for ${primaryAIL.name}:`, error);
         }
       });
       
-      console.log(`✅ Marker filtering complete: ${visibleCount} visible, ${hiddenCount} hidden`);
-      
-      // If we're filtering by state and have results, ensure the map shows the state bounds
-      if (appComponent.selectedState !== 'all' && visibleCount > 0) {
-        console.log('🎯 State filter active with results - ensuring state bounds are visible');
-        setTimeout(() => {
-          if (ailFinderComponent) {
-            ailFinderComponent.zoomToState(appComponent.selectedState);
-          }
-        }, 100);
-      }
+      console.log(`✅ Loaded ${markers.length} markers on map`);
     }
 
+    // Make initMap globally available for Google Maps callback
     window.initMap = initMap;
 
+    // Fallback initialization if Google Maps loads before Alpine.js
     document.addEventListener('DOMContentLoaded', function() {
       if (window.google && window.google.maps && !mapInitialized) {
         setTimeout(initMap, 1000);
