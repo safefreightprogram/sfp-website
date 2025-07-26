@@ -62,6 +62,10 @@
         <a href="index.html" class="transition-transform transform hover:scale-[1.05]">
           <img src="SFP-Logo.png" alt="Safe Freight Program" class="h-8 w-auto">
         </a>
+      </div>
+      
+      <!-- Centered Title -->
+      <div class="absolute left-1/2 transform -translate-x-1/2">
         <h1 class="text-xl font-semibold">Find AIL</h1>
       </div>
       
@@ -305,23 +309,58 @@
     let ailData = [];
     let mapInitialized = false;
 
-    // Australia bounds for fitting map to country
+    // Australia bounds for fitting map to country (more generous bounds)
     const australiaBounds = {
-      north: -10.0,
-      south: -44.0,
-      west: 112.0,
-      east: 154.0
+      north: -9.0,    // Further north to include all of Queensland/NT
+      south: -44.0,   // Include all of Tasmania
+      west: 112.0,    // Include all of Western Australia
+      east: 154.0     // Include all of Queensland/NSW coast
     };
 
-    // State/Territory center coordinates for zooming
-    const stateCenters = {
-      NSW: { lat: -33.8688, lng: 151.2093, zoom: 7 },
-      QLD: { lat: -27.4698, lng: 153.0251, zoom: 6 },
-      VIC: { lat: -37.8136, lng: 144.9631, zoom: 7 },
-      SA: { lat: -34.9285, lng: 138.6007, zoom: 7 },
-      WA: { lat: -31.9505, lng: 115.8605, zoom: 6 },
-      NT: { lat: -12.4634, lng: 130.8456, zoom: 6 },
-      TAS: { lat: -41.4545, lng: 145.9707, zoom: 8 }
+    // State/Territory bounds for proper fitting
+    const stateBounds = {
+      NSW: {
+        north: -28.15,
+        south: -37.5,
+        west: 140.9,
+        east: 153.6
+      },
+      QLD: {
+        north: -10.0,
+        south: -29.2,
+        west: 137.9,
+        east: 154.0
+      },
+      VIC: {
+        north: -33.9,
+        south: -39.2,
+        west: 140.9,
+        east: 150.0
+      },
+      SA: {
+        north: -25.9,
+        south: -38.1,
+        west: 129.0,
+        east: 141.0
+      },
+      WA: {
+        north: -13.7,
+        south: -35.1,
+        west: 112.9,
+        east: 129.0
+      },
+      NT: {
+        north: -10.9,
+        south: -26.0,
+        west: 129.0,
+        east: 138.0
+      },
+      TAS: {
+        north: -39.2,
+        south: -43.6,
+        west: 143.8,
+        east: 148.4
+      }
     };
 
     // Complete AIL Data from Google Sheet - All 79 locations
@@ -433,18 +472,13 @@
         selectedIndex: -1,
 
         init() {
-          console.log('🚀 Initializing AIL Finder...');
           ailData = rawAilData;
           this.filteredLocations = [...ailData];
-          console.log(`✅ Loaded ${ailData.length} AIL locations`);
           
           // Initialize map after a short delay to ensure DOM is ready
           setTimeout(() => {
             if (window.google && window.google.maps && !mapInitialized) {
-              console.log('🗺️ Google Maps loaded, initializing...');
               initMap();
-            } else if (!window.google) {
-              console.log('⏳ Waiting for Google Maps to load...');
             }
           }, 500);
         },
@@ -505,27 +539,15 @@
           this.showAutocomplete = false;
           this.selectedIndex = -1;
           this.filterLocations();
-          
-          // If single result, zoom to it
-          if (this.filteredLocations.length === 1) {
-            this.zoomToLocation(this.filteredLocations[0]);
-          }
         },
 
         performSearch() {
           this.showAutocomplete = false;
           this.selectedIndex = -1;
           this.filterLocations();
-          
-          // If single result, zoom to it
-          if (this.filteredLocations.length === 1) {
-            this.zoomToLocation(this.filteredLocations[0]);
-          }
         },
 
         filterLocations() {
-          console.log(`🔍 Filtering: "${this.searchText}", State: ${this.selectedState}`);
-          
           this.filteredLocations = ailData.filter(location => {
             const matchesSearch = !this.searchText || 
               location.company.toLowerCase().includes(this.searchText.toLowerCase()) ||
@@ -534,12 +556,69 @@
             return matchesSearch && matchesState;
           });
           
-          console.log(`📊 Found ${this.filteredLocations.length} matching locations`);
-          
           // Update map markers if map is active
           if (this.activeTab === 'map' && mapInitialized) {
             filterMapMarkers();
+            
+            // Smart zoom based on number of results
+            setTimeout(() => {
+              this.smartZoomToResults();
+            }, 200);
           }
+        },
+
+        smartZoomToResults() {
+          if (!mapInitialized || this.filteredLocations.length === 0) return;
+          
+          // If 1 result, zoom to that specific location
+          if (this.filteredLocations.length === 1) {
+            this.zoomToLocation(this.filteredLocations[0]);
+            return;
+          }
+          
+          // If 2-10 results, fit bounds to show all results
+          if (this.filteredLocations.length >= 2 && this.filteredLocations.length <= 10) {
+            this.fitBoundsToResults();
+            return;
+          }
+          
+          // If more than 10 results and state is selected, zoom to state
+          if (this.filteredLocations.length > 10 && this.selectedState !== 'all') {
+            this.zoomToState(this.selectedState);
+            return;
+          }
+          
+          // Default: show all of Australia
+          if (this.filteredLocations.length > 10 && this.selectedState === 'all') {
+            this.fitMapToAustralia();
+          }
+        },
+
+        fitBoundsToResults() {
+          if (!mapInitialized || this.filteredLocations.length === 0) return;
+          
+          // Create bounds from all filtered locations
+          const bounds = new google.maps.LatLngBounds();
+          
+          this.filteredLocations.forEach(location => {
+            bounds.extend(new google.maps.LatLng(location.lat, location.lng));
+          });
+          
+          // Apply bounds with padding
+          setTimeout(() => {
+            google.maps.event.trigger(map, 'resize');
+            map.fitBounds(bounds);
+            
+            // Add padding by slightly reducing zoom if too tight
+            setTimeout(() => {
+              const currentZoom = map.getZoom();
+              if (currentZoom > 12) {
+                map.setZoom(Math.min(currentZoom - 0.5, 14)); // Max zoom of 14 for multi-location view
+              } else if (currentZoom > 8) {
+                map.setZoom(currentZoom - 0.3); // Small adjustment for medium zooms
+              }
+            }, 300);
+          }, 100);
         },
 
         handleStateChange() {
@@ -554,7 +633,6 @@
         },
 
         clearFilters() {
-          console.log('🧹 Clearing filters...');
           this.searchText = '';
           this.selectedState = 'all';
           this.showAutocomplete = false;
@@ -568,7 +646,6 @@
         },
 
         setActiveTab(tab) {
-          console.log(`📋 Switching to ${tab} view`);
           this.activeTab = tab;
           
           if (tab === 'map' && mapInitialized) {
@@ -582,13 +659,22 @@
         },
 
         viewOnMap(location) {
-          console.log(`📍 Viewing ${location.company} on map`);
           this.activeTab = 'map';
           this.selectedLocation = location;
           
           if (mapInitialized) {
             this.zoomToLocation(location);
           }
+        },
+
+        getAILsAtLocation(location) {
+          if (!location) return [];
+          
+          // Find all AILs at the same coordinates (within a small tolerance)
+          return ailData.filter(ail => 
+            Math.abs(ail.lat - location.lat) < 0.001 && 
+            Math.abs(ail.lng - location.lng) < 0.001
+          );
         },
 
         zoomToLocation(location) {
@@ -603,13 +689,17 @@
         },
 
         zoomToState(state) {
-          if (!mapInitialized || !stateCenters[state]) return;
+          if (!mapInitialized || !stateBounds[state]) return;
           
-          const stateCenter = stateCenters[state];
+          const bounds = stateBounds[state];
+          
           setTimeout(() => {
             google.maps.event.trigger(map, 'resize');
-            map.setCenter({ lat: stateCenter.lat, lng: stateCenter.lng });
-            map.setZoom(stateCenter.zoom);
+            const mapBounds = new google.maps.LatLngBounds(
+              new google.maps.LatLng(bounds.south, bounds.west),
+              new google.maps.LatLng(bounds.north, bounds.east)
+            );
+            map.fitBounds(mapBounds);
           }, 100);
         },
 
@@ -623,15 +713,22 @@
               new google.maps.LatLng(australiaBounds.north, australiaBounds.east)
             );
             map.fitBounds(bounds);
+            
+            // Fine-tune the padding for better fit
+            setTimeout(() => {
+              const currentZoom = map.getZoom();
+              // Add slight padding by reducing zoom a bit
+              if (currentZoom > 4) {
+                map.setZoom(currentZoom - 0.3);
+              }
+            }, 300);
           }, 100);
-        }
+        },
       }
     }
 
     // Google Maps initialization
     function initMap() {
-      console.log('🗺️ Creating Google Map...');
-      
       try {
         map = new google.maps.Map(document.getElementById("map"), {
           zoom: 5,
@@ -647,14 +744,22 @@
         });
 
         mapInitialized = true;
-        console.log('✅ Map created successfully');
         
-        // Fit map to Australia bounds
+        // Fit map to Australia bounds on initial load
         const bounds = new google.maps.LatLngBounds(
           new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
           new google.maps.LatLng(australiaBounds.north, australiaBounds.east)
         );
         map.fitBounds(bounds);
+        
+        // Fine-tune after initial fit
+        setTimeout(() => {
+          const currentZoom = map.getZoom();
+          // Reduce zoom slightly for better padding
+          if (currentZoom > 4) {
+            map.setZoom(currentZoom - 0.3);
+          }
+        }, 500);
         
         // Add markers
         loadMarkers();
@@ -668,53 +773,67 @@
         });
         
       } catch (error) {
-        console.error('❌ Error initializing map:', error);
+        console.error('Error initializing map:', error);
       }
     }
 
     function loadMarkers() {
-      console.log(`📍 Loading ${ailData.length} markers...`);
-      
       // Clear existing markers
       markers.forEach(marker => marker.setMap(null));
       markers = [];
 
-      let loadedCount = 0;
+      // Group AILs by location to handle clusters
+      const locationGroups = {};
       
       ailData.forEach(ail => {
+        const key = `${ail.lat.toFixed(6)},${ail.lng.toFixed(6)}`;
+        if (!locationGroups[key]) {
+          locationGroups[key] = [];
+        }
+        locationGroups[key].push(ail);
+      });
+
+      // Create markers for each unique location
+      Object.values(locationGroups).forEach(ailsAtLocation => {
+        const primaryAIL = ailsAtLocation[0]; // Use first AIL for marker position
+        const isCluster = ailsAtLocation.length > 1;
+        
         try {
           const marker = new google.maps.Marker({
-            position: { lat: ail.lat, lng: ail.lng },
+            position: { lat: primaryAIL.lat, lng: primaryAIL.lng },
             map: map,
-            title: ail.company,
+            title: isCluster 
+              ? `${ailsAtLocation.length} AILs at this location` 
+              : primaryAIL.company,
             icon: {
               url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="10" fill="#2563eb" stroke="white" stroke-width="2"/>
-                  <circle cx="12" cy="12" r="4" fill="white"/>
+                <svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="14" cy="14" r="12" fill="${isCluster ? '#dc2626' : '#2563eb'}" stroke="white" stroke-width="2"/>
+                  <circle cx="14" cy="14" r="6" fill="white"/>
+                  ${isCluster ? `<text x="14" y="18" text-anchor="middle" fill="${isCluster ? '#dc2626' : '#2563eb'}" font-size="8" font-weight="bold">${ailsAtLocation.length}</text>` : ''}
                 </svg>
               `),
-              scaledSize: new google.maps.Size(24, 24),
-              anchor: new google.maps.Point(12, 12)
+              scaledSize: new google.maps.Size(isCluster ? 28 : 24, isCluster ? 28 : 24),
+              anchor: new google.maps.Point(isCluster ? 14 : 12, isCluster ? 14 : 12)
             }
           });
 
+          // Store reference to all AILs at this location
+          marker.ailsAtLocation = ailsAtLocation;
+
           marker.addListener("click", () => {
-            console.log(`🖱️ Clicked marker: ${ail.company}`);
             const appComponent = document.querySelector('[x-data]').__x.$data;
             if (appComponent) {
-              appComponent.selectedLocation = ail;
+              // Show the primary AIL, but the popup will display all AILs at location
+              appComponent.selectedLocation = primaryAIL;
             }
           });
 
           markers.push(marker);
-          loadedCount++;
         } catch (error) {
-          console.error(`❌ Error creating marker for ${ail.company}:`, error);
+          console.error(`Error creating marker for ${primaryAIL.company}:`, error);
         }
       });
-      
-      console.log(`✅ Loaded ${loadedCount} markers successfully`);
     }
 
     function filterMapMarkers() {
@@ -723,30 +842,19 @@
       const appComponent = document.querySelector('[x-data]').__x.$data;
       if (!appComponent) return;
       
-      console.log('🔄 Updating map markers visibility...');
-      
-      let visibleCount = 0;
-      
       markers.forEach(marker => {
-        const ail = ailData.find(a => 
-          Math.abs(a.lat - marker.getPosition().lat()) < 0.0001 && 
-          Math.abs(a.lng - marker.getPosition().lng()) < 0.0001
-        );
-        
-        if (ail) {
+        // Check if any AIL at this marker location matches the filters
+        const shouldShow = marker.ailsAtLocation.some(ail => {
           const matchesSearch = !appComponent.searchText || 
             ail.company.toLowerCase().includes(appComponent.searchText.toLowerCase()) ||
             ail.address.toLowerCase().includes(appComponent.searchText.toLowerCase());
           const matchesState = appComponent.selectedState === 'all' || ail.state === appComponent.selectedState;
           
-          const shouldShow = matchesSearch && matchesState;
-          marker.setVisible(shouldShow);
-          
-          if (shouldShow) visibleCount++;
-        }
+          return matchesSearch && matchesState;
+        });
+        
+        marker.setVisible(shouldShow);
       });
-      
-      console.log(`👁️ ${visibleCount} markers visible`);
     }
 
     // Make initMap globally available for Google Maps callback
@@ -754,11 +862,8 @@
 
     // Fallback initialization if Google Maps loads before Alpine.js
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('📄 DOM loaded');
-      
       // Check if Google Maps is already loaded
       if (window.google && window.google.maps && !mapInitialized) {
-        console.log('🔄 Google Maps already loaded, initializing...');
         setTimeout(initMap, 1000);
       }
     });
