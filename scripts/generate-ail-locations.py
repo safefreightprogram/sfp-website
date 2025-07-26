@@ -1,33 +1,44 @@
 import pandas as pd
 import json
+import os
 
-def convert_sheet_to_json(csv_url, output_file='ail-locations.json'):
-    df = pd.read_csv(csv_url)
+# Google Sheet CSV export URL
+sheet_url = "https://docs.google.com/spreadsheets/d/1q4SFo83xPIysakFXTwIRFq0vDGIib3d0ZqEEP6vQdEs/export?format=csv"
 
-    column_mapping = {
-        'AIL #': 'id',
-        'Company': 'company',
-        'Combined Address': 'address',
-        'Phone': 'phone',
-        'Latitude': 'lat',
-        'Longitude': 'lng',
-        'State': 'state'
-    }
+# Output path (make sure this folder exists in your repo)
+output_path = "data/ail-locations.json"
 
-    df = df[list(column_mapping.keys())].rename(columns=column_mapping)
-    df = df.dropna(subset=['lat', 'lng', 'address'])
+# Columns to extract and rename
+columns = {
+    "AIL #": "id",
+    "Company": "name",
+    "Business Address Line 1": "address",
+    "Suburb": "suburb",
+    "State": "state",
+    "Postcode": "postcode",
+    "Licensed Inspector": "inspector",
+    "Phone": "phone",
+    "Latitude": "lat",
+    "Longitude": "lng"
+}
 
-    df['id'] = df['id'].astype(int)
-    df['lat'] = df['lat'].astype(float)
-    df['lng'] = df['lng'].astype(float)
-    df['company'] = df['company'].fillna('')
-    df['phone'] = df['phone'].fillna('')
-    df['state'] = df['state'].fillna('')
+# Load CSV from Google Sheets
+df = pd.read_csv(sheet_url)
 
-    data = df.to_dict(orient='records')
+# Drop rows with no coordinates
+df = df.dropna(subset=["Latitude", "Longitude"])
 
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+# Keep only the desired columns and rename them
+df = df[list(columns.keys())].rename(columns=columns)
 
-# Run the function
-convert_sheet_to_json("https://docs.google.com/spreadsheets/d/1q4SFo83xPIysakFXTwIRFq0vDGIib3d0ZqEEP6vQdEs/export?format=csv")
+# Convert to list of dicts
+ail_data = df.to_dict(orient="records")
+
+# Ensure the output folder exists
+os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+# Write to JSON
+with open(output_path, "w", encoding="utf-8") as f:
+    json.dump(ail_data, f, ensure_ascii=False, indent=2)
+
+print(f"✅ AIL data updated: {output_path}")
