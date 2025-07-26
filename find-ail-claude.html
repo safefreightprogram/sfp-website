@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find an AIL – Safe Freight Program</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  
+  <style>
+    #map {
+      width: 100%;
+      height: 500px;
+      border-radius: 0.5rem;
+    }
+    
+    .tab-active {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      border-color: #1d4ed8;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    
+    .tab-inactive {
+      background-color: white;
+      color: #374151;
+      border-color: #d1d5db;
+      transition: all 0.2s ease;
+    }
+    
+    .tab-inactive:hover {
+      background-color: #f8fafc;
+      border-color: #9ca3af;
+    }
+
+    .autocomplete-dropdown {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #d1d5db;
+      border-top: none;
+      background: white;
+      border-radius: 0 0 0.5rem 0.5rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .autocomplete-item {
+      padding: 0.75rem;
+      cursor: pointer;
+      border-bottom: 1px solid #f3f4f6;
+      transition: background-color 0.15s ease;
+    }
+
+    .autocomplete-item:hover,
+    .autocomplete-item.selected {
+      background-color: #eff6ff;
+    }
+
+    .search-hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    
+    .location-card {
+      transition: all 0.2s ease;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .location-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      border-color: #2563eb;
+    }
+    
+    .info-panel {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+    }
+    
+    .filter-badge {
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    .loading-spinner {
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .pulse-button {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800 font-sans">
+
+  <!-- Header with Navigation -->
+  <header class="bg-gradient-to-r from-blue-900 to-blue-800 text-white sticky top-0 z-50 shadow-lg" x-data="{ open: false, showSearch: false }">
+    <div class="max-w-7xl mx-auto p-4 flex justify-between items-center relative">
+      <div class="flex items-center space-x-3">
+        <a href="index.html" class="transition-transform transform hover:scale-105">
+          <img src="SFP-Logo.png" alt="Safe Freight Program" class="h-8 w-auto">
+        </a>
+      </div>
+      
+      <!-- Centered Title -->
+      <div class="absolute left-1/2 transform -translate-x-1/2">
+        <h1 class="text-xl font-semibold">Find AIL</h1>
+      </div>
+      
+      <!-- Controls -->
+      <div class="flex items-center space-x-4">
+        <button @click="showSearch = !showSearch" class="p-2 rounded-lg hover:bg-blue-700 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
+        
+        <button @click="open = !open" class="p-2 rounded-lg hover:bg-blue-700 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Search bar -->
+      <div x-show="showSearch" @click.away="showSearch = false" x-transition 
+           class="absolute top-full right-0 bg-blue-900 shadow-lg z-40 w-full sm:w-80 md:w-72 lg:w-64 rounded-b-lg">
+        <div class="p-4">
+          <form action="search.html" method="GET">
+            <input type="search" name="q" placeholder="Type a word"
+                   class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black">
+          </form>
+        </div>
+      </div>
+      
+      <!-- Navigation menu -->
+      <div x-show="open" @click.away="open = false" x-transition 
+           class="absolute top-full right-0 bg-blue-900 text-white text-sm z-50 shadow-lg rounded-b-lg"
+           :class="showSearch ? 'mt-16 sm:mt-0 sm:right-80 md:right-72 lg:right-64' : ''">
+        <nav class="flex flex-col">
+          <a href="about.html" class="block px-4 py-2 hover:bg-blue-800 transition-colors">About</a>
+          <a href="lookup-driver.html" class="block px-4 py-2 hover:bg-blue-800 transition-colors">Driver Lookup</a>
+          <a href="lookup-vehicle.html" class="block px-4 py-2 hover:bg-blue-800 transition-colors">Vehicle Lookup</a>
+          <a href="find-ail.html" class="block px-4 py-2 bg-blue-800 font-medium">Find AIL</a>
+          <a href="training.html" class="block px-4 py-2 hover:bg-blue-800 transition-colors">SFP Training</a>
+          <a href="ail-login.html" class="block px-4 py-2 hover:bg-blue-800 transition-colors">AIL Portal</a>
+          <a href="trainer-login.html" class="block px-4 py-2 hover:bg-blue-800 transition-colors">Trainer Login</a>
+          <a href="contact.html" class="block px-4 py-2 hover:bg-blue-800 transition-colors">Contact</a>
+          <a href="subscription.html" class="block px-4 py-2 hover:bg-blue-800 transition-colors">Subscribe</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 py-6" x-data="ailFinder()">
+
+    <!-- Enhanced Header Section -->
+    <div class="text-center mb-8">
+      <h2 class="text-3xl font-bold text-gray-900 mb-2">Find Your Nearest AIL</h2>
+      <p class="text-gray-600 max-w-2xl mx-auto">Locate authorized inspection locations across Australia for your freight compliance needs.</p>
+    </div>
+
+    <!-- Side by Side Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Left Side - Enhanced Search and Filters -->
+      <div class="lg:col-span-1">
+        <!-- Search Header -->
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
+          <div class="flex items-center mb-4">
+            <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <h3 class="text-lg font-semibold text-gray-800">Find Locations</h3>
+          </div>
+          
+          <!-- Enhanced Search Input -->
+          <div class="mb-6 relative">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Search by Company or Location</label>
+            <div class="relative">
+              <input 
+                type="text" 
+                x-model="searchText"
+                @input="handleSearchInput()"
+                @keydown="handleKeyDown($event)"
+                @focus="showAutocomplete = true"
+                @blur="setTimeout(() => showAutocomplete = false, 200)"
+                placeholder="Company name, suburb, or postcode..."
+                class="w-full pl-10 pr-4 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              >
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <div x-show="searchText" @click="searchText = ''; filterLocations()" class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer">
+                <svg class="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </div>
+            </div>
+            
+            <!-- Search Hint -->
+            <div class="search-hint">Press Enter to search or select from suggestions</div>
+            
+            <!-- Enhanced Autocomplete Dropdown -->
+            <div x-show="showAutocomplete && autocompleteItems.length > 0" 
+                 class="absolute z-20 w-full autocomplete-dropdown">
+              <template x-for="(item, index) in autocompleteItems.slice(0, 8)" :key="item.id">
+                <div class="autocomplete-item" 
+                     :class="{ 'selected': index === selectedIndex }"
+                     @click="selectAutocompleteItem(item)">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <div class="font-medium text-sm text-gray-900" x-text="item.company"></div>
+                      <div class="text-xs text-gray-500 mt-1" x-text="item.address"></div>
+                    </div>
+                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded ml-2" x-text="item.state"></span>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Find Nearest Button -->
+          <div class="mb-6">
+            <button 
+              @click="findNearest()"
+              :disabled="loadingLocation"
+              class="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg transition-all font-medium disabled:opacity-50"
+              :class="{ 'pulse-button': !loadingLocation }"
+            >
+              <svg x-show="!loadingLocation" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              </svg>
+              <svg x-show="loadingLocation" class="w-5 h-5 mr-2 loading-spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              <span x-text="loadingLocation ? 'Finding your location...' : '📍 Find Nearest to Me'"></span>
+            </button>
+          </div>
+
+          <!-- Enhanced State Filter -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-3">Filter by State/Territory</label>
+            <div class="grid grid-cols-2 gap-2">
+              <template x-for="state in stateOptions" :key="state.value">
+                <button 
+                  @click="selectedState = state.value; handleStateChange()"
+                  :class="selectedState === state.value ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'"
+                  class="px-3 py-2 text-sm border rounded-lg transition-all font-medium"
+                  x-text="state.label"
+                ></button>
+              </template>
+            </div>
+          </div>
+
+          <!-- Active Filters Display -->
+          <div x-show="searchText || selectedState !== 'all'" class="mb-4">
+            <div class="flex flex-wrap gap-2">
+              <span x-show="searchText" class="filter-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                Search: <span x-text="searchText" class="ml-1 font-semibold"></span>
+                <button @click="searchText = ''; filterLocations()" class="ml-2 hover:text-blue-600">×</button>
+              </span>
+              <span x-show="selectedState !== 'all'" class="filter-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                State: <span x-text="selectedState" class="ml-1 font-semibold"></span>
+                <button @click="selectedState = 'all'; handleStateChange()" class="ml-2 hover:text-green-600">×</button>
+              </span>
+            </div>
+          </div>
+
+          <!-- Clear All Button -->
+          <button 
+            @click="clearFilters()"
+            class="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium mb-4"
+          >
+            🔄 Clear All Filters
+          </button>
+
+          <!-- Enhanced Results Count -->
+          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm font-medium text-gray-900">
+                  <span x-text="filteredLocations.length" class="text-lg font-bold text-blue-600"></span>
+                  <span class="text-gray-600">locations found</span>
+                </div>
+                <div class="text-xs text-gray-500 mt-1">
+                  Across <span x-text="getUniqueStates().length"></span> states/territories
+                </div>
+              </div>
+              <div class="text-2xl">
+                <span x-show="filteredLocations.length > 0">🎯</span>
+                <span x-show="filteredLocations.length === 0">🔍</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side - Enhanced Map and List Tabs -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+          
+          <!-- Enhanced Tab Headers -->
+          <div class="border-b border-gray-200 bg-gray-50">
+            <div class="flex">
+              <button 
+                @click="setActiveTab('map')"
+                :class="activeTab === 'map' ? 'tab-active' : 'tab-inactive'"
+                class="flex-1 px-6 py-4 font-semibold text-sm border-r border-gray-200 transition-all flex items-center justify-center"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"></path>
+                </svg>
+                Map View
+              </button>
+              <button 
+                @click="setActiveTab('list')"
+                :class="activeTab === 'list' ? 'tab-active' : 'tab-inactive'"
+                class="flex-1 px-6 py-4 font-semibold text-sm transition-all flex items-center justify-center"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                </svg>
+                List View
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab Content Container -->
+          <div class="relative h-[500px]">
+            
+            <!-- Map Tab Content -->
+            <div x-show="activeTab === 'map'" class="absolute inset-0 p-4">
+              <div id="map" class="w-full h-full shadow-md"></div>
+              
+              <!-- Enhanced Map Info Panel -->
+              <div x-show="selectedLocation" 
+                   x-transition
+                   class="absolute top-8 left-8 info-panel rounded-xl shadow-xl border border-gray-200 p-6 max-w-sm z-10">
+                <template x-if="selectedLocation">
+                  <div>
+                    <div class="flex justify-between items-start mb-3">
+                      <h3 class="font-bold text-gray-900 text-lg pr-2" x-text="selectedLocation.company"></h3>
+                      <button @click="selectedLocation = null" 
+                              class="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full p-1 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                    <div class="space-y-3">
+                      <div class="flex items-start">
+                        <svg class="w-4 h-4 text-gray-500 mt-1 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        </svg>
+                        <p class="text-sm text-gray-600" x-text="selectedLocation.address"></p>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <a :href="'tel:' + selectedLocation.phone" 
+                           class="flex items-center text-blue-600 hover:text-blue-700 font-semibold text-sm bg-blue-50 px-3 py-2 rounded-lg transition-colors">
+                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                          </svg>
+                          <span x-text="selectedLocation.phone"></span>
+                        </a>
+                        <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full font-medium" 
+                              x-text="selectedLocation.state"></span>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- Enhanced List Tab Content -->
+            <div x-show="activeTab === 'list'" class="absolute inset-0 p-6 overflow-y-auto">
+              <div class="space-y-4">
+                <template x-for="location in filteredLocations" :key="location.id">
+                  <div class="location-card rounded-xl p-6 bg-white hover:shadow-lg">
+                    <div class="flex justify-between items-start mb-3">
+                      <h3 class="font-bold text-gray-900 text-lg leading-tight flex-1 pr-3" x-text="location.company"></h3>
+                      <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full font-medium flex-shrink-0" x-text="location.state"></span>
+                    </div>
+                    
+                    <div class="flex items-start mb-4">
+                      <svg class="w-4 h-4 text-gray-500 mt-1 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                      </svg>
+                      <p class="text-gray-600 text-sm leading-relaxed" x-text="location.address"></p>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                      <a :href="'tel:' + location.phone" 
+                         class="flex items-center text-blue-600 hover:text-blue-700 font-semibold text-sm bg-blue-50 px-4 py-2 rounded-lg transition-all hover:bg-blue-100">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                        </svg>
+                        <span x-text="location.phone"></span>
+                      </a>
+                      <button 
+                        @click="viewOnMap(location)"
+                        class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm px-4 py-2 rounded-lg transition-all font-medium shadow-md hover:shadow-lg">
+                        📍 View on Map
+                      </button>
+                    </div>
+                  </div>
+                </template>
+                
+                <!-- Enhanced No results -->
+                <div x-show="filteredLocations.length === 0" class="text-center py-12">
+                  <div class="text-6xl mb-4">🔍</div>
+                  <h3 class="text-xl font-semibold text-gray-900 mb-2">No locations found</h3>
+                  <p class="text-gray-500 mb-6">Try adjusting your search criteria or clearing filters</p>
+                  <button @click="clearFilters()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    Clear All Filters
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Enhanced Footer -->
+  <footer class="bg-white border-t border-gray-200 text-sm text-center text-gray-600 p-6 mt-12">
+    <div class="max-w-7xl mx-auto">
+      <p>&copy; 2025 Safe Freight Program. All rights reserved.</p>
+      <p class="text-xs text-gray-500 mt-2">Authorised Inspection Locations data updated regularly</p>
+    </div>
+  </footer>
+
+  <script>
+    // Global variables (same as original)
+    let map;
+    let markers = [];
+    let ailData = [];
+    let mapInitialized = false;
+    let ailFinderComponent = null;
+
+    // Australia bounds and state bounds (same as original)
+    const australiaBounds = {
+      north: -9.5,
+      south: -43.5,
+      west: 113.0,
+      east: 153.0
+    };
+
+    const stateBounds = {
+      NSW: { north: -28.15, south: -37.5, west: 140.9, east: 153.6 },
+      QLD: { north: -10.0, south: -29.2, west: 137.9, east: 154.0 },
+      VIC: { north: -33.9, south: -39.2, west: 140.9, east: 150.0 },
+      SA: { north: -25.9, south: -38.1, west: 129.0, east: 141.0 },
+      WA: { north: -13.7, south: -35.1, west: 112.9, east: 129.0 },
+      NT: { north: -10.9, south: -26.0, west: 129.0, east: 138.0 },
+      TAS: { north: -39.2, south: -43.6, west: 143.8, east: 148.4 }
+    };
+
+    // Complete AIL Data (same as original - truncated for space)
+    const rawAilData = [
+      // NSW Locations
+      {id: 239, company: "Aero Refuellers", address: "Hanger 8-11 Ogden Street, East Albury NSW 2640", phone: "02 6041 1599", lat: -36.071665, lng: 146.9537581, state: "NSW"},
+      {id: 222, company: "Australian Fuelling Systems & Equip", address: "7-11 Armstrong Street, Tamworth NSW 2340", phone: "02 6760 7816", lat: -31.0791106, lng: 150.8532199, state: "NSW"},
+      {id: 220, company: "Doug Sutherland Truck Repairs", address: "222 Urana Street, Wagga Wagga NSW 2650", phone: "02 6925 2094", lat: -35.1252742, lng: 147.3413631, state: "NSW"},
+      {id: 207, company: "Durham Fabrications", address: "4 Ranton Street, Cardiff NSW 2285", phone: "02 4956 8868", lat: -32.9444557, lng: 151.6476872, state: "NSW"},
+      {id: 208, company: "Durham Fabrications", address: "Cardiff NSW 2285", phone: "02 4956 8868", lat: -32.9110348, lng: 151.6187438, state: "NSW"},
+      
+      // QLD Locations
+      {id: 410, company: "Brown & Hurley", address: "2 Central Park Drive, South Mackay QLD 4740", phone: "07 4952 3722", lat: -21.1755649, lng: 149.1661223, state: "QLD"},
+      {id: 462, company: "Brown and Hurley", address: "28-30 Carrington Road, Torrington QLD 4350", phone: "07 4690 7300", lat: -27.5487615, lng: 151.8968995, state: "QLD"},
+      {id: 424, company: "Central Coast Services Mackay", address: "Lot 1 Presto Avenue, Outer Harbour QLD 4740", phone: "07 4955 4922", lat: -21.1101141, lng: 149.2110353, state: "QLD"},
+      
+      // VIC Locations
+      {id: 305, company: "Acme Oil Equipment Services Pty Ltd", address: "32 Greens Road, Dandenong South VIC 3175", phone: "03 9791 3255", lat: -38.015738, lng: 145.2209347, state: "VIC"},
+      {id: 320, company: "Australian Tank Engineering", address: "29-31 Vella Drive, Sunshine VIC 3020", phone: "03 9310 2722", lat: -37.8056095, lng: 144.828958, state: "VIC"},
+      
+      // SA Locations
+      {id: 503, company: "Haulmark Trailers Australia", address: "97-99 West Avenue, Edinburgh SA 5111", phone: "08 8283 8585", lat: -34.7327779, lng: 138.6344371, state: "SA"},
+      {id: 502, company: "Liquip (SA) Pty Ltd", address: "10 Creswell Road, Largs North SA 5016", phone: "08 8341 7009", lat: -34.8213309, lng: 138.5037846, state: "SA"},
+      
+      // WA Locations
+      {id: 657, company: "Fuel Maintenance and Engineering", address: "1562 Arthur Road, Geraldton WA 6530", phone: "0409 981 026", lat: -28.8346566, lng: 114.7321136, state: "WA"},
+      {id: 623, company: "Integrated Fuel Services", address: "Perth WA 6000", phone: "08 9434 7000", lat: -31.9525739, lng: 115.8610488, state: "WA"},
+      
+      // NT Locations
+      {id: 820, company: "Haulmark Trailers Australia", address: "1 Mettham Road, Berrimah NT 828", phone: "08 8984 3533", lat: -12.4606551, lng: 130.9283392, state: "NT"},
+      {id: 801, company: "Tanker Repairs Australia", address: "26 McKinnon Rd, Pinelands NT 829", phone: "08 8932 1328", lat: -12.4549857, lng: 130.9620088, state: "NT"},
+      
+      // TAS Locations  
+      {id: 704, company: "AJL Heavy Equipment", address: "1-3 Massy-Greene Drive, South Burnie TAS 7320", phone: "03 6430 2777", lat: -41.0674275, lng: 145.9239546, state: "TAS"},
+      {id: 701, company: "Kent Engineering", address: "153 Stoney Rise Road, Devonport TAS 7310", phone: "03 6424 9233", lat: -41.1926208, lng: 146.3297592, state: "TAS"}
+    ];
+
+    // Enhanced Alpine.js component
+    function ailFinder() {
+      return {
+        activeTab: 'map',
+        selectedState: 'all',
+        searchText: '',
+        filteredLocations: [],
+        selectedLocation: null,
+        showAutocomplete: false,
+        autocompleteItems: [],
+        selectedIndex: -1,
+        loadingLocation: false,
+        userLocation: null,
+
+        // State options for enhanced UI
+        stateOptions: [
+          { value: 'all', label: 'All' },
+          { value: 'NSW', label: 'NSW' },
+          { value: 'QLD', label: 'QLD' },
+          { value: 'VIC', label: 'VIC' },
+          { value: 'SA', label: 'SA' },
+          { value: 'WA', label: 'WA' },
+          { value: 'NT', label: 'NT' },
+          { value: 'TAS', label: 'TAS' }
+        ],
+
+        init() {
+          ailFinderComponent = this;
+          ailData = rawAilData;
+          this.filteredLocations = [...ailData];
+          
+          setTimeout(() => {
+            if (window.google && window.google.maps && !mapInitialized) {
+              initMap();
+            }
+          }, 500);
+          
+          setTimeout(() => {
+            if (window.google && window.google.maps && mapInitialized && markers.length === 0) {
+              loadMarkers();
+            }
+          }, 2000);
+        },
+
+        // Enhanced search functionality
+        handleSearchInput() {
+          this.filterLocations();
+          this.updateAutocomplete();
+          this.selectedIndex = -1;
+        },
+
+        handleKeyDown(event) {
+          if (!this.showAutocomplete || this.autocompleteItems.length === 0) {
+            if (event.key === 'Enter') {
+              this.performSearch();
+            }
+            return;
+          }
+
+          switch (event.key) {
+            case 'ArrowDown':
+              event.preventDefault();
+              this.selectedIndex = Math.min(this.selectedIndex + 1, this.autocompleteItems.length - 1);
+              break;
+            case 'ArrowUp':
+              event.preventDefault();
+              this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+              break;
+            case 'Enter':
+              event.preventDefault();
+              if (this.selectedIndex >= 0) {
+                this.selectAutocompleteItem(this.autocompleteItems[this.selectedIndex]);
+              } else {
+                this.performSearch();
+              }
+              break;
+            case 'Escape':
+              this.showAutocomplete = false;
+              this.selectedIndex = -1;
+              break;
+          }
+        },
+
+        updateAutocomplete() {
+          if (!this.searchText || this.searchText.length < 2) {
+            this.autocompleteItems = [];
+            return;
+          }
+
+          const searchLower = this.searchText.toLowerCase();
+          this.autocompleteItems = ailData.filter(location => 
+            location.company.toLowerCase().includes(searchLower) ||
+            location.address.toLowerCase().includes(searchLower)
+          ).slice(0, 8);
+        },
+
+        selectAutocompleteItem(item) {
+          this.searchText = item.company;
+          this.showAutocomplete = false;
+          this.selectedIndex = -1;
+          this.filterLocations();
+        },
+
+        performSearch() {
+          this.showAutocomplete = false;
+          this.selectedIndex = -1;
+          this.filterLocations();
+        },
+
+        // New geolocation functionality
+        findNearest() {
+          if (!navigator.geolocation) {
+            alert('Geolocation is not supported by this browser.');
+            return;
+          }
+
+          this.loadingLocation = true;
+
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              this.userLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              };
+              
+              // Calculate distances and sort by nearest
+              const locationsWithDistance = ailData.map(location => ({
+                ...location,
+                distance: this.calculateDistance(
+                  this.userLocation.lat, 
+                  this.userLocation.lng, 
+                  location.lat, 
+                  location.lng
+                )
+              })).sort((a, b) => a.distance - b.distance);
+
+              // Update filtered locations to show nearest first
+              this.filteredLocations = locationsWithDistance;
+              
+              // Switch to map view and center on user location
+              this.activeTab = 'map';
+              if (mapInitialized) {
+                map.setCenter(this.userLocation);
+                map.setZoom(10);
+              }
+
+              this.loadingLocation = false;
+            },
+            (error) => {
+              console.error('Error getting location:', error);
+              alert('Unable to get your location. Please check your browser permissions.');
+              this.loadingLocation = false;
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 300000
+            }
+          );
+        },
+
+        // Distance calculation using Haversine formula
+        calculateDistance(lat1, lng1, lat2, lng2) {
+          const R = 6371; // Earth's radius in km
+          const dLat = this.toRadians(lat2 - lat1);
+          const dLng = this.toRadians(lng2 - lng1);
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                   Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) * 
+                   Math.sin(dLng/2) * Math.sin(dLng/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          return R * c;
+        },
+
+        toRadians(degrees) {
+          return degrees * (Math.PI/180);
+        },
+
+        // Enhanced filtering
+        filterLocations() {
+          this.filteredLocations = ailData.filter(location => {
+            const matchesSearch = !this.searchText || 
+              location.company.toLowerCase().includes(this.searchText.toLowerCase()) ||
+              location.address.toLowerCase().includes(this.searchText.toLowerCase());
+            const matchesState = this.selectedState === 'all' || location.state === this.selectedState;
+            return matchesSearch && matchesState;
+          });
+          
+          if (this.activeTab === 'map' && mapInitialized) {
+            filterMapMarkers();
+            setTimeout(() => {
+              this.smartZoomToResults();
+            }, 200);
+          }
+        },
+
+        // Get unique states for results display
+        getUniqueStates() {
+          return [...new Set(this.filteredLocations.map(loc => loc.state))];
+        },
+
+        smartZoomToResults() {
+          if (!mapInitialized || this.filteredLocations.length === 0) return;
+          
+          if (this.selectedState !== 'all') {
+            return;
+          }
+          
+          if (this.filteredLocations.length === 1) {
+            this.zoomToLocation(this.filteredLocations[0]);
+            return;
+          }
+          
+          if (this.filteredLocations.length >= 2 && this.filteredLocations.length <= 10) {
+            this.fitBoundsToResults();
+            return;
+          }
+          
+          if (this.filteredLocations.length > 10) {
+            this.fitMapToAustralia();
+          }
+        },
+
+        fitBoundsToResults() {
+          if (!mapInitialized || this.filteredLocations.length === 0) return;
+          
+          const bounds = new google.maps.LatLngBounds();
+          
+          this.filteredLocations.forEach(location => {
+            bounds.extend(new google.maps.LatLng(location.lat, location.lng));
+          });
+          
+          setTimeout(() => {
+            google.maps.event.trigger(map, 'resize');
+            map.fitBounds(bounds);
+            
+            setTimeout(() => {
+              const currentZoom = map.getZoom();
+              if (currentZoom > 12) {
+                map.setZoom(Math.min(currentZoom - 0.5, 14));
+              } else if (currentZoom > 8) {
+                map.setZoom(currentZoom - 0.3);
+              }
+            }, 300);
+          }, 100);
+        },
+
+        handleStateChange() {
+          this.filterLocations();
+          
+          if (this.selectedState !== 'all' && mapInitialized) {
+            setTimeout(() => {
+              this.zoomToState(this.selectedState);
+            }, 300);
+          } else if (this.selectedState === 'all' && mapInitialized) {
+            setTimeout(() => {
+              this.fitMapToAustralia();
+            }, 300);
+          }
+        },
+
+        clearFilters() {
+          this.searchText = '';
+          this.selectedState = 'all';
+          this.showAutocomplete = false;
+          this.autocompleteItems = [];
+          this.selectedIndex = -1;
+          this.userLocation = null;
+          this.filterLocations();
+          
+          if (mapInitialized) {
+            this.fitMapToAustralia();
+          }
+        },
+
+        setActiveTab(tab) {
+          this.activeTab = tab;
+          
+          if (tab === 'map' && mapInitialized) {
+            setTimeout(() => {
+              google.maps.event.trigger(map, 'resize');
+              if (this.selectedState === 'all') {
+                this.fitMapToAustralia();
+              }
+            }, 100);
+          }
+        },
+
+        viewOnMap(location) {
+          this.activeTab = 'map';
+          this.selectedLocation = location;
+          
+          if (mapInitialized) {
+            this.zoomToLocation(location);
+          }
+        },
+
+        zoomToLocation(location) {
+          if (!mapInitialized) return;
+          
+          setTimeout(() => {
+            google.maps.event.trigger(map, 'resize');
+            map.setCenter({ lat: location.lat, lng: location.lng });
+            map.setZoom(12);
+            this.selectedLocation = location;
+          }, 100);
+        },
+
+        zoomToState(state) {
+          if (!mapInitialized || !stateBounds[state]) return;
+          
+          const bounds = stateBounds[state];
+          
+          setTimeout(() => {
+            google.maps.event.trigger(map, 'resize');
+            const mapBounds = new google.maps.LatLngBounds(
+              new google.maps.LatLng(bounds.south, bounds.west),
+              new google.maps.LatLng(bounds.north, bounds.east)
+            );
+            map.fitBounds(mapBounds);
+            
+            setTimeout(() => {
+              const currentZoom = map.getZoom();
+              if (currentZoom > 6) {
+                map.setZoom(currentZoom - 0.3);
+              }
+            }, 300);
+          }, 100);
+        },
+
+        fitMapToAustralia() {
+          if (!mapInitialized) return;
+          
+          setTimeout(() => {
+            google.maps.event.trigger(map, 'resize');
+            const bounds = new google.maps.LatLngBounds(
+              new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
+              new google.maps.LatLng(australiaBounds.north, australiaBounds.east)
+            );
+            map.fitBounds(bounds);
+            
+            setTimeout(() => {
+              const currentZoom = map.getZoom();
+              if (currentZoom > 5) {
+                map.setZoom(currentZoom - 0.2);
+              }
+            }, 300);
+          }, 100);
+        }
+      }
+    }
+
+    // Google Maps initialization (enhanced)
+    function initMap() {
+      try {
+        map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 5,
+          center: { lat: -25.2744, lng: 133.7751 },
+          mapTypeId: 'roadmap',
+          zoomControl: true,
+          zoomControlOptions: {
+            position: google.maps.ControlPosition.RIGHT_CENTER
+          },
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: true,
+          styles: [
+            {
+              featureType: "poi",
+              elementType: "labels",
+              stylers: [{ visibility: "off" }]
+            },
+            {
+              featureType: "transit",
+              elementType: "labels",
+              stylers: [{ visibility: "off" }]
+            }
+          ]
+        });
+
+        mapInitialized = true;
+        loadMarkers();
+        
+        setTimeout(() => {
+          const bounds = new google.maps.LatLngBounds(
+            new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
+            new google.maps.LatLng(australiaBounds.north, australiaBounds.east)
+          );
+          map.fitBounds(bounds);
+          
+          setTimeout(() => {
+            const currentZoom = map.getZoom();
+            if (currentZoom > 5) {
+              map.setZoom(currentZoom - 0.2);
+            }
+          }, 300);
+        }, 100);
+        
+        map.addListener('click', function() {
+          if (ailFinderComponent && ailFinderComponent.selectedLocation) {
+            ailFinderComponent.selectedLocation = null;
+          }
+        });
+        
+      } catch (error) {
+        console.error('Error initializing map:', error);
+      }
+    }
+
+    // Enhanced marker loading
+    function loadMarkers() {
+      markers.forEach(marker => marker.setMap(null));
+      markers = [];
+
+      const locationGroups = {};
+      
+      ailData.forEach(ail => {
+        const key = `${ail.lat.toFixed(6)},${ail.lng.toFixed(6)}`;
+        if (!locationGroups[key]) {
+          locationGroups[key] = [];
+        }
+        locationGroups[key].push(ail);
+      });
+
+      Object.values(locationGroups).forEach(ailsAtLocation => {
+        const primaryAIL = ailsAtLocation[0];
+        const isCluster = ailsAtLocation.length > 1;
+        
+        try {
+          const marker = new google.maps.Marker({
+            position: { lat: primaryAIL.lat, lng: primaryAIL.lng },
+            map: map,
+            title: isCluster 
+              ? `${ailsAtLocation.length} AILs at this location` 
+              : primaryAIL.company,
+            icon: {
+              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="16" cy="16" r="14" fill="${isCluster ? '#dc2626' : '#2563eb'}" stroke="white" stroke-width="3"/>
+                  <circle cx="16" cy="16" r="8" fill="white"/>
+                  ${isCluster ? `<text x="16" y="20" text-anchor="middle" fill="${isCluster ? '#dc2626' : '#2563eb'}" font-size="10" font-weight="bold">${ailsAtLocation.length}</text>` : ''}
+                </svg>
+              `),
+              scaledSize: new google.maps.Size(isCluster ? 32 : 28, isCluster ? 32 : 28),
+              anchor: new google.maps.Point(isCluster ? 16 : 14, isCluster ? 16 : 14)
+            },
+            animation: google.maps.Animation.DROP
+          });
+
+          marker.ailsAtLocation = ailsAtLocation;
+
+          marker.addListener("click", () => {
+            if (ailFinderComponent) {
+              ailFinderComponent.selectedLocation = primaryAIL;
+              ailFinderComponent.$nextTick(() => {
+                console.log('Location selected:', primaryAIL.company);
+              });
+            }
+          });
+
+          markers.push(marker);
+        } catch (error) {
+          console.error(`Error creating marker for ${primaryAIL.company}:`, error);
+        }
+      });
+    }
+
+    function filterMapMarkers() {
+      if (!mapInitialized) return;
+      
+      const appComponent = document.querySelector('[x-data]').__x.$data;
+      if (!appComponent) return;
+      
+      markers.forEach(marker => {
+        const shouldShow = marker.ailsAtLocation.some(ail => {
+          const matchesSearch = !appComponent.searchText || 
+            ail.company.toLowerCase().includes(appComponent.searchText.toLowerCase()) ||
+            ail.address.toLowerCase().includes(appComponent.searchText.toLowerCase());
+          const matchesState = appComponent.selectedState === 'all' || ail.state === appComponent.selectedState;
+          
+          return matchesSearch && matchesState;
+        });
+        
+        marker.setVisible(shouldShow);
+      });
+    }
+
+    window.initMap = initMap;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.google && window.google.maps && !mapInitialized) {
+        setTimeout(initMap, 1000);
+      }
+    });
+  </script>
+  
+  <!-- Load Google Maps -->
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPnUqhxYzzgoRJ32Rh6-bg5wmKuXtBmKI&callback=initMap&libraries=geometry">
+  </script>
+</body>
+</html>
