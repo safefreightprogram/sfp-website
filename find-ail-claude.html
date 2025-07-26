@@ -385,7 +385,7 @@
           try {
             // Load AIL data from JSON file
             console.log('🔄 Loading AIL data from JSON...');
-            const response = await fetch('data/ail-locations.json');
+            const response = await fetch('./data/ail-locations.json');
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
             }
