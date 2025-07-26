@@ -234,7 +234,6 @@
       </div>
     </div>
   </main>
-  </main>
 
   <!-- Footer -->
   <footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
@@ -251,9 +250,9 @@
     let markers = [];
     let ailData = [];
 
-    // Complete AIL Data - All 67 locations
+    // Updated AIL Data from Google Sheet - All 79 locations
     const rawAilData = [
-      // NSW Locations (12)
+      // NSW Locations
       {id: 239, company: "Aero Refuellers", address: "Hanger 8-11 Ogden Street, East Albury NSW 2640", phone: "02 6041 1599", lat: -36.071665, lng: 146.9537581, state: "NSW"},
       {id: 222, company: "Australian Fuelling Systems & Equip", address: "7-11 Armstrong Street, Tamworth NSW 2340", phone: "02 6760 7816", lat: -31.0791106, lng: 150.8532199, state: "NSW"},
       {id: 220, company: "Doug Sutherland Truck Repairs", address: "222 Urana Street, Wagga Wagga NSW 2650", phone: "02 6925 2094", lat: -35.1252742, lng: 147.3413631, state: "NSW"},
@@ -267,7 +266,7 @@
       {id: 235, company: "Heavy Haulage Maintenance", address: "28 Old Punt Road, Tomago NSW 2322", phone: "02 4964 9475", lat: -32.8209927, lng: 151.7028008, state: "NSW"},
       {id: 200, company: "WBG Trailer Repairs", address: "Lot 1 Yarrunga Road, Prestons NSW 2170", phone: "02 9608 2288", lat: -33.9363776, lng: 150.8603357, state: "NSW"},
       
-      // QLD Locations (39)
+      // QLD Locations  
       {id: 410, company: "Brown & Hurley", address: "2 Central Park Drive, South Mackay QLD 4740", phone: "07 4952 3722", lat: -21.1755649, lng: 149.1661223, state: "QLD"},
       {id: 462, company: "Brown and Hurley", address: "28-30 Carrington Road, Torrington QLD 4350", phone: "07 4690 7300", lat: -27.5487615, lng: 151.8968995, state: "QLD"},
       {id: 424, company: "Central Coast Services Mackay", address: "Lot 1 Presto Avenue, Outer Harbour QLD 4740", phone: "07 4955 4922", lat: -21.1101141, lng: 149.2110353, state: "QLD"},
@@ -297,7 +296,7 @@
       {id: 457, company: "Stephen Symes", address: "Mobile Inspector, QLD", phone: "0403 277 637", lat: -22.575197, lng: 144.0847926, state: "QLD"},
       {id: 416, company: "Sustar Engineering Pty Ltd", address: "Lot 244 Fison Street, Gladstone QLD 4680", phone: "07 4972 5366", lat: -23.8415948, lng: 151.2497708, state: "QLD"},
       
-      // VIC Locations (13)
+      // VIC Locations
       {id: 305, company: "Acme Oil Equipment Services Pty Ltd", address: "32 Greens Road, Dandenong South VIC 3175", phone: "03 9791 3255", lat: -38.015738, lng: 145.2209347, state: "VIC"},
       {id: 320, company: "Australian Tank Engineering", address: "29-31 Vella Drive, Sunshine VIC 3020", phone: "03 9310 2722", lat: -37.8056095, lng: 144.828958, state: "VIC"},
       {id: 310, company: "Echuca Engineering", address: "13 Mundarra Road, Echuca VIC 3564", phone: "03 5480 6921", lat: -36.141996, lng: 144.762877, state: "VIC"},
@@ -312,14 +311,14 @@
       {id: 326, company: "Tieman Tankers", address: "184-186 Northbourne Road, Campbellfield VIC 3061", phone: "03 9469 6701", lat: -37.6482781, lng: 144.9611406, state: "VIC"},
       {id: 314, company: "Transport Preventative Maintenance P/Ltd", address: "10-14 Churchill Street, Williamstown VIC 3016", phone: "03 9397 1135", lat: -37.8521501, lng: 144.8627896, state: "VIC"},
       
-      // SA Locations (5)
+      // SA Locations
       {id: 503, company: "Haulmark Trailers Australia", address: "97-99 West Avenue, Edinburgh SA 5111", phone: "08 8283 8585", lat: -34.7327779, lng: 138.6344371, state: "SA"},
       {id: 506, company: "Hoss Engineering & Maintenance Service", address: "3 Mallee Crescent, Port Lincoln SA 5606", phone: "0427 518 945", lat: -34.7340247, lng: 135.8623913, state: "SA"},
       {id: 502, company: "Liquip (SA) Pty Ltd", address: "10 Creswell Road, Largs North SA 5016", phone: "08 8341 7009", lat: -34.8213309, lng: 138.5037846, state: "SA"},
       {id: 512, company: "Mechanical & Technical Testing", address: "40 Butler Terrace, Naracoorte SA 5271", phone: "08 8762 2379", lat: -36.9624232, lng: 140.7370711, state: "SA"},
       {id: 501, company: "OES Oil Engineering Services", address: "5 Creswell Road, Largs North SA 5016", phone: "08 8341 5677", lat: -34.8222069, lng: 138.5031614, state: "SA"},
       
-      // WA Locations (12)
+      // WA Locations
       {id: 657, company: "Fuel Maintenance and Engineering", address: "1562 Arthur Road, Geraldton WA 6530", phone: "0409 981 026", lat: -28.8346566, lng: 114.7321136, state: "WA"},
       {id: 623, company: "Integrated Fuel Services", address: "Perth WA 6000", phone: "08 9434 7000", lat: -31.9525739, lng: 115.8610488, state: "WA"},
       {id: 665, company: "J & S Labour and Machinery", address: "40 Moorambine Street, Wedgefield WA 6721", phone: "08 9172 5313", lat: -20.3663216, lng: 118.5870289, state: "WA"},
@@ -333,179 +332,15 @@
       {id: 607, company: "WA Fuel Supplies", address: "Perth WA 6000", phone: "08 9943 8338", lat: -31.9525739, lng: 115.8610488, state: "WA"},
       {id: 609, company: "WA Transmech", address: "30-32 Macedonia Street, Naval Base WA 6165", phone: "08 9410 0857", lat: -32.2022035, lng: 115.7831976, state: "WA"},
       
-      // NT Locations (4)
+      // NT Locations
       {id: 820, company: "Haulmark Trailers Australia", address: "1 Mettham Road, Berrimah NT 828", phone: "08 8984 3533", lat: -12.4606551, lng: 130.9283392, state: "NT"},
       {id: 809, company: "RGM Maintenance Pty Ltd", address: "9 Matthew Hopkins Rd, Holtze NT 829", phone: "08 8983 0100", lat: -12.4549185, lng: 130.9838449, state: "NT"},
       {id: 811, company: "SWEL Pty Ltd", address: "50 Sargent Street, Alice Springs NT 870", phone: "08 8953 0369", lat: -23.6739621, lng: 133.8676851, state: "NT"},
       {id: 801, company: "Tanker Repairs Australia", address: "26 McKinnon Rd, Pinelands NT 829", phone: "08 8932 1328", lat: -12.4549857, lng: 130.9620088, state: "NT"},
       
-      // TAS Locations (5)
+      // TAS Locations
       {id: 704, company: "AJL Heavy Equipment", address: "1-3 Massy-Greene Drive, South Burnie TAS 7320", phone: "03 6430 2777", lat: -41.0674275, lng: 145.9239546, state: "TAS"},
       {id: 703, company: "AJL Heavy Equipment", address: "South Burnie TAS 7320", phone: "03 6430 2777", lat: -41.0701328, lng: 145.8962992, state: "TAS"},
       {id: 701, company: "Kent Engineering", address: "153 Stoney Rise Road, Devonport TAS 7310", phone: "03 6424 9233", lat: -41.1926208, lng: 146.3297592, state: "TAS"},
       {id: 710, company: "Midland Truck & Bus", address: "42 Crooked Billet Drive, Bridgewater TAS 7030", phone: "03 6263 4333", lat: -42.7210713, lng: 147.2344207, state: "TAS"},
       {id: 702, company: "Wiggies Radiators", address: "18-22 Hillcrest Road, Devonport TAS 7310", phone: "03 6424 7292", lat: -41.1828568, lng: 146.3302493, state: "TAS"}
-    ];
-      {id: 304, company: "Evolution Tanker Repairs", address: "371 Rossiter Road, Koo Wee Rup VIC 3981", phone: "0424 099 314", lat: -38.19564, lng: 145.497366, state: "VIC"},
-      {id: 313, company: "G & S Bigham", address: "87 Golf Course Road, Horsham VIC 3400", phone: "03 5382 5893", lat: -36.7376332, lng: 142.1970197, state: "VIC"},
-      {id: 303, company: "Holmwood Group VIC", address: "425 Fitzgerald Road, Derrimut VIC 3030", phone: "03 9936 0360", lat: -37.8008048, lng: 144.787899, state: "VIC"},
-      {id: 324, company: "Johnson's Truck & Coach Service Pty Ltd", address: "579 Benetook Avenue, Mildura VIC 3500", phone: "03 5024 4666", lat: -34.2092698, lng: 142.1616144, state: "VIC"},
-      {id: 322, company: "Liquip Victoria (Fuelcraft)", address: "476 Boundary Rd, Derrimut VIC 3030", phone: "03 9311 7822", lat: -37.8104863, lng: 144.759139, state: "VIC"},
-      {id: 302, company: "Marshall Lethlean", address: "20 Whitfield Blvd, Cranbourne West VIC 3977", phone: "03 8788 5400", lat: -38.0804675, lng: 145.2414944, state: "VIC"},
-      {id: 323, company: "Progress Transport Services Pty Ltd", address: "Shed 2, Coghlans Road, Warrnambool VIC 3280", phone: "0429 320 420", lat: -38.3523961, lng: 142.4661686, state: "VIC"},
-      {id: 307, company: "Starworx", address: "5A Westwood Drive, Ravenhall VIC 3029", phone: "0459 839 072", lat: -37.7717246, lng: 144.7551499, state: "VIC"},
-      {id: 326, company: "Tieman Tankers", address: "184-186 Northbourne Road, Campbellfield VIC 3061", phone: "03 9469 6701", lat: -37.6482781, lng: 144.9611406, state: "VIC"},
-      {id: 314, company: "Transport Preventative Maintenance P/Ltd", address: "10-14 Churchill Street, Williamstown VIC 3016", phone: "03 9397 1135", lat: -37.8521501, lng: 144.8627896, state: "VIC"},
-      
-      {id: 503, company: "Haulmark Trailers Australia", address: "97-99 West Avenue, Edinburgh SA 5111", phone: "08 8283 8585", lat: -34.7327779, lng: 138.6344371, state: "SA"},
-      {id: 506, company: "Hoss Engineering & Maintenance Service", address: "3 Mallee Crescent, Port Lincoln SA 5606", phone: "0427 518 945", lat: -34.7340247, lng: 135.8623913, state: "SA"},
-      {id: 502, company: "Liquip (SA) Pty Ltd", address: "10 Creswell Road, Largs North SA 5016", phone: "08 8341 7009", lat: -34.8213309, lng: 138.5037846, state: "SA"},
-      {id: 512, company: "Mechanical & Technical Testing", address: "40 Butler Terrace, Naracoorte SA 5271", phone: "08 8762 2379", lat: -36.9624232, lng: 140.7370711, state: "SA"},
-      {id: 501, company: "OES Oil Engineering Services", address: "5 Creswell Road, Largs North SA 5016", phone: "08 8341 5677", lat: -34.8222069, lng: 138.5031614, state: "SA"},
-      
-      {id: 657, company: "Fuel Maintenance and Engineering", address: "1562 Arthur Road, Geraldton WA 6530", phone: "0409 981 026", lat: -28.8346566, lng: 114.7321136, state: "WA"},
-      {id: 690, company: "Perth Tanker Repairs", address: "30-32 Macedonia St, Naval Base WA 6165", phone: "08 9410 0222", lat: -32.2022035, lng: 115.7831976, state: "WA"},
-      {id: 644, company: "Stevemacs Bulk", address: "27-29 Glassford Road, Kewdale WA 6105", phone: "08 9352 2100", lat: -31.969669, lng: 115.9550175, state: "WA"},
-      
-      {id: 820, company: "Haulmark Trailers Australia", address: "1 Mettham Road, Berrimah NT 828", phone: "08 8984 3533", lat: -12.4606551, lng: 130.9283392, state: "NT"},
-      {id: 809, company: "RGM Maintenance Pty Ltd", address: "9 Matthew Hopkins Rd, Holtze NT 829", phone: "08 8983 0100", lat: -12.4549185, lng: 130.9838449, state: "NT"},
-      {id: 811, company: "SWEL Pty Ltd", address: "50 Sargent Street, Alice Springs NT 870", phone: "08 8953 0369", lat: -23.6739621, lng: 133.8676851, state: "NT"},
-      
-      {id: 704, company: "AJL Heavy Equipment", address: "1-3 Massy-Greene Drive, South Burnie TAS 7320", phone: "03 6430 2777", lat: -41.0674275, lng: 145.9239546, state: "TAS"},
-      {id: 701, company: "Kent Engineering", address: "153 Stoney Rise Road, Devonport TAS 7310", phone: "03 6424 9233", lat: -41.1926208, lng: 146.3297592, state: "TAS"},
-      {id: 710, company: "Midland Truck & Bus", address: "42 Crooked Billet Drive, Bridgewater TAS 7030", phone: "03 6263 4333", lat: -42.7210713, lng: 147.2344207, state: "TAS"}
-    ];
-
-    // Alpine.js component
-    function ailFinder() {
-      return {
-        activeTab: 'map',
-        selectedState: 'all',
-        searchText: '',
-        filteredLocations: [],
-        selectedLocation: null,
-
-        init() {
-          ailData = rawAilData;
-          this.filteredLocations = ailData;
-          console.log('Initialized with', ailData.length, 'locations');
-        },
-
-        filterLocations() {
-          this.filteredLocations = ailData.filter(location => {
-            const matchesSearch = !this.searchText || location.company.toLowerCase().includes(this.searchText.toLowerCase());
-            const matchesState = this.selectedState === 'all' || location.state === this.selectedState;
-            return matchesSearch && matchesState;
-          });
-          
-          if (this.activeTab === 'map' && typeof filterMapMarkers === 'function') {
-            filterMapMarkers();
-          }
-        },
-
-        clearFilters() {
-          this.searchText = '';
-          this.selectedState = 'all';
-          this.filterLocations();
-        },
-
-        setActiveTab(tab) {
-          this.activeTab = tab;
-          if (tab === 'map' && window.google && window.map) {
-            setTimeout(() => {
-              google.maps.event.trigger(map, 'resize');
-              map.setCenter({ lat: -25.2744, lng: 133.7751 });
-            }, 100);
-          }
-        },
-
-        viewOnMap(location) {
-          this.activeTab = 'map';
-          this.selectedLocation = location;
-          if (window.google && window.map) {
-            setTimeout(() => {
-              google.maps.event.trigger(map, 'resize');
-              map.setCenter({ lat: location.lat, lng: location.lng });
-              map.setZoom(12);
-            }, 100);
-          }
-        }
-      }
-    }
-
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 5,
-        center: { lat: -25.2744, lng: 133.7751 },
-        mapTypeId: 'roadmap',
-        styles: [
-          {
-            featureType: "poi",
-            elementType: "labels",
-            stylers: [{ visibility: "off" }]
-          }
-        ]
-      });
-
-      loadMarkers();
-      console.log('Map initialized with', ailData.length, 'locations');
-      
-      map.addListener('click', function() {
-        const appComponent = document.querySelector('[x-data]').__x.$data;
-        if (appComponent) {
-          appComponent.selectedLocation = null;
-        }
-      });
-    }
-
-    function loadMarkers() {
-      markers.forEach(marker => marker.setMap(null));
-      markers = [];
-
-      ailData.forEach(ail => {
-        const marker = new google.maps.Marker({
-          position: { lat: ail.lat, lng: ail.lng },
-          map: map,
-          title: ail.company,
-          icon: {
-            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-              <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="10" cy="10" r="8" fill="#2563eb" stroke="white" stroke-width="2"/>
-              </svg>
-            `),
-            scaledSize: new google.maps.Size(20, 20),
-            anchor: new google.maps.Point(10, 10)
-          }
-        });
-
-        marker.addListener("click", () => {
-          const appComponent = document.querySelector('[x-data]').__x.$data;
-          appComponent.selectedLocation = ail;
-        });
-
-        markers.push(marker);
-      });
-    }
-
-    function filterMapMarkers() {
-      const activeFilters = document.querySelector('[x-data]').__x.$data;
-      
-      markers.forEach(marker => {
-        const ail = ailData.find(a => a.lat === marker.getPosition().lat() && a.lng === marker.getPosition().lng());
-        if (ail) {
-          const matchesSearch = !activeFilters.searchText || ail.company.toLowerCase().includes(activeFilters.searchText.toLowerCase());
-          const matchesState = activeFilters.selectedState === 'all' || ail.state === activeFilters.selectedState;
-          
-          marker.setVisible(matchesSearch && matchesState);
-        }
-      });
-    }
-
-    window.initMap = initMap;
-
-    if (window.google && window.google.maps) {
-      initMap();
-    }
-  </script>
-</body>
-</html>
