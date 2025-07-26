@@ -1,0 +1,97 @@
+
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find an AIL – Safe Freight Program</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+  <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans" x-data="ailMap()" x-init="init">
+
+<header class="bg-blue-900 text-white p-4 shadow">
+  <h1 class="text-xl font-bold">Find an Authorised Inspection Location (AIL)</h1>
+</header>
+
+<div class="relative w-full h-[calc(100vh-64px)]">
+  <div id="map" class="absolute inset-0 z-0"></div>
+
+  <!-- Floating Controls -->
+  <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
+    <input type="text" placeholder="Search AIL..." x-model="searchTerm"
+           class="px-3 py-2 rounded-md border border-gray-300 shadow-sm focus:outline-none focus:ring focus:ring-blue-500 w-64" />
+    <button class="bg-blue-800 text-white px-4 py-2 rounded shadow" @click="showList = !showList">
+      <span x-text="showList ? 'Hide List' : 'List View'"></span>
+    </button>
+  </div>
+
+  <!-- Slide-in List Panel -->
+  <div class="absolute top-0 right-0 h-full w-80 bg-white shadow-xl transform transition-transform duration-300"
+       :class="showList ? 'translate-x-0' : 'translate-x-full'" style="z-index: 20;">
+    <div class="p-4 overflow-y-auto h-full">
+      <h2 class="text-lg font-semibold mb-4">Authorised Locations</h2>
+      <template x-for="loc in filteredLocations" :key="loc.name">
+        <div class="mb-3 p-3 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer"
+             @click="zoomTo(loc)">
+          <h3 class="font-bold" x-text="loc.name"></h3>
+          <p class="text-sm" x-text="loc.address"></p>
+          <p class="text-sm text-blue-700" x-text="loc.phone"></p>
+        </div>
+      </template>
+    </div>
+  </div>
+</div>
+
+<script>
+  let map, markers = [], clusterer;
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("ailMap", () => ({
+      locations: [],
+      searchTerm: '',
+      showList: false,
+
+      get filteredLocations() {
+        const term = this.searchTerm.toLowerCase();
+        return this.locations.filter(loc => loc.name.toLowerCase().includes(term) ||
+                                            loc.address.toLowerCase().includes(term));
+      },
+
+      async init() {
+        const res = await fetch("data/ail-locations.json");
+        this.locations = await res.json();
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: -25.2744, lng: 133.7751 }, zoom: 4,
+          mapTypeControl: false, streetViewControl: false
+        });
+
+        markers = this.locations.map(loc => {
+          const marker = new google.maps.Marker({
+            position: { lat: loc.lat, lng: loc.lng },
+            map,
+            title: loc.name
+          });
+
+          const infowindow = new google.maps.InfoWindow({
+            content: `<strong>${loc.name}</strong><br>${loc.address}<br>${loc.phone || ''}`
+          });
+
+          marker.addListener('click', () => infowindow.open(map, marker));
+          return marker;
+        });
+
+        clusterer = new markerClusterer.MarkerClusterer({ map, markers });
+      },
+
+      zoomTo(loc) {
+        map.setZoom(14);
+        map.panTo({ lat: loc.lat, lng: loc.lng });
+      }
+    }));
+  });
+</script>
+
+</body>
+</html>
