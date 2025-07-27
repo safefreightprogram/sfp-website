@@ -16,7 +16,7 @@ function domainStyleAilFinder() {
   return {
     filteredLocations: [], selectedLocation: null, loadingLocation: false, loading: true,
     userLocation: null, selectedState: 'all', searchQuery: '', showFilters: false, showList: false,
-    showSearchResults: false, searchSuggestions: [],
+    showSearchResults: false, searchSuggestions: [], highlightedIndex: -1,
     stateOptions: [
       { value: 'all', label: 'All States' }, { value: 'NSW', label: 'NSW' }, { value: 'QLD', label: 'QLD' },
       { value: 'VIC', label: 'VIC' }, { value: 'SA', label: 'SA' }, { value: 'WA', label: 'WA' },
@@ -131,11 +131,59 @@ function domainStyleAilFinder() {
     handleSearch() { 
       this.filterLocations(); 
       this.updateSearchSuggestions();
+      this.highlightedIndex = -1; // Reset highlighting when search changes
+    },
+
+    handleKeydown(event) {
+      if (!this.showSearchResults || this.searchSuggestions.length === 0) return;
+      
+      const maxIndex = Math.min(this.searchSuggestions.length - 1, 7); // Max 8 items shown
+      
+      switch(event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          this.highlightedIndex = this.highlightedIndex < maxIndex ? this.highlightedIndex + 1 : 0;
+          this.scrollToHighlighted();
+          break;
+          
+        case 'ArrowUp':
+          event.preventDefault();
+          this.highlightedIndex = this.highlightedIndex > 0 ? this.highlightedIndex - 1 : maxIndex;
+          this.scrollToHighlighted();
+          break;
+          
+        case 'Enter':
+          event.preventDefault();
+          if (this.highlightedIndex >= 0 && this.highlightedIndex <= maxIndex) {
+            this.selectSuggestion(this.searchSuggestions[this.highlightedIndex]);
+          }
+          break;
+          
+        case 'Escape':
+          this.showSearchResults = false;
+          this.highlightedIndex = -1;
+          break;
+      }
+    },
+
+    scrollToHighlighted() {
+      // Scroll the highlighted item into view
+      setTimeout(() => {
+        const dropdown = document.querySelector('[x-show="showSearchResults && searchQuery.trim() !== \'\' && searchSuggestions.length > 0"]');
+        const highlighted = dropdown?.children[this.highlightedIndex];
+        if (highlighted) {
+          highlighted.scrollIntoView({ 
+            block: 'nearest', 
+            behavior: 'smooth' 
+          });
+        }
+      }, 10);
     },
 
     updateSearchSuggestions() {
       if (this.searchQuery.trim() === '') {
         this.searchSuggestions = [];
+        this.highlightedIndex = -1;
         return;
       }
       
@@ -156,11 +204,13 @@ function domainStyleAilFinder() {
       
       console.log(`💡 Found ${suggestions.length} suggestions`);
       this.searchSuggestions = suggestions.slice(0, 10); // Limit to 10 suggestions
+      this.highlightedIndex = -1; // Reset highlighting when suggestions change
     },
 
     selectSuggestion(suggestion) {
       this.searchQuery = suggestion.name;
       this.showSearchResults = false;
+      this.highlightedIndex = -1;
       this.selectedLocation = suggestion;
       this.filterLocations();
       
