@@ -1,4 +1,4 @@
-// ail-finder.js
+// js/ail-finder.js
 let map, markers = [], ailData = [], mapInitialized = false, ailFinderComponent = null;
 
 const australiaBounds = { north: -5.0, south: -48.0, west: 108.0, east: 158.0 };
@@ -38,11 +38,25 @@ function domainStyleAilFinder() {
         if (!response?.ok || !jsonText) throw new Error('Could not find ail-locations.json');
         
         let rawData = JSON.parse(jsonText);
-        ailData = rawData.map(location => ({
-          ...location, lat: parseFloat(location.lat), lng: parseFloat(location.lng),
-          id: parseInt(location.id), address: location.address || null,
-          suburb: location.suburb || null, inspector: location.inspector || '-'
-        })).filter(location => !isNaN(location.lat) && !isNaN(location.lng) && location.lat && location.lng);
+        console.log('Raw data sample:', rawData[0]); // Debug log
+        ailData = rawData.map(location => {
+          const lat = parseFloat(location.lat);
+          const lng = parseFloat(location.lng);
+          console.log(`Processing: ${location.name} - lat: ${lat}, lng: ${lng}`); // Debug log
+          return {
+            ...location, 
+            lat: lat, 
+            lng: lng,
+            id: parseInt(location.id), 
+            address: location.address || null,
+            suburb: location.suburb || null, 
+            inspector: location.inspector || '-'
+          };
+        }).filter(location => {
+          const isValid = !isNaN(location.lat) && !isNaN(location.lng) && location.lat && location.lng;
+          if (!isValid) console.log(`Invalid coordinates for: ${location.name}`);
+          return isValid;
+        });
         
         this.filteredLocations = [...ailData];
         this.loading = false;
@@ -210,10 +224,12 @@ function initMap() {
 
 function loadMarkers() {
   if (!mapInitialized || !ailData.length) return;
+  console.log(`Loading ${ailData.length} markers...`);
   markers.forEach(marker => marker.setMap(null));
   markers = [];
   ailData.forEach(ail => {
     try {
+      console.log(`Creating marker for: ${ail.name} at lat: ${ail.lat}, lng: ${ail.lng}`); // Debug log
       const marker = new google.maps.Marker({
         position: { lat: ail.lat, lng: ail.lng }, map: map, title: ail.name,
         icon: {
@@ -226,6 +242,7 @@ function loadMarkers() {
       markers.push(marker);
     } catch (error) { console.error(`Error creating marker for ${ail.name}:`, error); }
   });
+  console.log(`Successfully loaded ${markers.length} markers on map`);
 }
 
 window.initMap = initMap;
