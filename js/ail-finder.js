@@ -16,6 +16,7 @@ function domainStyleAilFinder() {
   return {
     filteredLocations: [], selectedLocation: null, loadingLocation: false, loading: true,
     userLocation: null, selectedState: 'all', searchQuery: '', showFilters: false, showList: false,
+    showSearchResults: false, searchSuggestions: [],
     stateOptions: [
       { value: 'all', label: 'All States' }, { value: 'NSW', label: 'NSW' }, { value: 'QLD', label: 'QLD' },
       { value: 'VIC', label: 'VIC' }, { value: 'SA', label: 'SA' }, { value: 'WA', label: 'WA' },
@@ -111,7 +112,14 @@ function domainStyleAilFinder() {
     },
 
     clearAllFilters() {
-      this.selectedState = 'all'; this.searchQuery = ''; this.filterLocations();
+      this.selectedState = 'all'; 
+      this.searchQuery = ''; 
+      this.showFilters = false;
+      this.selectedLocation = null;
+      this.showList = false;
+      this.showSearchResults = false;
+      this.searchSuggestions = [];
+      this.filterLocations();
       if (mapInitialized) setTimeout(() => this.fitMapToAustralia(), 100);
     },
 
@@ -120,7 +128,47 @@ function domainStyleAilFinder() {
       if (mapInitialized) setTimeout(() => state !== 'all' ? this.zoomToState(state) : this.fitMapToAustralia(), 100);
     },
 
-    handleSearch() { this.filterLocations(); },
+    handleSearch() { 
+      this.filterLocations(); 
+      this.updateSearchSuggestions();
+    },
+
+    updateSearchSuggestions() {
+      if (this.searchQuery.trim() === '') {
+        this.searchSuggestions = [];
+        return;
+      }
+      
+      const query = this.searchQuery.toLowerCase();
+      let suggestions = ailData.filter(location => 
+        location.name.toLowerCase().includes(query) ||
+        (location.suburb && location.suburb.toLowerCase().includes(query)) ||
+        location.state.toLowerCase().includes(query) ||
+        (location.address && location.address.toLowerCase().includes(query))
+      );
+      
+      // Filter by selected state if applicable
+      if (this.selectedState !== 'all') {
+        suggestions = suggestions.filter(location => location.state === this.selectedState);
+      }
+      
+      this.searchSuggestions = suggestions;
+    },
+
+    selectSuggestion(suggestion) {
+      this.searchQuery = suggestion.name;
+      this.showSearchResults = false;
+      this.selectedLocation = suggestion;
+      this.filterLocations();
+      
+      // Center map on selected location
+      if (mapInitialized) {
+        setTimeout(() => {
+          map.setCenter({ lat: suggestion.lat, lng: suggestion.lng });
+          map.setZoom(12);
+        }, 100);
+      }
+    },
 
     filterLocations() {
       let filtered = [...ailData];
