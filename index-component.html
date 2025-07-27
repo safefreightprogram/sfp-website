@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Safe Freight Program</title>
+
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+  <!-- Tailwind CSS + Alpine.js -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="The Safe Freight Program sets the new standard for compliant, safety-driven road freight operations in Australia." />
+  <meta name="author" content="Safe Freight Program" />
+  <meta property="og:title" content="Safe Freight Program" />
+  <meta property="og:description" content="Professional. Compliant. Safe. Get your Safe Freight Passport today." />
+  <meta property="og:image" content="/images/social-preview.jpg" />
+  <meta property="og:type" content="website" />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Safe Freight Program",
+    "url": "https://safefreightprogram.com.au",
+    "logo": "https://safefreightprogram.com.au/logo.png",
+    "sameAs": [],
+    "description": "Australia's standard for safe and compliant freight operations."
+  }
+  </script>
+
+  <style>
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-fadeInUp {
+      animation: fadeInUp 0.6s ease-out both;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+  <!-- SVG Icons -->
+  <svg style="display: none;">
+    <symbol id="icon-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17h6M9 5h11l3 6v6a2 2 0 01-2 2h-1a3 3 0 11-6 0H9a3 3 0 11-6 0H2a2 2 0 01-2-2V7a2 2 0 012-2h7z" />
+    </symbol>
+    <symbol id="icon-driver" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+    </symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19a8 8 0 100-16 8 8 0 000 16zm6.5-1.5L21 21" />
+    </symbol>
+    <symbol id="icon-cap" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6" />
+    </symbol>
+    <symbol id="icon-chain-link" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14L6 18m-2-2a4 4 0 015.66 0l1.41 1.41a4 4 0 005.66 0l2.83-2.83a4 4 0 000-5.66l-1.41-1.41a4 4 0 00-5.66 0L10 10m4-4l4-4" />
+    </symbol>
+    <symbol id="icon-document" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6M9 16h6M9 8h6M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </symbol>
+    <symbol id="icon-qr" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h4v4H3V7zM3 13h4v4H3v-4zM13 3h4v4h-4V3zM13 13h4v4h-4v-4zM17 7h4v4h-4V7zM7 17h4v4H7v-4z" />
+    </symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </symbol>
+    <symbol id="icon-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    </symbol>
+    <symbol id="icon-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+    </symbol>
+  </svg>
+
+  <!-- Header Component -->
+  <div id="header-component"></div>
+
+  <!-- Main Content -->
+  <main class="max-w-6xl mx-auto px-4 py-12">
+    <!-- Hero Section -->
+    <section class="text-center mb-16">
+      <h1 class="text-4xl md:text-5xl font-bold text-blue-800 mb-4">Safe Freight Program</h1>
+      <h2 class="text-2xl md:text-3xl font-semibold text-gray-700 mb-8">Every Driver. Every Load. One Program.</h2>
+    </section>
+
+    <!-- Services Grid - 3x3 Layout -->
+    <section class="animate-fadeInUp">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Driver Lookup -->
+        <a href="lookup-driver.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200">
+          <div class="flex flex-col items-center text-center space-y-4">
+            <div class="bg-blue-100 p-4 rounded-full">
+              <svg class="w-8 h-8 text-blue-700"><use href="#icon-driver" /></svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">Driver Lookup</h3>
+              <p class="text-gray-600 text-sm">Check driver credentials and Safe Freight Passport status</p>
+            </div>
+          </div>
+        </a>
+
+        <!-- Vehicle Lookup -->
+        <a href="lookup-vehicle.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200">
+          <div class="flex flex-col items-center text-center space-y-4">
+            <div class="bg-blue-100 p-4 rounded-full">
+              <svg class="w-8 h-8 text-blue-700"><use href="#icon-truck" /></svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">Vehicle Lookup</h3>
+              <p class="text-gray-600 text-sm">Verify vehicle credentials and compliance status</p>
+            </div>
+          </div>
+        </a>
+
+        <!-- AIL Portal -->
+        <a href="ail-login.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200">
+          <div class="flex flex-col items-center text-center space-y-4">
+            <div class="bg-blue-100 p-4 rounded-full">
+              <svg class="w-8 h-8 text-blue-700"><use href="#icon-qr" /></svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">AIL Portal</h3>
+              <p class="text-gray-600 text-sm">Submit vehicle inspection results</p>
+            </div>
+          </div>
+        </a>
+
+        <!-- Driver Passport -->
+        <a href="passport.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200">
+          <div class="flex flex-col items-center text-center space-y-4">
+            <div class="bg-blue-100 p-4 rounded-full">
+              <svg class="w-8 h-8 text-blue-700"><use href="#icon-document" /></svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">Driver Passport</h3>
+              <p class="text-gray-600 text-sm">Get your Safe Freight Passport credentials</p>
+            </div>
+          </div>
+        </a>
+
+        <!-- Supply Chain -->
+        <a href="loading.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200">
+          <div class="flex flex-col items-center text-center space-y-4">
+            <div class="bg-blue-100 p-4 rounded-full">
+              <svg class="w-8 h-8 text-blue-700"><use href="#icon-chain-link" /></svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">Supply Chain</h3>
+              <p class="text-gray-600 text-sm">Access driver accreditation and vehicle compliance</p>
+            </div>
+          </div>
+        </a>
+
+        <!-- AIL Locations -->
+        <a href="ail.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200">
+          <div class="flex flex-col items-center text-center space-y-4">
+            <div class="bg-blue-100 p-4 rounded-full">
+              <svg class="w-8 h-8 text-blue-700"><use href="#icon-search" /></svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">AIL Locations</h3>
+              <p class="text-gray-600 text-sm">Find authorized inspection locations near you</p>
+            </div>
+          </div>
+        </a>
+
+        <!-- Training -->
+        <a href="training.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200">
+          <div class="flex flex-col items-center text-center space-y-4">
+            <div class="bg-blue-100 p-4 rounded-full">
+              <svg class="w-8 h-8 text-blue-700"><use href="#icon-cap" /></svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">SFP Training</h3>
+              <p class="text-gray-600 text-sm">Licensed Safe Freight Program training providers</p>
+            </div>
+          </div>
+        </a>
+
+        <!-- About -->
+        <a href="about.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200">
+          <div class="flex flex-col items-center text-center space-y-4">
+            <div class="bg-blue-100 p-4 rounded-full">
+              <svg class="w-8 h-8 text-blue-700"><use href="#icon-shield" /></svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">About SFP</h3>
+              <p class="text-gray-600 text-sm">Learn about our safety and compliance standards</p>
+            </div>
+          </div>
+        </a>
+
+        <!-- Contact -->
+        <a href="contact.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200">
+          <div class="flex flex-col items-center text-center space-y-4">
+            <div class="bg-blue-100 p-4 rounded-full">
+              <svg class="w-8 h-8 text-blue-700"><use href="#icon-phone" /></svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">Contact Us</h3>
+              <p class="text-gray-600 text-sm">Get in touch with our support team</p>
+            </div>
+          </div>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer Component -->
+  <div id="footer-component"></div>
+
+  <!-- Component Loading Script -->
+  <script>
+    // Function to load component
+    async function loadComponent(elementId, componentPath) {
+      try {
+        const response = await fetch(componentPath);
+        if (response.ok) {
+          const html = await response.text();
+          document.getElementById(elementId).innerHTML = html;
+        } else {
+          console.error(`Failed to load component: ${componentPath}`);
+        }
+      } catch (error) {
+        console.error(`Error loading component ${componentPath}:`, error);
+      }
+    }
+
+    // Load components when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      loadComponent('header-component', '/components/header.html');
+      loadComponent('footer-component', '/components/footer.html');
+    });
+  </script>
+</body>
+</html>
