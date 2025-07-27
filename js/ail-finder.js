@@ -81,8 +81,21 @@ function domainStyleAilFinder() {
           };
         }).filter(location => {
           const isValid = !isNaN(location.lat) && !isNaN(location.lng) && location.lat && location.lng;
+          
+          // Additional filter to exclude likely offshore coordinates
+          const isProbablyOnshore = !(
+            // Exclude far east Queensland (Coral Sea)
+            (location.lat >= -28 && location.lat <= -10 && location.lng >= 152.8) ||
+            // Exclude far east NSW (Tasman Sea)  
+            (location.lat >= -37 && location.lat <= -28 && location.lng >= 151.5) ||
+            // Exclude far west WA (Indian Ocean)
+            (location.lat >= -35 && location.lat <= -13 && location.lng <= 114.5)
+          );
+          
           if (!isValid) console.log(`❌ Invalid coordinates for: ${location.name}`);
-          return isValid;
+          if (!isProbablyOnshore) console.log(`🌊 FILTERED OFFSHORE: ${location.name} - lat: ${location.lat}, lng: ${location.lng}`);
+          
+          return isValid && isProbablyOnshore;
         });
         
         this.filteredLocations = [...ailData];
@@ -148,6 +161,16 @@ function domainStyleAilFinder() {
         },
         (error) => { console.error('Error getting location:', error); alert('Unable to get your location. Please check your browser permissions.'); this.loadingLocation = false; }
       );
+    },
+
+    returnToAustraliaView() {
+      this.userLocation = null;
+      this.filteredLocations = [...ailData];
+      this.selectedState = 'all';
+      this.searchQuery = '';
+      if (mapInitialized) {
+        setTimeout(() => this.fitMapToAustralia(), 100);
+      }
     },
 
     calculateDistance(lat1, lng1, lat2, lng2) {
