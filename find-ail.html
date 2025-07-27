@@ -112,6 +112,7 @@
               x-model="searchQuery" 
               @input="handleSearch" 
               @keyup="handleSearch"
+              @keydown="handleKeydown($event)"
               @focus="showSearchResults = true" 
               @blur="setTimeout(() => showSearchResults = false, 200)" />
             <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,11 +122,16 @@
             <!-- Autosuggest Dropdown -->
             <div x-show="showSearchResults && searchQuery.trim() !== '' && searchSuggestions.length > 0" 
                  class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 z-50 max-h-60 overflow-y-auto">
-              <template x-for="suggestion in searchSuggestions.slice(0, 8)" :key="suggestion.id">
+              <template x-for="(suggestion, index) in searchSuggestions.slice(0, 8)" :key="suggestion.id">
                 <div @click="selectSuggestion(suggestion)" 
-                     class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0">
-                  <div class="font-medium text-gray-900 text-sm" x-text="suggestion.name"></div>
-                  <div class="text-xs text-gray-500 mt-1">
+                     @mouseenter="highlightedIndex = index"
+                     :class="highlightedIndex === index ? 'bg-blue-50 border-l-4 border-blue-500' : 'hover:bg-gray-50'"
+                     class="px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition-all duration-150">
+                  <div class="font-medium text-gray-900 text-sm" 
+                       :class="highlightedIndex === index ? 'text-blue-900' : ''"
+                       x-text="suggestion.name"></div>
+                  <div class="text-xs mt-1"
+                       :class="highlightedIndex === index ? 'text-blue-600' : 'text-gray-500'">
                     <span x-text="suggestion.suburb"></span>
                     <span x-show="suggestion.suburb && suggestion.state">, </span>
                     <span x-text="suggestion.state"></span>
