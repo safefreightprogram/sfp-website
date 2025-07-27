@@ -15,6 +15,12 @@
 .slide-out-right { animation: slideOutRight 0.3s ease-in; }
 @keyframes slideOutRight { from { transform: translateX(0); } to { transform: translateX(100%); } }
 
+.slide-in-left { animation: slideInLeft 0.3s ease-out; }
+@keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+
+.slide-out-left { animation: slideOutLeft 0.3s ease-in; }
+@keyframes slideOutLeft { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
 /* Clean Airbnb-style floating elements */
 .floating-search {
   backdrop-filter: blur(20px);
