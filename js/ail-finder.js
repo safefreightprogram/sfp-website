@@ -43,12 +43,30 @@ function domainStyleAilFinder() {
           const lat = parseFloat(location.lat);
           const lng = parseFloat(location.lng);
           
-          // Validate Australian coordinate ranges
-          const isValidAustralianLat = lat >= -44 && lat <= -10; // Australia latitude range
-          const isValidAustralianLng = lng >= 113 && lng <= 154; // Australia longitude range
+          // More restrictive land-based coordinate validation for Australia
+          const isValidMainlandLat = lat >= -43.5 && lat <= -9.5; // Tighter mainland bounds
+          const isValidMainlandLng = lng >= 113.5 && lng <= 153.5; // Tighter mainland bounds
           
-          if (!isValidAustralianLat || !isValidAustralianLng) {
-            console.warn(`⚠️ SUSPICIOUS COORDINATES: ${location.name} - lat: ${lat}, lng: ${lng} (outside Australia)`);
+          // Check for suspicious coordinates that might be in water
+          const isPossiblyOffshore = (
+            // Queensland coast edge
+            (lat >= -28 && lat <= -10 && lng >= 152.8) ||
+            // NSW coast edge  
+            (lat >= -37 && lat <= -28 && lng >= 151.5) ||
+            // Tasmania edge
+            (lat >= -43.5 && lat <= -40 && (lng <= 144 || lng >= 148.5)) ||
+            // WA coast edge
+            (lat >= -35 && lat <= -13 && lng <= 114.5) ||
+            // SA coast edge
+            (lat >= -38 && lat <= -32 && lng <= 135.5)
+          );
+          
+          if (!isValidMainlandLat || !isValidMainlandLng) {
+            console.warn(`⚠️ OUTSIDE AUSTRALIA: ${location.name} - lat: ${lat}, lng: ${lng}`);
+          }
+          
+          if (isPossiblyOffshore) {
+            console.warn(`🌊 POSSIBLY OFFSHORE: ${location.name} - lat: ${lat}, lng: ${lng} (${location.suburb}, ${location.state})`);
           }
           
           console.log(`Processing: ${location.name} - lat: ${lat}, lng: ${lng}`); // Debug log
@@ -63,7 +81,7 @@ function domainStyleAilFinder() {
           };
         }).filter(location => {
           const isValid = !isNaN(location.lat) && !isNaN(location.lng) && location.lat && location.lng;
-          if (!isValid) console.log(`Invalid coordinates for: ${location.name}`);
+          if (!isValid) console.log(`❌ Invalid coordinates for: ${location.name}`);
           return isValid;
         });
         
