@@ -365,22 +365,88 @@
         // Trigger map resize event
         google.maps.event.trigger(map, 'resize');
         
-        // Force redraw of all markers
+        // Force complete marker recreation at correct coordinates
         if (markers && markers.length > 0) {
-          markers.forEach(marker => {
-            const pos = marker.getPosition();
-            marker.setPosition(pos);
-            marker.setVisible(false);
-            setTimeout(() => marker.setVisible(true), 50);
+          console.log('📍 Refreshing marker positions...');
+          markers.forEach((marker, index) => {
+            if (ailData[index]) {
+              const correctLat = parseFloat(ailData[index].lat);
+              const correctLng = parseFloat(ailData[index].lng);
+              
+              // Validate coordinates are within Australia bounds
+              if (correctLat >= -43.5 && correctLat <= -9.5 && 
+                  correctLng >= 113.5 && correctLng <= 153.5) {
+                
+                const newPosition = new google.maps.LatLng(correctLat, correctLng);
+                marker.setPosition(newPosition);
+                
+                // Force marker redraw
+                marker.setVisible(false);
+                setTimeout(() => {
+                  marker.setVisible(true);
+                }, 10);
+              } else {
+                console.warn(`Invalid coordinates for ${ailData[index].name}: ${correctLat}, ${correctLng}`);
+                marker.setVisible(false);
+              }
+            }
           });
         }
         
-        // Refresh map bounds
+        // Refresh map bounds after marker update
         setTimeout(() => {
           if (ailFinderComponent) {
             ailFinderComponent.fitMapToAustralia();
           }
-        }, 200);
+        }, 300);
+      }
+    }
+    
+    // Force marker position validation on zoom change
+    function setupZoomListener() {
+      if (map) {
+        map.addListener('zoom_changed', () => {
+          console.log('🔍 Zoom changed, validating marker positions...');
+          setTimeout(() => {
+            if (markers && markers.length > 0) {
+              markers.forEach((marker, index) => {
+                if (ailData[index]) {
+                  const correctLat = parseFloat(ailData[index].lat);
+                  const correctLng = parseFloat(ailData[index].lng);
+                  const currentPos = marker.getPosition();
+                  
+                  // Check if marker position matches expected coordinates
+                  if (Math.abs(currentPos.lat() - correctLat) > 0.01 || 
+                      Math.abs(currentPos.lng() - correctLng) > 0.01) {
+                    console.log(`🔧 Correcting position for ${ailData[index].name}`);
+                    marker.setPosition(new google.maps.LatLng(correctLat, correctLng));
+                  }
+                }
+              });
+            }
+          }, 100);
+        });
+      }
+    }
+    
+    // Enhanced coordinate validation
+    function validateAndFixCoordinates() {
+      if (ailData && ailData.length > 0) {
+        console.log('🧭 Validating all coordinates...');
+        ailData.forEach((location, index) => {
+          const lat = parseFloat(location.lat);
+          const lng = parseFloat(location.lng);
+          
+          // Australia bounds check
+          const isValidLat = lat >= -43.5 && lat <= -9.5;
+          const isValidLng = lng >= 113.5 && lng <= 153.5;
+          
+          if (!isValidLat || !isValidLng) {
+            console.warn(`❌ Invalid coordinates for ${location.name}: lat=${lat}, lng=${lng}`);
+          } else {
+            console.log(`✅ Valid coordinates for ${location.name}: lat=${lat}, lng=${lng}`);
+          }
+        });
       }
     }
     
@@ -394,11 +460,14 @@
     // Force refresh when map becomes visible
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && mapInitialized) {
-        setTimeout(forceMapRefresh, 500);
+        setTimeout(() => {
+          forceMapRefresh();
+          setupZoomListener();
+        }, 500);
       }
     });
     
-    // Additional initialization check
+    // Additional initialization check with coordinate validation
     let mapReadyInterval = setInterval(() => {
       if (window.google && window.google.maps && !mapInitialized) {
         console.log('⏰ Attempting delayed map initialization...');
@@ -409,8 +478,12 @@
       
       if (mapInitialized) {
         clearInterval(mapReadyInterval);
-        // Force a refresh after initialization
-        setTimeout(forceMapRefresh, 1000);
+        // Validate coordinates and force refresh after initialization
+        setTimeout(() => {
+          validateAndFixCoordinates();
+          forceMapRefresh();
+          setupZoomListener();
+        }, 1000);
       }
     }, 2000);
     
