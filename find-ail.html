@@ -69,7 +69,7 @@
                     <button @click.stop="getDirections(location)"
                       class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center">
                       <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 713 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"></path>
                       </svg>
                       Directions
                     </button>
@@ -102,7 +102,7 @@
         <div class="flex items-center space-x-3 mb-4">
           <button @click="showList = !showList" class="p-2 hover:bg-gray-100 rounded-xl transition-colors flex-shrink-0">
             <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
             </svg>
           </button>
           
@@ -149,7 +149,7 @@
         </button>
         
         <!-- Filters Section - Now Always Mobile Friendly -->
-        <div x-show="showFilters" x-transition class="mt-4 pt-4 border-t border-gray-200">
+        <div x-show="showFilters" @click.away="showFilters = false" x-transition class="mt-4 pt-4 border-t border-gray-200">
           <div class="space-y-3">
             <!-- State Filter Label -->
             <div class="text-sm font-medium text-gray-700 mb-2">Filter by State</div>
@@ -206,7 +206,18 @@
                 <svg class="w-5 h-5 text-gray-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                 </svg>
-                <p class="text-gray-600 text-sm leading-relaxed" x-text="getDisplayAddress(selectedLocation)"></p>
+                <div class="text-gray-600 text-sm leading-relaxed">
+                  <div x-show="selectedLocation.address && selectedLocation.address !== 'Mobile Inspector'" 
+                       x-text="selectedLocation.address" class="font-medium"></div>
+                  <div x-show="selectedLocation.address === 'Mobile Inspector'" 
+                       class="font-medium text-blue-600">Mobile Inspector</div>
+                  <div class="flex space-x-1 text-gray-500">
+                    <span x-show="selectedLocation.suburb" x-text="selectedLocation.suburb"></span>
+                    <span x-show="selectedLocation.suburb && selectedLocation.state">,</span>
+                    <span x-show="selectedLocation.state" x-text="selectedLocation.state"></span>
+                    <span x-show="selectedLocation.postcode" x-text="selectedLocation.postcode"></span>
+                  </div>
+                </div>
               </div>
               
               <div x-show="hasNamedInspector(selectedLocation)" class="flex items-start">
@@ -226,7 +237,7 @@
                   <button @click="getDirections(selectedLocation)"
                     class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 713 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"></path>
                     </svg>
                     Directions
                   </button>
