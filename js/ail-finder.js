@@ -139,7 +139,9 @@ function domainStyleAilFinder() {
         return;
       }
       
-      const query = this.searchQuery.toLowerCase();
+      const query = this.searchQuery.toLowerCase().trim();
+      console.log(`🔍 UPDATING SUGGESTIONS for: "${query}"`);
+      
       let suggestions = ailData.filter(location => 
         location.name.toLowerCase().includes(query) ||
         (location.suburb && location.suburb.toLowerCase().includes(query)) ||
@@ -152,7 +154,8 @@ function domainStyleAilFinder() {
         suggestions = suggestions.filter(location => location.state === this.selectedState);
       }
       
-      this.searchSuggestions = suggestions;
+      console.log(`💡 Found ${suggestions.length} suggestions`);
+      this.searchSuggestions = suggestions.slice(0, 10); // Limit to 10 suggestions
     },
 
     selectSuggestion(suggestion) {
@@ -171,17 +174,38 @@ function domainStyleAilFinder() {
     },
 
     filterLocations() {
+      console.log(`🔍 FILTERING: State="${this.selectedState}", Search="${this.searchQuery}"`);
+      
       let filtered = [...ailData];
-      if (this.selectedState !== 'all') filtered = filtered.filter(location => location.state === this.selectedState);
-      if (this.searchQuery.trim()) {
-        const query = this.searchQuery.toLowerCase();
-        filtered = filtered.filter(location => 
-          location.name.toLowerCase().includes(query) || location.suburb.toLowerCase().includes(query) ||
-          location.state.toLowerCase().includes(query) || (location.address?.toLowerCase().includes(query))
-        );
+      
+      // Filter by state first
+      if (this.selectedState !== 'all') {
+        filtered = filtered.filter(location => location.state === this.selectedState);
+        console.log(`📍 After state filter (${this.selectedState}): ${filtered.length} locations`);
       }
+      
+      // Filter by search query
+      if (this.searchQuery.trim()) {
+        const query = this.searchQuery.toLowerCase().trim();
+        const beforeCount = filtered.length;
+        
+        filtered = filtered.filter(location => 
+          location.name.toLowerCase().includes(query) ||
+          (location.suburb && location.suburb.toLowerCase().includes(query)) ||
+          location.state.toLowerCase().includes(query) ||
+          (location.address && location.address.toLowerCase().includes(query))
+        );
+        
+        console.log(`🔍 After search filter ("${query}"): ${filtered.length} locations (was ${beforeCount})`);
+      }
+      
       this.filteredLocations = filtered;
-      if (mapInitialized) this.updateMapMarkers();
+      console.log(`✅ FINAL RESULT: ${this.filteredLocations.length} locations shown`);
+      
+      // Update map markers
+      if (mapInitialized) {
+        this.updateMapMarkers();
+      }
     },
 
     updateMapMarkers() {
