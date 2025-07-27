@@ -42,6 +42,15 @@ function domainStyleAilFinder() {
         ailData = rawData.map(location => {
           const lat = parseFloat(location.lat);
           const lng = parseFloat(location.lng);
+          
+          // Validate Australian coordinate ranges
+          const isValidAustralianLat = lat >= -44 && lat <= -10; // Australia latitude range
+          const isValidAustralianLng = lng >= 113 && lng <= 154; // Australia longitude range
+          
+          if (!isValidAustralianLat || !isValidAustralianLng) {
+            console.warn(`⚠️ SUSPICIOUS COORDINATES: ${location.name} - lat: ${lat}, lng: ${lng} (outside Australia)`);
+          }
+          
           console.log(`Processing: ${location.name} - lat: ${lat}, lng: ${lng}`); // Debug log
           return {
             ...location, 
