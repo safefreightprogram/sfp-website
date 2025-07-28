@@ -59,8 +59,8 @@ function loadMarkers() {
         url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
           <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
             <path d="M16 0C7.2 0 0 7.2 0 16c0 8.8 16 24 16 24s16-15.2 16-24C32 7.2 24.8 0 16 0z" fill="#1e40af" stroke="white" stroke-width="2"/>
-            <circle cx="16" cy="16" r="8" fill="white"/>
-            <circle cx="16" cy="16" r="4" fill="#1e40af"/>
+            <rect x="9" y="10" width="14" height="18" rx="2" ry="2" fill="white"/>
+            <path d="M11 14h10M11 18h10M11 22h6" stroke="#1e40af" stroke-width="2" stroke-linecap="round"/>
           </svg>`),
         scaledSize: new google.maps.Size(32, 40),
         anchor: new google.maps.Point(16, 40)
@@ -224,6 +224,66 @@ function domainStyleAilFinder() {
       );
       map.fitBounds(bounds);
       setTimeout(() => map.setZoom(Math.max(map.getZoom() - 0.5, 4.0)), 300);
+    },
+
+    findNearest() {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+      }
+
+      this.loadingLocation = true;
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          this.userLocation = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+          };
+
+          const sorted = ailData.map(loc => ({
+            ...loc,
+            distance: this.calculateDistance(
+              this.userLocation.lat,
+              this.userLocation.lng,
+              loc.lat,
+              loc.lng
+            )
+          })).sort((a, b) => a.distance - b.distance);
+
+          this.filteredLocations = sorted;
+          this.selectedState = 'all';
+          this.searchQuery = '';
+
+          if (mapInitialized) {
+            map.setCenter(this.userLocation);
+            map.setZoom(10);
+            this.updateMapMarkers();
+          }
+
+          this.loadingLocation = false;
+        },
+        (err) => {
+          console.error('Geolocation error:', err);
+          alert('Unable to access your location. Please check browser settings.');
+          this.loadingLocation = false;
+        }
+      );
+    },
+
+    calculateDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371;
+      const dLat = this.toRadians(lat2 - lat1);
+      const dLng = this.toRadians(lng2 - lng1);
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    },
+
+    toRadians(deg) {
+      return deg * (Math.PI / 180);
     },
 
     getDisplayAddress(loc) {
