@@ -39,38 +39,14 @@ function domainStyleAilFinder() {
         if (!response?.ok || !jsonText) throw new Error('Could not find ail-locations.json');
         
         let rawData = JSON.parse(jsonText);
-        console.log('Raw data sample:', rawData[0]); // Debug log
+        console.log('Raw data sample:', rawData[0]);
+        
+        // Process ALL locations - no filtering
         ailData = rawData.map(location => {
           const lat = parseFloat(location.lat);
           const lng = parseFloat(location.lng);
           
-          // More restrictive land-based coordinate validation for Australia
-          const isValidMainlandLat = lat >= -43.5 && lat <= -9.5; // Tighter mainland bounds
-          const isValidMainlandLng = lng >= 113.5 && lng <= 153.5; // Tighter mainland bounds
-          
-          // Check for suspicious coordinates that might be in water
-          const isPossiblyOffshore = (
-            // Queensland coast edge
-            (lat >= -28 && lat <= -10 && lng >= 152.8) ||
-            // NSW coast edge  
-            (lat >= -37 && lat <= -28 && lng >= 151.5) ||
-            // Tasmania edge
-            (lat >= -43.5 && lat <= -40 && (lng <= 144 || lng >= 148.5)) ||
-            // WA coast edge
-            (lat >= -35 && lat <= -13 && lng <= 114.5) ||
-            // SA coast edge
-            (lat >= -38 && lat <= -32 && lng <= 135.5)
-          );
-          
-          if (!isValidMainlandLat || !isValidMainlandLng) {
-            console.warn(`⚠️ OUTSIDE AUSTRALIA: ${location.name} - lat: ${lat}, lng: ${lng}`);
-          }
-          
-          if (isPossiblyOffshore) {
-            console.warn(`🌊 POSSIBLY OFFSHORE: ${location.name} - lat: ${lat}, lng: ${lng} (${location.suburb}, ${location.state})`);
-          }
-          
-          console.log(`Processing: ${location.name} - lat: ${lat}, lng: ${lng}`); // Debug log
+          console.log(`Processing: ${location.name} - lat: ${lat}, lng: ${lng}`);
           return {
             ...location, 
             lat: lat, 
@@ -81,23 +57,13 @@ function domainStyleAilFinder() {
             inspector: location.inspector || '-'
           };
         }).filter(location => {
+          // Only filter out truly invalid coordinates
           const isValid = !isNaN(location.lat) && !isNaN(location.lng) && location.lat && location.lng;
-          
-          // Additional filter to exclude likely offshore coordinates
-          const isProbablyOnshore = !(
-            // Exclude far east Queensland (Coral Sea)
-            (location.lat >= -28 && location.lat <= -10 && location.lng >= 152.8) ||
-            // Exclude far east NSW (Tasman Sea)  
-            (location.lat >= -37 && location.lat <= -28 && location.lng >= 151.5) ||
-            // Exclude far west WA (Indian Ocean)
-            (location.lat >= -35 && location.lat <= -13 && location.lng <= 114.5)
-          );
-          
           if (!isValid) console.log(`❌ Invalid coordinates for: ${location.name}`);
-          if (!isProbablyOnshore) console.log(`🌊 FILTERED OFFSHORE: ${location.name} - lat: ${location.lat}, lng: ${location.lng}`);
-          
-          return isValid && isProbablyOnshore;
+          return isValid;
         });
+        
+        console.log(`✅ Loaded ${ailData.length} total locations`);
         
         this.filteredLocations = [...ailData];
         this.loading = false;
@@ -131,13 +97,13 @@ function domainStyleAilFinder() {
     handleSearch() { 
       this.filterLocations(); 
       this.updateSearchSuggestions();
-      this.highlightedIndex = -1; // Reset highlighting when search changes
+      this.highlightedIndex = -1;
     },
 
     handleKeydown(event) {
       if (!this.showSearchResults || this.searchSuggestions.length === 0) return;
       
-      const maxIndex = Math.min(this.searchSuggestions.length - 1, 7); // Max 8 items shown
+      const maxIndex = Math.min(this.searchSuggestions.length - 1, 7);
       
       switch(event.key) {
         case 'ArrowDown':
@@ -167,7 +133,6 @@ function domainStyleAilFinder() {
     },
 
     scrollToHighlighted() {
-      // Scroll the highlighted item into view
       setTimeout(() => {
         const dropdown = document.querySelector('[x-show="showSearchResults && searchQuery.trim() !== \'\' && searchSuggestions.length > 0"]');
         const highlighted = dropdown?.children[this.highlightedIndex];
@@ -188,7 +153,6 @@ function domainStyleAilFinder() {
       }
       
       const query = this.searchQuery.toLowerCase().trim();
-      console.log(`🔍 UPDATING SUGGESTIONS for: "${query}"`);
       
       let suggestions = ailData.filter(location => 
         location.name.toLowerCase().includes(query) ||
@@ -197,14 +161,12 @@ function domainStyleAilFinder() {
         (location.address && location.address.toLowerCase().includes(query))
       );
       
-      // Filter by selected state if applicable
       if (this.selectedState !== 'all') {
         suggestions = suggestions.filter(location => location.state === this.selectedState);
       }
       
-      console.log(`💡 Found ${suggestions.length} suggestions`);
-      this.searchSuggestions = suggestions.slice(0, 10); // Limit to 10 suggestions
-      this.highlightedIndex = -1; // Reset highlighting when suggestions change
+      this.searchSuggestions = suggestions.slice(0, 10);
+      this.highlightedIndex = -1;
     },
 
     selectSuggestion(suggestion) {
@@ -214,11 +176,24 @@ function domainStyleAilFinder() {
       this.selectedLocation = suggestion;
       this.filterLocations();
       
-      // Center map on selected location
+      // Enhanced map centering with proper coordinate handling
       if (mapInitialized) {
         setTimeout(() => {
-          map.setCenter({ lat: suggestion.lat, lng: suggestion.lng });
-          map.setZoom(12);
+          const position = new google.maps.LatLng(suggestion.lat, suggestion.lng);
+          map.setCenter(position);
+          map.setZoom(14);
+          
+          // Find and animate the marker
+          const marker = markers.find(m => {
+            const pos = m.getPosition();
+            return Math.abs(pos.lat() - suggestion.lat) < 0.0001 && 
+                   Math.abs(pos.lng() - suggestion.lng) < 0.0001;
+          });
+          
+          if (marker) {
+            marker.setAnimation(google.maps.Animation.BOUNCE);
+            setTimeout(() => marker.setAnimation(null), 2000);
+          }
         }, 100);
       }
     },
@@ -228,13 +203,11 @@ function domainStyleAilFinder() {
       
       let filtered = [...ailData];
       
-      // Filter by state first
       if (this.selectedState !== 'all') {
         filtered = filtered.filter(location => location.state === this.selectedState);
         console.log(`📍 After state filter (${this.selectedState}): ${filtered.length} locations`);
       }
       
-      // Filter by search query
       if (this.searchQuery.trim()) {
         const query = this.searchQuery.toLowerCase().trim();
         const beforeCount = filtered.length;
@@ -252,7 +225,6 @@ function domainStyleAilFinder() {
       this.filteredLocations = filtered;
       console.log(`✅ FINAL RESULT: ${this.filteredLocations.length} locations shown`);
       
-      // Update map markers
       if (mapInitialized) {
         this.updateMapMarkers();
       }
@@ -278,7 +250,11 @@ function domainStyleAilFinder() {
             ...location, distance: this.calculateDistance(this.userLocation.lat, this.userLocation.lng, location.lat, location.lng)
           })).sort((a, b) => a.distance - b.distance);
           this.filteredLocations = locationsWithDistance; this.selectedState = 'all'; this.searchQuery = '';
-          if (mapInitialized) { map.setCenter(this.userLocation); map.setZoom(10); }
+          if (mapInitialized) { 
+            const userPos = new google.maps.LatLng(this.userLocation.lat, this.userLocation.lng);
+            map.setCenter(userPos); 
+            map.setZoom(10); 
+          }
           this.loadingLocation = false;
         },
         (error) => { console.error('Error getting location:', error); alert('Unable to get your location. Please check your browser permissions.'); this.loadingLocation = false; }
@@ -332,7 +308,12 @@ function domainStyleAilFinder() {
 
     zoomToLocation(location) {
       if (!mapInitialized) return;
-      setTimeout(() => { google.maps.event.trigger(map, 'resize'); map.setCenter({ lat: location.lat, lng: location.lng }); map.setZoom(12); }, 100);
+      setTimeout(() => { 
+        google.maps.event.trigger(map, 'resize'); 
+        const position = new google.maps.LatLng(location.lat, location.lng);
+        map.setCenter(position); 
+        map.setZoom(12); 
+      }, 100);
     },
 
     zoomToState(state) {
@@ -371,9 +352,15 @@ function domainStyleAilFinder() {
 function initMap() {
   try {
     map = new google.maps.Map(document.getElementById("map"), {
-      zoom: 5, center: { lat: -25.0, lng: 134.0 }, mapTypeId: 'roadmap',
-      zoomControl: true, zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_BOTTOM },
-      streetViewControl: false, mapTypeControl: false, fullscreenControl: false, disableDefaultUI: false,
+      zoom: 5, 
+      center: { lat: -25.0, lng: 134.0 }, 
+      mapTypeId: 'roadmap',
+      zoomControl: true, 
+      zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_BOTTOM },
+      streetViewControl: false, 
+      mapTypeControl: false, 
+      fullscreenControl: true,
+      disableDefaultUI: false,
       styles: [
         { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
         { featureType: "transit", elementType: "labels", stylers: [{ visibility: "off" }] },
@@ -401,16 +388,24 @@ function loadMarkers() {
   markers = [];
   ailData.forEach(ail => {
     try {
-      console.log(`Creating marker for: ${ail.name} at lat: ${ail.lat}, lng: ${ail.lng}`); // Debug log
+      console.log(`Creating marker for: ${ail.name} at lat: ${ail.lat}, lng: ${ail.lng}`);
       const marker = new google.maps.Marker({
-        position: new google.maps.LatLng(ail.lat, ail.lng), map: map, title: ail.name,
+        position: new google.maps.LatLng(ail.lat, ail.lng), 
+        map: map, 
+        title: ail.name,
         icon: {
           url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`<svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg"><defs><filter id="shadow" x="-50%" y="-50%" width="200%" height="200%"><dropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/></filter></defs><path d="M16 0C7.2 0 0 7.2 0 16c0 8.8 16 24 16 24s16-15.2 16-24C32 7.2 24.8 0 16 0z" fill="#1e40af" stroke="white" stroke-width="2" filter="url(#shadow)"/><circle cx="16" cy="16" r="8" fill="white"/><circle cx="16" cy="16" r="4" fill="#1e40af"/></svg>`),
-          scaledSize: new google.maps.Size(32, 40), anchor: new google.maps.Point(16, 40)
+          scaledSize: new google.maps.Size(32, 40), 
+          anchor: new google.maps.Point(16, 40)
         },
         animation: google.maps.Animation.DROP
       });
-      marker.addListener("click", () => { if (ailFinderComponent) { ailFinderComponent.selectedLocation = ail; map.panTo(marker.getPosition()); } });
+      marker.addListener("click", () => { 
+        if (ailFinderComponent) { 
+          ailFinderComponent.selectedLocation = ail; 
+          map.panTo(marker.getPosition()); 
+        } 
+      });
       markers.push(marker);
     } catch (error) { console.error(`Error creating marker for ${ail.name}:`, error); }
   });
