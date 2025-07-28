@@ -8,7 +8,7 @@ const stateBounds = {
   VIC: { north: -33.9, south: -39.2, west: 140.9, east: 150.0 },
   SA: { north: -25.9, south: -38.1, west: 129.0, east: 141.0 },
   WA: { north: -13.7, south: -35.1, west: 112.9, east: 129.0 },
-  NT: { north: -10.9, south: -26.0, west: 129.0, east: 138.0 },
+  NT: { north: -10.9, south: -26.0, web: 129.0, east: 138.0 },
   TAS: { north: -39.2, south: -43.6, west: 143.8, east: 148.4 }
 };
 
@@ -368,6 +368,13 @@ function initMap() {
       ]
     });
     mapInitialized = true;
+    
+    // CRITICAL FIX: Force map resize after initialization
+    setTimeout(() => {
+      google.maps.event.trigger(map, 'resize');
+      console.log('🔧 Map resize triggered to fix projection issues');
+    }, 500);
+    
     if (ailData.length > 0) loadMarkers();
     setTimeout(() => {
       const bounds = new google.maps.LatLngBounds(
@@ -386,6 +393,7 @@ function loadMarkers() {
   console.log(`Loading ${ailData.length} markers...`);
   markers.forEach(marker => marker.setMap(null));
   markers = [];
+  
   ailData.forEach(ail => {
     try {
       console.log(`Creating marker for: ${ail.name} at lat: ${ail.lat}, lng: ${ail.lng}`);
@@ -400,6 +408,7 @@ function loadMarkers() {
         },
         animation: google.maps.Animation.DROP
       });
+      
       marker.addListener("click", () => { 
         if (ailFinderComponent) { 
           ailFinderComponent.selectedLocation = ail; 
@@ -409,7 +418,19 @@ function loadMarkers() {
       markers.push(marker);
     } catch (error) { console.error(`Error creating marker for ${ail.name}:`, error); }
   });
+  
   console.log(`Successfully loaded ${markers.length} markers on map`);
+  
+  // CRITICAL FIX: Force map refresh after all markers are loaded
+  setTimeout(() => {
+    google.maps.event.trigger(map, 'resize');
+    // Force all markers to recalculate their positions
+    markers.forEach(marker => {
+      const pos = marker.getPosition();
+      marker.setPosition(pos);
+    });
+    console.log('🔧 Forced marker position recalculation');
+  }, 1000);
 }
 
 window.initMap = initMap;
