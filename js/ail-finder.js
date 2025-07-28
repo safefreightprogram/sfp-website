@@ -1,6 +1,15 @@
 let map, markers = [], ailData = [], mapInitialized = false, ailFinderComponent = null;
 
 const australiaBounds = { north: -8.0, south: -44.0, west: 112.0, east: 154.0 };
+const stateBounds = {
+  NSW: { north: -28.15, south: -37.5, west: 140.9, east: 153.6 },
+  QLD: { north: -10.0, south: -29.2, west: 137.9, east: 154.0 },
+  VIC: { north: -33.9, south: -39.2, west: 140.9, east: 150.0 },
+  SA: { north: -25.9, south: -38.1, west: 129.0, east: 141.0 },
+  WA: { north: -13.7, south: -35.1, west: 112.9, east: 129.0 },
+  NT: { north: -10.9, south: -26.0, west: 129.0, east: 138.0 },
+  TAS: { north: -39.2, south: -43.6, west: 143.8, east: 148.4 }
+};
 
 function initMap() {
   try {
@@ -100,11 +109,7 @@ function domainStyleAilFinder() {
     async init() {
       ailFinderComponent = this;
       try {
-        const paths = [
-          './data/ail-locations.json', 'data/ail-locations.json',
-          '/data/ail-locations.json', './ail-locations.json'
-        ];
-
+        const paths = ['./data/ail-locations.json', 'data/ail-locations.json', '/data/ail-locations.json', './ail-locations.json'];
         let jsonText = null;
         for (const path of paths) {
           try {
@@ -134,14 +139,7 @@ function domainStyleAilFinder() {
 
         if (mapInitialized) {
           loadMarkers();
-          setTimeout(() => {
-            const bounds = new google.maps.LatLngBounds(
-              new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
-              new google.maps.LatLng(australiaBounds.north, australiaBounds.east)
-            );
-            map.fitBounds(bounds);
-            setTimeout(() => map.setZoom(Math.max(map.getZoom() - 0.5, 4.0)), 300);
-          }, 300);
+          this.fitMapToAustralia();
         } else {
           setTimeout(() => {
             if (window.google?.maps && !mapInitialized) initMap();
@@ -155,13 +153,86 @@ function domainStyleAilFinder() {
       }
     },
 
-    hasNamedInspector(loc) {
-      return loc.inspector && loc.inspector !== '-';
+    filterLocations() {
+      let filtered = [...ailData];
+
+      if (this.selectedState !== 'all') {
+        filtered = filtered.filter(loc => loc.state === this.selectedState);
+      }
+
+      if (this.searchQuery.trim()) {
+        const q = this.searchQuery.toLowerCase().trim();
+        filtered = filtered.filter(loc =>
+          loc.name.toLowerCase().includes(q) ||
+          loc.suburb.toLowerCase().includes(q) ||
+          loc.address.toLowerCase().includes(q) ||
+          loc.state.toLowerCase().includes(q)
+        );
+      }
+
+      this.filteredLocations = filtered;
+
+      if (mapInitialized) this.updateMapMarkers();
+    },
+
+    updateMapMarkers() {
+      if (!mapInitialized) return;
+      markers.forEach(marker => {
+        const match = this.filteredLocations.find(loc =>
+          Math.abs(marker.getPosition().lat() - loc.lat) < 0.0001 &&
+          Math.abs(marker.getPosition().lng() - loc.lng) < 0.0001
+        );
+        marker.setVisible(!!match);
+      });
+    },
+
+    selectState(state) {
+      this.selectedState = state;
+      this.filterLocations();
+
+      if (!mapInitialized) return;
+
+      setTimeout(() => {
+        const bounds = state === 'all'
+          ? new google.maps.LatLngBounds(
+              new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
+              new google.maps.LatLng(australiaBounds.north, australiaBounds.east))
+          : new google.maps.LatLngBounds(
+              new google.maps.LatLng(stateBounds[state].south, stateBounds[state].west),
+              new google.maps.LatLng(stateBounds[state].north, stateBounds[state].east));
+        map.fitBounds(bounds);
+      }, 300);
+    },
+
+    handleSearch() {
+      this.filterLocations();
+      this.updateSearchSuggestions();
+      this.highlightedIndex = -1;
+    },
+
+    clearAllFilters() {
+      this.selectedState = 'all';
+      this.searchQuery = '';
+      this.filterLocations();
+      if (mapInitialized) this.fitMapToAustralia();
+    },
+
+    fitMapToAustralia() {
+      const bounds = new google.maps.LatLngBounds(
+        new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
+        new google.maps.LatLng(australiaBounds.north, australiaBounds.east)
+      );
+      map.fitBounds(bounds);
+      setTimeout(() => map.setZoom(Math.max(map.getZoom() - 0.5, 4.0)), 300);
     },
 
     getDisplayAddress(loc) {
       if (loc.address === 'Mobile Inspector') return `Mobile Inspector – ${loc.state}`;
       return [loc.address, loc.suburb, loc.state + ' ' + loc.postcode].filter(Boolean).join(', ');
+    },
+
+    hasNamedInspector(loc) {
+      return loc.inspector && loc.inspector !== '-';
     },
 
     getDirections(loc) {
@@ -178,6 +249,20 @@ function domainStyleAilFinder() {
         map.setCenter(pos);
         map.setZoom(12);
       }
+    },
+
+    updateSearchSuggestions() {
+      if (!this.searchQuery.trim()) {
+        this.searchSuggestions = [];
+        return;
+      }
+      const q = this.searchQuery.toLowerCase().trim();
+      this.searchSuggestions = ailData.filter(loc =>
+        loc.name.toLowerCase().includes(q) ||
+        loc.suburb.toLowerCase().includes(q) ||
+        loc.address.toLowerCase().includes(q) ||
+        loc.state.toLowerCase().includes(q)
+      ).slice(0, 10);
     }
   };
 }
