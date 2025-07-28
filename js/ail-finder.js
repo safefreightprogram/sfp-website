@@ -57,13 +57,11 @@ function loadMarkers() {
       title: ail.name,
       icon: {
         url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-          <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 0C7.2 0 0 7.2 0 16c0 8.8 16 24 16 24s16-15.2 16-24C32 7.2 24.8 0 16 0z" fill="#1e40af" stroke="white" stroke-width="2"/>
-            <rect x="9" y="10" width="14" height="18" rx="2" ry="2" fill="white"/>
-            <path d="M11 14h10M11 18h10M11 22h6" stroke="#1e40af" stroke-width="2" stroke-linecap="round"/>
+          <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="8" r="6" fill="#1e40af" stroke="white" stroke-width="2"/>
           </svg>`),
-        scaledSize: new google.maps.Size(32, 40),
-        anchor: new google.maps.Point(16, 40)
+        scaledSize: new google.maps.Size(16, 16),
+        anchor: new google.maps.Point(8, 8)
       },
       animation: google.maps.Animation.DROP
     });
@@ -150,6 +148,18 @@ function domainStyleAilFinder() {
         console.error('Failed to load locations:', err);
         this.loading = false;
         alert('Failed to load location data.');
+      }
+    },
+
+    returnToAustraliaView() {
+      this.userLocation = null;
+      this.selectedState = 'all';
+      this.searchQuery = '';
+      this.filteredLocations = [...ailData];
+
+      if (mapInitialized) {
+        this.updateMapMarkers();
+        this.fitMapToAustralia();
       }
     },
 
