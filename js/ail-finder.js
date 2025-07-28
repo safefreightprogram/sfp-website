@@ -1,14 +1,14 @@
 // js/ail-finder.js
 let map, markers = [], ailData = [], mapInitialized = false, ailFinderComponent = null;
 
-const australiaBounds = { north: -5.0, south: -48.0, west: 108.0, east: 158.0 };
+const australiaBounds = { north: -8.0, south: -44.0, west: 112.0, east: 154.0 };
 const stateBounds = {
   NSW: { north: -28.15, south: -37.5, west: 140.9, east: 153.6 },
   QLD: { north: -10.0, south: -29.2, west: 137.9, east: 154.0 },
   VIC: { north: -33.9, south: -39.2, west: 140.9, east: 150.0 },
   SA: { north: -25.9, south: -38.1, west: 129.0, east: 141.0 },
   WA: { north: -13.7, south: -35.1, west: 112.9, east: 129.0 },
-  NT: { north: -10.9, south: -26.0, web: 129.0, east: 138.0 },
+  NT: { north: -10.9, south: -26.0, west: 129.0, east: 138.0 },
   TAS: { north: -39.2, south: -43.6, west: 143.8, east: 148.4 }
 };
 
