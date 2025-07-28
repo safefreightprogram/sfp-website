@@ -403,7 +403,7 @@ function loadMarkers() {
     try {
       console.log(`Creating marker for: ${ail.name} at lat: ${ail.lat}, lng: ${ail.lng}`); // Debug log
       const marker = new google.maps.Marker({
-        position: { lat: ail.lat, lng: ail.lng }, map: map, title: ail.name,
+        position: new google.maps.LatLng(ail.lat, ail.lng), map: map, title: ail.name,
         icon: {
           url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`<svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg"><defs><filter id="shadow" x="-50%" y="-50%" width="200%" height="200%"><dropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/></filter></defs><path d="M16 0C7.2 0 0 7.2 0 16c0 8.8 16 24 16 24s16-15.2 16-24C32 7.2 24.8 0 16 0z" fill="#1e40af" stroke="white" stroke-width="2" filter="url(#shadow)"/><circle cx="16" cy="16" r="8" fill="white"/><circle cx="16" cy="16" r="4" fill="#1e40af"/></svg>`),
           scaledSize: new google.maps.Size(32, 40), anchor: new google.maps.Point(16, 40)
