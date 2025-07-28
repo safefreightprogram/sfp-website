@@ -1,4 +1,5 @@
 let map, markers = [], ailData = [], mapInitialized = false, ailFinderComponent = null;
+let activeInfoWindow = null;
 
 const australiaBounds = { north: -8.0, south: -44.0, west: 112.0, east: 154.0 };
 const stateBounds = {
@@ -37,7 +38,13 @@ function initMap() {
     });
 
     map.addListener('click', () => {
-      if (ailFinderComponent?.selectedLocation) ailFinderComponent.selectedLocation = null;
+      if (activeInfoWindow) {
+        activeInfoWindow.close();
+        activeInfoWindow = null;
+      }
+      if (ailFinderComponent?.selectedLocation) {
+        ailFinderComponent.selectedLocation = null;
+      }
     });
   } catch (error) {
     console.error('Error initializing map:', error);
@@ -70,6 +77,22 @@ function loadMarkers() {
       if (ailFinderComponent) {
         ailFinderComponent.selectedLocation = ail;
         map.panTo(marker.getPosition());
+
+        if (activeInfoWindow) activeInfoWindow.close();
+
+        const infoContent = `
+          <div style="font-family: sans-serif; font-size: 14px;">
+            <div><strong>${ail.name}</strong></div>
+            <div>${ail.phone || 'Phone not available'}</div>
+          </div>
+        `;
+
+        const infoWindow = new google.maps.InfoWindow({
+          content: infoContent
+        });
+
+        infoWindow.open(map, marker);
+        activeInfoWindow = infoWindow;
       }
     });
 
@@ -129,7 +152,8 @@ function domainStyleAilFinder() {
           id: parseInt(loc.id),
           address: loc.address || '',
           suburb: loc.suburb || '',
-          inspector: loc.inspector || '-'
+          inspector: loc.inspector || '-',
+          phone: loc.phone || ''
         })).filter(loc => !isNaN(loc.lat) && !isNaN(loc.lng));
 
         this.filteredLocations = [...ailData];
@@ -294,31 +318,6 @@ function domainStyleAilFinder() {
 
     toRadians(deg) {
       return deg * (Math.PI / 180);
-    },
-
-    getDisplayAddress(loc) {
-      if (loc.address === 'Mobile Inspector') return `Mobile Inspector – ${loc.state}`;
-      return [loc.address, loc.suburb, loc.state + ' ' + loc.postcode].filter(Boolean).join(', ');
-    },
-
-    hasNamedInspector(loc) {
-      return loc.inspector && loc.inspector !== '-';
-    },
-
-    getDirections(loc) {
-      const encoded = encodeURIComponent(this.getDisplayAddress(loc));
-      const web = `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
-      window.open(web, '_blank');
-    },
-
-    viewOnMap(loc) {
-      this.selectedLocation = loc;
-      this.showList = false;
-      if (mapInitialized) {
-        const pos = new google.maps.LatLng(loc.lat, loc.lng);
-        map.setCenter(pos);
-        map.setZoom(12);
-      }
     },
 
     updateSearchSuggestions() {
