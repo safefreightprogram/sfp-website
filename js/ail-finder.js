@@ -343,7 +343,7 @@ function domainStyleAilFinder() {
           new google.maps.LatLng(australiaBounds.north, australiaBounds.east)
         );
         map.fitBounds(bounds);
-        setTimeout(() => map.setZoom(Math.max(map.getZoom() - 0.5, 4.0)), 300);
+        // setTimeout(() => map.setZoom(Math.max(map.getZoom() - 0.5, 4.0)), 300);
       }, 100);
     }
   }
