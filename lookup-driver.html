@@ -4,170 +4,123 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Driver Lookup – Safe Freight Program</title>
+
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-  <!-- Firebase Auth Setup -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      GoogleAuthProvider,
-      signInWithPopup,
-      onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBURlJUicOTobRLghN2RyEZfXEZvU_uiYU",
-      authDomain: "safe-freight-program.firebaseapp.com",
-      projectId: "safe-freight-program",
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    let authInitialized = false;
-
-    onAuthStateChanged(auth, (user) => {
-      if (!authInitialized) {
-        setTimeout(() => {
-          if (!auth.currentUser) {
-            window.location.href = "/login.html";
-          } else {
-            initializeUserInterface(auth.currentUser);
-            hideAuthLoader();
-          }
-          authInitialized = true;
-        }, 800);
-      } else if (!user) {
-        window.location.href = "/login.html";
-      } else {
-        initializeUserInterface(user);
-        hideAuthLoader();
-      }
-    });
-
-    function initializeUserInterface(user) {
-      const logoutLink = document.getElementById("logoutLink");
-      const userInfo = document.getElementById("userInfo");
-
-      if (logoutLink) logoutLink.classList.remove("hidden");
-      if (userInfo && user.email) {
-        userInfo.textContent = user.email;
-        userInfo.classList.remove("hidden");
-      }
-    }
-
-    function hideAuthLoader() {
-      const loader = document.getElementById('authLoader');
-      if (loader) {
-        loader.style.opacity = '0';
-        setTimeout(() => loader.style.display = 'none', 300);
-      }
-    }
-
-    window.signOutUser = () => {
-      const logoutBtn = document.getElementById("logoutLink");
-      const originalText = logoutBtn.textContent;
-      logoutBtn.textContent = "Signing out...";
-      logoutBtn.style.pointerEvents = "none";
-
-      signOut(auth).then(() => {
-        window.location.href = "/login.html";
-      }).catch(err => {
-        console.error("Logout failed:", err);
-        alert("Logout failed: " + err.message);
-        logoutBtn.textContent = originalText;
-        logoutBtn.style.pointerEvents = "auto";
-      });
-    };
-
-    const provider = new GoogleAuthProvider();
-    window.signInWithEmail = (email, password) => signInWithEmailAndPassword(auth, email, password);
-    window.signInWithGoogle = () => signInWithPopup(auth, provider);
-  </script>
+  <style>
+    [x-cloak] { display: none; }
+  </style>
 </head>
-
 <body class="bg-gray-50 text-gray-800 font-sans">
-  <!-- Loading screen -->
-  <div id="authLoader" class="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50 transition-opacity duration-300">
-    <div class="text-center">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto mb-4"></div>
-      <p class="text-gray-600 text-lg">Authenticating...</p>
-    </div>
-  </div>
 
-  <!-- Injected Components -->
+  <!-- Injected Header -->
   <div id="header"></div>
 
-  <!-- Main Content -->
-  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <section class="text-center">
-      <h2 class="text-3xl font-bold text-blue-800 mb-4">Driver Credential Lookup</h2>
-      <p class="mb-4 text-gray-600">Scan a SFP Passport QR Code or enter a Safe Freight Program Driver ID Number to check driver credentials.</p>
-      <div class="mb-4 text-center">
-        <button type="button" onclick="startScan()" class="text-blue-700 hover:text-blue-900 text-sm border border-blue-700 px-3 py-2 rounded inline-flex items-center gap-1 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h2l2-3h10l2 3h2a1 1 0 011 1v11a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1zm9 3a4 4 0 100 8 4 4 0 000-8z" />
-          </svg>
-          <span>Scan QR Code</span>
-        </button>
-      </div>
-    </section>
+  <!-- Main Section -->
+  <main class="max-w-4xl mx-auto px-4 py-12" x-data="driverLookup()" x-init="init()">
+    <h1 class="text-3xl font-bold text-blue-800 text-center mb-8">Driver Lookup</h1>
 
-    <div class="bg-white shadow-md rounded-lg p-6 max-w-xl mx-auto">
-      <form onsubmit="lookupDriver(); return false;" class="space-y-4">
-        <label for="driverInput" class="block text-sm font-medium text-gray-700">Safe Freight Program Driver Number</label>
-        <div class="flex items-center border border-gray-300 rounded-md px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
-          <span class="text-blue-700 font-semibold pr-1">SFPD-</span>
-          <input type="text" id="driverInput" pattern="[0-9]*" inputmode="numeric" autocomplete="off"
-                class="flex-1 border-none focus:ring-0 focus:outline-none text-sm"
-                placeholder="001234" required />
+    <form @submit.prevent="search" class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+      <input type="text" x-model="query" placeholder="Enter Driver ID or Licence Number"
+        class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-300" />
+      <button type="submit"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded transition">Search</button>
+    </form>
+
+    <template x-if="resultFound">
+      <div class="bg-white rounded shadow p-6 border border-gray-200">
+        <h2 class="text-xl font-semibold text-green-700 mb-4">Driver Found</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <template x-for="(value, key) in result" :key="key">
+            <div>
+              <dt class="text-gray-600 text-sm" x-text="formatKey(key)"></dt>
+              <dd class="text-gray-900 font-medium" x-text="value || '—'"></dd>
+            </div>
+          </template>
         </div>
-        <button type="submit" id="searchBtn" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-md shadow transition-colors">Search</button>
-      </form>
+      </div>
+    </template>
 
-      <div id="driverResult" class="mt-6 hidden"></div>
-    </div>
+    <template x-if="resultNotFound">
+      <div class="bg-yellow-100 border border-yellow-300 text-yellow-800 rounded p-4 text-center">
+        No driver found for that ID or licence number.
+      </div>
+    </template>
+
+    <template x-if="error">
+      <div class="bg-red-100 border border-red-300 text-red-800 rounded p-4 text-center mt-4" x-text="error"></div>
+    </template>
   </main>
-
-  <!-- QR Scanner Modal -->
-  <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden overflow-hidden">
-    <div class="bg-white p-4 rounded-md shadow-md max-w-sm w-full relative">
-      <div id="qr-reader" style="width: 100%;"></div>
-      <button onclick="stopScan()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl font-bold">&times;</button>
-    </div>
-  </div>
 
   <!-- Injected Footer -->
   <div id="footer"></div>
 
-  <!-- JS Includes -->
-  <script src="driver-lookup.js"></script> <!-- If you’ve externalised the logic -->
+  <!-- Header/Footer + Delayed Alpine Load -->
   <script>
-    // Include header and footer
     async function include(id, file) {
-      try {
-        const res = await fetch(file);
-        if (!res.ok) throw new Error(`${file} not found`);
-        document.getElementById(id).innerHTML = await res.text();
-      } catch (err) {
-        console.error(err);
-      }
+      const res = await fetch(file);
+      if (!res.ok) throw new Error(`${file} not found`);
+      document.getElementById(id).innerHTML = await res.text();
     }
 
-    include("header", "components/header.html");
-    include("footer", "components/footer.html");
+    async function initPage() {
+      await include("header", "components/header.html");
+      await include("footer", "components/footer.html");
+
+      const alpine = document.createElement('script');
+      alpine.src = 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js';
+      alpine.defer = true;
+      document.body.appendChild(alpine);
+    }
+
+    initPage();
   </script>
 
-  <!-- Lookup logic -->
+  <!-- Driver Lookup Logic -->
   <script>
-    // 👇 Paste your existing lookupDriver(), formatDate(), startScan(), etc. here
-    // Or load them via external <script src="driver-lookup.js"> if split
+    function driverLookup() {
+      return {
+        query: '',
+        result: {},
+        resultFound: false,
+        resultNotFound: false,
+        error: '',
+
+        init() {
+          const url = new URLSearchParams(window.location.search);
+          const id = url.get('id');
+          if (id) {
+            this.query = id;
+            this.search();
+          }
+        },
+
+        async search() {
+          this.resultFound = false;
+          this.resultNotFound = false;
+          this.error = '';
+          try {
+            const response = await fetch('https://script.google.com/macros/s/AKfycbyltST20zF4DC9CJuHZOLLGkMxdknfzqZu5dAzES-Wj4z6WL7-uIdUCIWmn2YuUrQL6/exec?type=driver&id=' + encodeURIComponent(this.query));
+            const data = await response.json();
+            if (data.success) {
+              this.result = data.result;
+              this.resultFound = true;
+            } else {
+              this.resultNotFound = true;
+            }
+          } catch (err) {
+            this.error = 'Something went wrong. Please try again later.';
+            console.error(err);
+          }
+        },
+
+        formatKey(key) {
+          return key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+        }
+      }
+    }
   </script>
+
 </body>
 </html>
