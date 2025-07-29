@@ -8,25 +8,10 @@
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- SEO Meta Tags -->
+  <!-- Meta -->
   <meta name="description" content="The Safe Freight Program sets the new standard for compliant, safety-driven road freight operations in Australia." />
-  <meta name="author" content="Safe Freight Program" />
   <meta property="og:title" content="Safe Freight Program" />
   <meta property="og:description" content="Professional. Compliant. Safe. Get your Safe Freight Passport today." />
-  <meta property="og:image" content="/images/social-preview.jpg" />
-  <meta property="og:type" content="website" />
-
-  <!-- Structured Data -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Safe Freight Program",
-    "url": "https://safefreightprogram.com.au",
-    "logo": "https://safefreightprogram.com.au/logo.png",
-    "description": "Australia's standard for safe and compliant freight operations."
-  }
-  </script>
 
   <style>
     @keyframes fadeInUp {
@@ -45,8 +30,33 @@
 
   <!-- SVG Symbols -->
   <svg style="display: none;">
-    <!-- all your <symbol> defs from backup stay here -->
-    <!-- ... -->
+    <symbol id="icon-driver" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+    </symbol>
+    <symbol id="icon-truck" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M3 3h13v13H3V3zm14 3h4l2 4v6h-6V6zM7 19a2 2 0 11-.001-3.999A2 2 0 017 19zm10 0a2 2 0 11-.001-3.999A2 2 0 0117 19z"/>
+    </symbol>
+    <symbol id="icon-qr" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zM3 15h6v6H3v-6zm2 2v2h2v-2H5zM15 3h6v6h-6V3zm2 2v2h2V5h-2zM10 10h4v4h-4v-4zM15 15h1v1h-1v-1zm2 0h1v1h-1v-1zm-2 2h1v1h-1v-1zm2 2h1v1h-1v-1z"/>
+    </symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2l9 4v6c0 5.55-3.84 10.74-9 12-5.16-1.26-9-6.45-9-12V6l9-4z"/>
+    </symbol>
+    <symbol id="icon-book" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M3 4v16h18V4H3zm2 2h14v12H5V6z"/>
+    </symbol>
+    <symbol id="icon-cog" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7zm8.94-2.5l1.03-1.78-2.01-3.49-2.16.31a7.91 7.91 0 00-1.44-1.44l.31-2.16-3.49-2.01L11 3.06 9.22 5.07l.31 2.16a7.91 7.91 0 00-1.44 1.44L6 8.94l-2.01 3.49L5.07 13l2.16-.31a7.91 7.91 0 001.44 1.44L8.94 18l3.49 2.01L13 18.93l.31-2.16a7.91 7.91 0 001.44-1.44L18 15.06l2.01-3.49L20.94 13z"/>
+    </symbol>
+    <symbol id="icon-cert" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2L2 7l10 5 10-5-10-5zm0 7l-6.16-3.08L12 2.84l6.16 3.08L12 9zm0 2l10-5v6c0 5.55-3.84 10.74-9 12-5.16-1.26-9-6.45-9-12V6l10 5z"/>
+    </symbol>
+    <symbol id="icon-info" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+    </symbol>
+    <symbol id="icon-docs" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M14 2H6a2 2 0 00-2 2v16l4-4h6a2 2 0 002-2V4a2 2 0 00-2-2z"/>
+    </symbol>
   </svg>
 
   <!-- Main Content -->
@@ -58,46 +68,69 @@
 
     <section class="animate-fadeInUp">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- These cards are unchanged -->
-        <!-- Driver Lookup -->
-        <a href="lookup-driver.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200">
-          <div class="flex flex-col items-center text-center space-y-4">
-            <div class="bg-blue-100 p-4 rounded-full">
-              <svg class="w-8 h-8 text-blue-700"><use href="#icon-driver" /></svg>
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gray-800 mb-2">Driver Lookup</h3>
-              <p class="text-gray-600 text-sm">Check driver credentials and Safe Freight Passport status</p>
-            </div>
+        <!-- Repeat this block for each tile -->
+        <a href="lookup-driver.html" class="block bg-white rounded-lg border p-6 hover:shadow-lg hover:border-blue-300 transition-all">
+          <div class="flex flex-col items-center space-y-4 text-center">
+            <div class="bg-blue-100 p-4 rounded-full"><svg class="w-8 h-8 text-blue-700"><use href="#icon-driver"/></svg></div>
+            <div><h3 class="text-lg font-semibold">Driver Lookup</h3><p class="text-sm text-gray-600">Check driver credentials and Safe Freight Passport status</p></div>
           </div>
         </a>
 
-        <!-- Vehicle Lookup -->
-        <a href="lookup-vehicle.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200">
-          <div class="flex flex-col items-center text-center space-y-4">
-            <div class="bg-blue-100 p-4 rounded-full">
-              <svg class="w-8 h-8 text-blue-700"><use href="#icon-truck" /></svg>
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gray-800 mb-2">Vehicle Lookup</h3>
-              <p class="text-gray-600 text-sm">Verify vehicle credentials and compliance status</p>
-            </div>
+        <a href="lookup-vehicle.html" class="block bg-white rounded-lg border p-6 hover:shadow-lg hover:border-blue-300 transition-all">
+          <div class="flex flex-col items-center space-y-4 text-center">
+            <div class="bg-blue-100 p-4 rounded-full"><svg class="w-8 h-8 text-blue-700"><use href="#icon-truck"/></svg></div>
+            <div><h3 class="text-lg font-semibold">Vehicle Lookup</h3><p class="text-sm text-gray-600">Verify vehicle credentials and compliance status</p></div>
           </div>
         </a>
 
-        <!-- AIL Portal -->
-        <a href="ail-login.html" class="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200">
-          <div class="flex flex-col items-center text-center space-y-4">
-            <div class="bg-blue-100 p-4 rounded-full">
-              <svg class="w-8 h-8 text-blue-700"><use href="#icon-qr" /></svg>
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gray-800 mb-2">AIL Portal</h3>
-              <p class="text-gray-600 text-sm">Submit vehicle inspection results</p>
-            </div>
+        <a href="ail-login.html" class="block bg-white rounded-lg border p-6 hover:shadow-lg hover:border-blue-300 transition-all">
+          <div class="flex flex-col items-center space-y-4 text-center">
+            <div class="bg-blue-100 p-4 rounded-full"><svg class="w-8 h-8 text-blue-700"><use href="#icon-qr"/></svg></div>
+            <div><h3 class="text-lg font-semibold">AIL Portal</h3><p class="text-sm text-gray-600">Submit vehicle inspection results</p></div>
           </div>
         </a>
-        <!-- Add remaining cards here unchanged from backup... -->
+
+        <a href="accreditation.html" class="block bg-white rounded-lg border p-6 hover:shadow-lg hover:border-blue-300 transition-all">
+          <div class="flex flex-col items-center space-y-4 text-center">
+            <div class="bg-blue-100 p-4 rounded-full"><svg class="w-8 h-8 text-blue-700"><use href="#icon-shield"/></svg></div>
+            <div><h3 class="text-lg font-semibold">Get Accredited</h3><p class="text-sm text-gray-600">Learn how to join the Safe Freight Program</p></div>
+          </div>
+        </a>
+
+        <a href="training.html" class="block bg-white rounded-lg border p-6 hover:shadow-lg hover:border-blue-300 transition-all">
+          <div class="flex flex-col items-center space-y-4 text-center">
+            <div class="bg-blue-100 p-4 rounded-full"><svg class="w-8 h-8 text-blue-700"><use href="#icon-book"/></svg></div>
+            <div><h3 class="text-lg font-semibold">Training</h3><p class="text-sm text-gray-600">Access online courses and refreshers</p></div>
+          </div>
+        </a>
+
+        <a href="admin.html" class="block bg-white rounded-lg border p-6 hover:shadow-lg hover:border-blue-300 transition-all">
+          <div class="flex flex-col items-center space-y-4 text-center">
+            <div class="bg-blue-100 p-4 rounded-full"><svg class="w-8 h-8 text-blue-700"><use href="#icon-cog"/></svg></div>
+            <div><h3 class="text-lg font-semibold">Admin</h3><p class="text-sm text-gray-600">Manage system settings and integrations</p></div>
+          </div>
+        </a>
+
+        <a href="certificates.html" class="block bg-white rounded-lg border p-6 hover:shadow-lg hover:border-blue-300 transition-all">
+          <div class="flex flex-col items-center space-y-4 text-center">
+            <div class="bg-blue-100 p-4 rounded-full"><svg class="w-8 h-8 text-blue-700"><use href="#icon-cert"/></svg></div>
+            <div><h3 class="text-lg font-semibold">Certificates</h3><p class="text-sm text-gray-600">View and verify issued certificates</p></div>
+          </div>
+        </a>
+
+        <a href="about.html" class="block bg-white rounded-lg border p-6 hover:shadow-lg hover:border-blue-300 transition-all">
+          <div class="flex flex-col items-center space-y-4 text-center">
+            <div class="bg-blue-100 p-4 rounded-full"><svg class="w-8 h-8 text-blue-700"><use href="#icon-info"/></svg></div>
+            <div><h3 class="text-lg font-semibold">About</h3><p class="text-sm text-gray-600">What the Safe Freight Program is and how it works</p></div>
+          </div>
+        </a>
+
+        <a href="docs.html" class="block bg-white rounded-lg border p-6 hover:shadow-lg hover:border-blue-300 transition-all">
+          <div class="flex flex-col items-center space-y-4 text-center">
+            <div class="bg-blue-100 p-4 rounded-full"><svg class="w-8 h-8 text-blue-700"><use href="#icon-docs"/></svg></div>
+            <div><h3 class="text-lg font-semibold">Documents</h3><p class="text-sm text-gray-600">Download policies, forms, and templates</p></div>
+          </div>
+        </a>
       </div>
     </section>
   </main>
@@ -105,7 +138,7 @@
   <!-- Injected Footer -->
   <div id="footer"></div>
 
-  <!-- Inject header/footer before Alpine loads -->
+  <!-- Inject and then load Alpine -->
   <script>
     async function include(id, file) {
       const res = await fetch(file);
@@ -117,7 +150,6 @@
       await include("header", "components/header.html");
       await include("footer", "components/footer.html");
 
-      // Now load Alpine.js safely
       const alpine = document.createElement('script');
       alpine.src = 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js';
       alpine.defer = true;
