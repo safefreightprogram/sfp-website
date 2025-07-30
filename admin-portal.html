@@ -1147,11 +1147,30 @@
     return '🚐';
   }
 
-  // Date formatting (from driver lookup)
+  // Date formatting (handles Google Sheets date formats)
   function formatDate(d) {
     if (!d) return '';
     
-    // Handle various date formats
+    // Handle Google Sheets Date constructor format: Date(2026,5,1)
+    if (d.includes('Date(')) {
+      try {
+        // Extract the date values from Date(year,month,day) format
+        const match = d.match(/Date\((\d{4}),(\d{1,2}),(\d{1,2})\)/);
+        if (match) {
+          const year = parseInt(match[1]);
+          const month = parseInt(match[2]); // Google Sheets months are 0-based like JavaScript
+          const day = parseInt(match[3]);
+          const parsed = new Date(year, month, day);
+          if (!isNaN(parsed.getTime())) {
+            return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing Date() format:', e);
+      }
+    }
+    
+    // Handle YYYY-MM-DD format
     if (d.includes('-')) {
       const [year, month, day] = d.split('-');
       const parsed = new Date(`${year}-${month}-${day}`);
@@ -1160,6 +1179,7 @@
       }
     }
     
+    // Handle DD/MM/YYYY format
     if (d.includes('/')) {
       const [day, month, year] = d.split('/');
       const parsed = new Date(`${year}-${month}-${day}`);
@@ -1168,6 +1188,7 @@
       }
     }
 
+    // If all else fails, return the original string
     return d;
   }
 
