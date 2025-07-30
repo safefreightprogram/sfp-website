@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Portal – Safe Freight Program</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <!-- Tailwind CSS - Consider using production build for live site -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
@@ -535,9 +536,25 @@
         const data = await fetchSheetData(url);
         
         if (data && data.length > 0) {
-          console.log(`Successfully loaded ${data.length} driver rows from Google Sheets`);
-          allDriversData = data;
-          driversData = data;
+          // Filter out placeholder/empty rows - only keep drivers with substantive data
+          const filteredData = data.filter(row => {
+            const [id, firstName, surname, status] = row;
+            
+            // Keep row if it has:
+            // 1. An ID that looks like SFPD-XXXXXX
+            // 2. A first name and surname
+            // 3. A valid status
+            return (
+              id && id.startsWith('SFPD-') &&
+              firstName && firstName.trim() !== '' &&
+              surname && surname.trim() !== '' &&
+              status && ['Active', 'Expired', 'Expires Soon'].includes(status)
+            );
+          });
+          
+          console.log(`Successfully loaded ${filteredData.length} drivers with substantive data (filtered from ${data.length} total rows)`);
+          allDriversData = filteredData;
+          driversData = filteredData;
           return true;
         }
       } catch (error) {
@@ -556,9 +573,26 @@
         const data = await fetchSheetData(url);
         
         if (data && data.length > 0) {
-          console.log(`Successfully loaded ${data.length} vehicle rows from Google Sheets`);
-          allVehiclesData = data;
-          vehiclesData = data;
+          // Filter out placeholder/empty rows - only keep vehicles with substantive data
+          const filteredData = data.filter(row => {
+            const [id, vehicleType, rego, vin, status] = row;
+            
+            // Keep row if it has:
+            // 1. An ID that looks like SFPV-XXXXXX
+            // 2. A vehicle type that's not empty
+            // 3. A registration number
+            // 4. A status (Active, Expired, Non-Compliant)
+            return (
+              id && id.startsWith('SFPV-') &&
+              vehicleType && vehicleType.trim() !== '' &&
+              rego && rego.trim() !== '' &&
+              status && ['Active', 'Expired', 'Non-Compliant'].includes(status)
+            );
+          });
+          
+          console.log(`Successfully loaded ${filteredData.length} vehicles with substantive data (filtered from ${data.length} total rows)`);
+          allVehiclesData = filteredData;
+          vehiclesData = filteredData;
           return true;
         }
       } catch (error) {
@@ -940,7 +974,77 @@
     }
   }
 
-  // Render driver table
+  // Render vehicle table
+  function renderVehicleTable() {
+    const tbody = document.getElementById('vehicleTableBody');
+    
+    if (!vehiclesData || vehiclesData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No vehicles found</td></tr>';
+      return;
+    }
+    
+    const rows = vehiclesData.map(row => {
+      const [id, vehicleType, rego, vin, status, expiryDate, lastInspectionDate, outcome, nextDue, inspectorEmail, ailName, notes, qrUrl, lastUpdated] = row;
+      
+      const statusClass = 
+        status === 'Active' ? 'bg-green-100 text-green-800' :
+        status === 'Expired' ? 'bg-red-100 text-red-800' :
+        status === 'Non-Compliant' ? 'bg-orange-100 text-orange-800' :
+        'bg-gray-100 text-gray-800';
+      
+      const formattedExpiry = formatDate(expiryDate);
+      const formattedLastInspection = formatDate(lastInspectionDate);
+      
+      // Get vehicle type icon
+      const vehicleIcon = getVehicleTypeIcon(vehicleType);
+      
+      return `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4">
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-gray-300 rounded-full mr-3 flex items-center justify-center text-sm font-medium text-gray-600">
+                ${vehicleIcon}
+              </div>
+              <div>
+                <div class="font-medium">${id || ''}</div>
+                <div class="text-sm text-gray-500">${vin || 'No VIN'}</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-900">${vehicleType || ''}</td>
+          <td class="px-6 py-4 text-sm text-gray-900">${rego || ''}</td>
+          <td class="px-6 py-4">
+            <span class="${statusClass} px-2 py-1 rounded text-xs font-medium">${status || 'Unknown'}</span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">${formattedExpiry || 'N/A'}</td>
+          <td class="px-6 py-4 text-sm text-gray-500">
+            ${formattedLastInspection || 'N/A'}
+            ${outcome ? `<div class="text-xs ${outcome === 'Pass' ? 'text-green-600' : 'text-red-600'}">${outcome}</div>` : ''}
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex space-x-2">
+              <button onclick="viewVehicle('${id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+              <button onclick="editVehicle('${id}')" class="text-green-600 hover:text-green-800 text-sm font-medium">Edit</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    
+    tbody.innerHTML = rows;
+  }
+
+  // Get vehicle type icon
+  function getVehicleTypeIcon(vehicleType) {
+    const type = (vehicleType || '').toLowerCase();
+    if (type.includes('prime') || type.includes('truck')) return '🚛';
+    if (type.includes('trailer')) return '🚚';
+    if (type.includes('tanker')) return '🛢️';
+    if (type.includes('bus')) return '🚌';
+    if (type.includes('flat')) return '📦';
+    if (type.includes('box')) return '📦';
+    return '🚐';
+  }
   function renderDriverTable() {
     const tbody = document.getElementById('driverTableBody');
     
