@@ -476,12 +476,19 @@
     'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFCekJjBtJNTP8/gviz/tq?tqx=out:csv',
     'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFCekJjBtJNTP8/export?format=csv'
   ];
+
+  const AIL_SHEET_URLS = [
+  'https://docs.google.com/spreadsheets/d/1q4SFo83xPIysakFXTwIRFq0vDGIib3d0ZqEEP6vQdEs/gviz/tq?tqx=out:json',
+  'https://docs.google.com/spreadsheets/d/1q4SFo83xPIysakFXTwIRFq0vDGIib3d0ZqEEP6vQdEs/gviz/tq?tqx=out:csv',
+  'https://docs.google.com/spreadsheets/d/1q4SFo83xPIysakFXTwIRFq0vDGIib3d0ZqEEP6vQdEs/export?format=csv'
+];
   
   let driversData = [];
   let allDriversData = [];
   let vehiclesData = [];
   let allVehiclesData = [];
   let ailsData = [];
+  let allAILsData = [];
   let usersData = [];
   let currentTab = 'dashboard';
   let dataLoadStatus = { drivers: 'unknown', vehicles: 'unknown' };
@@ -492,11 +499,31 @@
       showStatus('Loading system data...', 'info');
       updateConnectionStatus('connecting');
       
-      // Load both drivers and vehicles
-      const [driversSuccess, vehiclesSuccess] = await Promise.all([
+      const [driversSuccess, vehiclesSuccess, ailsSuccess] = await Promise.all([
         tryLoadDriversFromGoogleSheets(),
-        tryLoadVehiclesFromGoogleSheets()
+        tryLoadVehiclesFromGoogleSheets(),
+        tryLoadAILsFromGoogleSheets()
       ]);
+
+      async function tryLoadAILsFromGoogleSheets() {
+  for (const url of AIL_SHEET_URLS) {
+    try {
+      console.log(`Trying to fetch AILs from: ${url}`);
+      const data = await fetchSheetData(url);
+      
+      if (data && data.length > 0) {
+        console.log(`Successfully loaded ${data.length} AIL rows (raw)`);
+        allAILsData = data;
+        ailsData = data;
+        return true;
+      }
+    } catch (error) {
+      console.error(`Failed to fetch AILs from ${url}:`, error);
+      continue;
+    }
+  }
+  return false;
+}
       
       if (driversSuccess && vehiclesSuccess) {
         showStatus('All data loaded successfully from Google Sheets!', 'success');
@@ -1385,6 +1412,18 @@
   setTimeout(() => {
     loadDashboardData();
   }, 500);
+
+function testAILData() {
+  console.log('=== AIL DATA TEST ===');
+  console.log('AIL Data Length:', ailsData.length);
+  console.log('All AIL Data:', ailsData);
+  if (ailsData.length > 0) {
+    console.log('First AIL:', ailsData[0]);
+    console.log('Column count:', ailsData[0].length);
+  }
+  console.log('==================');
+}
+  
 </script>
 
 </body>
