@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Table Debug Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">Driver Table Debugging Tool</h1>
+        
+        <!-- Test Data Loading -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">1. Test Data Loading</h2>
+            <div class="space-y-4">
+                <button onclick="testDriverSheetAccess()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Test Driver Sheet Access
+                </button>
+                <button onclick="testVehicleSheetAccess()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Test Vehicle Sheet Access
+                </button>
+                <div id="dataTestResults" class="mt-4 p-4 bg-gray-100 rounded min-h-[100px]">
+                    Click buttons above to test data access...
+                </div>
+            </div>
+        </div>
+
+        <!-- Raw Data Display -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">2. Raw Data Inspection</h2>
+            <div class="space-y-4">
+                <button onclick="showRawDriverData()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                    Show Raw Driver Data
+                </button>
+                <div id="rawDataDisplay" class="mt-4 p-4 bg-gray-100 rounded max-h-96 overflow-auto">
+                    Click button above to inspect raw data...
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Rendering Test -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">3. Driver Table Test</h2>
+            <button onclick="renderTestDriverTable()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 mb-4">
+                Render Test Driver Table
+            </button>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full border">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase border">Driver</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase border">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase border">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase border">Expiry</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase border">Certifications</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase border">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="testDriverTableBody" class="divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-gray-500 border">Click button above to test table rendering...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Same sheet URLs as your admin portal
+        const DRIVER_SHEET_URLS = [
+            'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json',
+            'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:csv',
+            'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/export?format=csv'
+        ];
+
+        const VEHICLE_SHEET_URLS = [
+            'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFCekJjBtJNTP8/gviz/tq?tqx=out:json',
+            'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFCekJjBtJNTP8/gviz/tq?tqx=out:csv',
+            'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFCekJjBtJNTP8/export?format=csv'
+        ];
+
+        let testDriverData = [];
+
+        // Test driver sheet access
+        async function testDriverSheetAccess() {
+            const results = document.getElementById('dataTestResults');
+            results.innerHTML = '<div class="text-blue-600">Testing driver sheet access...</div>';
+            
+            let successCount = 0;
+            let results_html = '<div class="space-y-2">';
+            
+            for (let i = 0; i < DRIVER_SHEET_URLS.length; i++) {
+                const url = DRIVER_SHEET_URLS[i];
+                try {
+                    results_html += `<div class="text-sm"><strong>URL ${i + 1}:</strong> Testing...</div>`;
+                    
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        const text = await response.text();
+                        const dataLength = text.length;
+                        results_html += `<div class="text-green-600 text-sm">✓ Success! Data length: ${dataLength} characters</div>`;
+                        
+                        // Try to parse the data
+                        let parsedData = null;
+                        if (url.includes('json')) {
+                            try {
+                                const json = JSON.parse(text.substr(47).slice(0, -2));
+                                parsedData = json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ''));
+                                results_html += `<div class="text-green-600 text-sm">✓ JSON parsed successfully. Rows: ${parsedData.length}</div>`;
+                            } catch (e) {
+                                results_html += `<div class="text-red-600 text-sm">✗ JSON parse failed: ${e.message}</div>`;
+                            }
+                        } else if (url.includes('csv')) {
+                            const lines = text.split('\n');
+                            parsedData = lines.slice(1).filter(line => line.trim()).map(line => {
+                                return line.split(',').map(cell => cell.replace(/"/g, ''));
+                            });
+                            results_html += `<div class="text-green-600 text-sm">✓ CSV parsed successfully. Rows: ${parsedData.length}</div>`;
+                        }
+                        
+                        if (parsedData && parsedData.length > 0) {
+                            testDriverData = parsedData;
+                            successCount++;
+                            results_html += `<div class="text-blue-600 text-sm">Sample row: ${JSON.stringify(parsedData[0]).substring(0, 100)}...</div>`;
+                        }
+                        
+                    } else {
+                        results_html += `<div class="text-red-600 text-sm">✗ HTTP ${response.status}: ${response.statusText}</div>`;
+                    }
+                } catch (error) {
+                    results_html += `<div class="text-red-600 text-sm">✗ Error: ${error.message}</div>`;
+                }
+                results_html += '<div class="border-b border-gray-300 my-2"></div>';
+            }
+            
+            results_html += `<div class="font-semibold ${successCount > 0 ? 'text-green-600' : 'text-red-600'}">
+                ${successCount}/${DRIVER_SHEET_URLS.length} URLs successful
+            </div></div>`;
+            
+            results.innerHTML = results_html;
+        }
+
+        // Test vehicle sheet access
+        async function testVehicleSheetAccess() {
+            const results = document.getElementById('dataTestResults');
+            results.innerHTML = '<div class="text-blue-600">Testing vehicle sheet access...</div>';
+            
+            let successCount = 0;
+            let results_html = '<div class="space-y-2">';
+            
+            for (let i = 0; i < VEHICLE_SHEET_URLS.length; i++) {
+                const url = VEHICLE_SHEET_URLS[i];
+                try {
+                    results_html += `<div class="text-sm"><strong>Vehicle URL ${i + 1}:</strong> Testing...</div>`;
+                    
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        const text = await response.text();
+                        const dataLength = text.length;
+                        results_html += `<div class="text-green-600 text-sm">✓ Success! Data length: ${dataLength} characters</div>`;
+                        successCount++;
+                    } else {
+                        results_html += `<div class="text-red-600 text-sm">✗ HTTP ${response.status}: ${response.statusText}</div>`;
+                    }
+                } catch (error) {
+                    results_html += `<div class="text-red-600 text-sm">✗ Error: ${error.message}</div>`;
+                }
+                results_html += '<div class="border-b border-gray-300 my-2"></div>';
+            }
+            
+            results_html += `<div class="font-semibold ${successCount > 0 ? 'text-green-600' : 'text-red-600'}">
+                ${successCount}/${VEHICLE_SHEET_URLS.length} vehicle URLs successful
+            </div></div>`;
+            
+            results.innerHTML = results_html;
+        }
+
+        // Show raw driver data
+        function showRawDriverData() {
+            const display = document.getElementById('rawDataDisplay');
+            
+            if (testDriverData.length === 0) {
+                display.innerHTML = '<div class="text-red-600">No driver data loaded. Please test sheet access first.</div>';
+                return;
+            }
+
+            let html = '<div class="space-y-4">';
+            html += `<div class="font-semibold">Total rows: ${testDriverData.length}</div>`;
+            
+            // Show first few rows
+            html += '<div class="text-sm"><strong>First 5 rows:</strong></div>';
+            for (let i = 0; i < Math.min(5, testDriverData.length); i++) {
+                const row = testDriverData[i];
+                html += `<div class="bg-white p-2 rounded border">
+                    <div class="font-medium">Row ${i + 1}:</div>
+                    <div class="text-xs text-gray-600">Raw: ${JSON.stringify(row)}</div>
+                    <div class="text-sm mt-1">
+                        ID: ${row[0] || 'N/A'} | 
+                        Name: ${(row[1] || '') + ' ' + (row[2] || '')} | 
+                        Status: ${row[3] || 'N/A'} | 
+                        Expiry: ${row[4] || 'N/A'}
+                    </div>
+                </div>`;
+            }
+            
+            html += '</div>';
+            display.innerHTML = html;
+        }
+
+        // Render test driver table
+        function renderTestDriverTable() {
+            const tbody = document.getElementById('testDriverTableBody');
+            
+            if (testDriverData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500 border">No driver data loaded. Please test sheet access first.</td></tr>';
+                return;
+            }
+
+            // Filter for substantive data (same logic as your admin portal)
+            const filteredData = testDriverData.filter(row => {
+                const [id, firstName, surname, status] = row;
+                return (
+                    id && id.startsWith('SFPD-') &&
+                    firstName && firstName.trim() !== '' &&
+                    surname && surname.trim() !== '' &&
+                    status && ['Active', 'Expired', 'Expires Soon'].includes(status)
+                );
+            });
+
+            console.log(`Filtered ${filteredData.length} rows from ${testDriverData.length} total`);
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-orange-500 border">No valid driver records found after filtering.</td></tr>';
+                return;
+            }
+
+            const rows = filteredData.map(row => {
+                const [id, firstName, surname, status, expiry, qrUrl, photo, slideId, cardPng, slp, sup, sdp, dg] = row;
+                
+                const certs = [];
+                if (slp === 'y') certs.push('<span class="bg-blue-500 text-white px-2 py-1 rounded text-xs">SLP</span>');
+                if (sup === 'y') certs.push('<span class="bg-green-500 text-white px-2 py-1 rounded text-xs">SUP</span>');
+                if (sdp === 'y') certs.push('<span class="bg-purple-500 text-white px-2 py-1 rounded text-xs">SDP</span>');
+                if (dg === 'y') certs.push('<span class="bg-orange-500 text-white px-2 py-1 rounded text-xs">DG</span>');
+                
+                const statusClass = 
+                    status === 'Active' ? 'bg-green-100 text-green-800' :
+                    status === 'Expired' ? 'bg-red-100 text-red-800' :
+                    status === 'Expires Soon' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800';
+                
+                const formattedExpiry = formatDate(expiry);
+                
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 border">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-gray-300 rounded-full mr-3 flex items-center justify-center text-sm font-medium text-gray-600">
+                                    ${firstName ? firstName.charAt(0) : '?'}${surname ? surname.charAt(0) : '?'}
+                                </div>
+                                <div>
+                                    <div class="font-medium">${firstName || ''} ${surname || ''}</div>
+                                    <div class="text-sm text-gray-500">${id || ''}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900 border">${id || ''}</td>
+                        <td class="px-6 py-4 border">
+                            <span class="${statusClass} px-2 py-1 rounded text-xs font-medium">${status || 'Unknown'}</span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500 border">${formattedExpiry || 'N/A'}</td>
+                        <td class="px-6 py-4 border">
+                            <div class="flex flex-wrap gap-1">
+                                ${certs.join(' ') || '<span class="text-gray-400 text-xs">None</span>'}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 border">
+                            <div class="flex space-x-2">
+                                <button onclick="alert('View ${id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+                                <button onclick="alert('Edit ${id}')" class="text-green-600 hover:text-green-800 text-sm font-medium">Edit</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            tbody.innerHTML = rows;
+        }
+
+        // Date formatting function (same as your admin portal)
+        function formatDate(d) {
+            if (!d) return '';
+            
+            // Handle various date formats
+            if (d.includes('-')) {
+                const [year, month, day] = d.split('-');
+                const parsed = new Date(`${year}-${month}-${day}`);
+                if (!isNaN(parsed.getTime())) {
+                    return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+                }
+            }
+            
+            if (d.includes('/')) {
+                const [day, month, year] = d.split('/');
+                const parsed = new Date(`${year}-${month}-${day}`);
+                if (!isNaN(parsed.getTime())) {
+                    return parsed.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+                }
+            }
+
+            return d;
+        }
+    </script>
+</body>
+</html>
