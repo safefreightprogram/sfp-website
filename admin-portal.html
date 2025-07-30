@@ -1005,8 +1005,7 @@
       const safeVin = (vin || 'No VIN').replace(/[<>&"]/g, '');
       const safeStatus = (status || 'Unknown').replace(/[<>&"]/g, '');
       
-      return `
-        <tr class="hover:bg-gray-50">
+      return `<tr class="hover:bg-gray-50">
           <td class="px-6 py-4">
             <div class="flex items-center">
               <div class="w-10 h-10 bg-gray-300 rounded-full mr-3 flex items-center justify-center text-sm font-medium text-gray-600">
@@ -1034,8 +1033,7 @@
               <button onclick="editVehicle('${safeId}')" class="text-green-600 hover:text-green-800 text-sm font-medium">Edit</button>
             </div>
           </td>
-        </tr>
-      `;
+        </tr>`;
     }).join('');
     
     try {
