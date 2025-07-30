@@ -519,6 +519,16 @@
       updateDashboardStats();
       updateRecentActivity();
       
+      // If we're currently on the drivers tab, render the table
+      if (currentTab === 'drivers') {
+        renderDriverTable();
+      }
+      
+      // If we're currently on the vehicles tab, render the table
+      if (currentTab === 'vehicles') {
+        renderVehicleTable();
+      }
+      
     } catch (error) {
       console.error('Error loading data:', error);
       showStatus('Error loading system data', 'error');
@@ -935,6 +945,8 @@
 
   // Tab management
   function switchTab(tabName) {
+    console.log(`Switching to tab: ${tabName}`);
+    
     // Hide all tab contents
     document.querySelectorAll('.tab-content').forEach(content => {
       content.classList.add('hidden');
@@ -942,27 +954,33 @@
     
     // Update tab styles
     document.querySelectorAll('[id^="tab-"]').forEach(tab => {
-      tab.classList.remove('border-blue-500', 'text-blue-600');
+      tab.classList.remove('border-blue-500', 'text-blue-600', 'border-b-2');
       tab.classList.add('text-gray-500');
     });
     
     // Show selected tab
-    document.getElementById(`content-${tabName}`).classList.remove('hidden');
+    const contentElement = document.getElementById(`content-${tabName}`);
+    if (contentElement) {
+      contentElement.classList.remove('hidden');
+    }
     
     const activeTab = document.getElementById(`tab-${tabName}`);
     if (activeTab) {
       activeTab.classList.remove('text-gray-500');
-      activeTab.classList.add('border-blue-500', 'text-blue-600');
+      activeTab.classList.add('border-blue-500', 'text-blue-600', 'border-b-2');
     }
     
     currentTab = tabName;
     
     // Load specific tab data
+    console.log(`Loading data for tab: ${tabName}`);
     switch(tabName) {
       case 'drivers':
+        console.log(`Driver data available: ${driversData ? driversData.length : 0} rows`);
         renderDriverTable();
         break;
       case 'vehicles':
+        console.log(`Vehicle data available: ${vehiclesData ? vehiclesData.length : 0} rows`);
         renderVehicleTable();
         break;
       case 'ails':
