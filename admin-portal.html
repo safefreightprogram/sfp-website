@@ -92,41 +92,8 @@
 </div>
 
 <div id="adminContent" class="hidden">
-  <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false }">
-    <div class="max-w-7xl mx-auto p-4 flex justify-between items-center relative">
-      <a href="index.html" class="text-xl font-bold">Safe Freight Program</a>
-      
-      <div class="flex items-center space-x-4">
-        <span id="userInfo" class="text-sm text-blue-200"></span>
-        
-        <button @click="open = !open" class="inline-flex">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      </div>
-      
-      <div x-show="open" @click.away="open = false" x-transition class="absolute top-full right-0 bg-blue-900 text-white text-sm z-50 shadow-md min-w-48">
-        <nav class="flex flex-col">
-          <a href="lookup-driver.html" class="block px-4 py-2 hover:bg-blue-800">Driver Lookup</a>
-          <a href="lookup-vehicle.html" class="block px-4 py-2 hover:bg-blue-800">Vehicle Lookup</a>
-          <div class="border-t border-blue-700 my-1"></div>
-          <a href="admin-portal.html" class="block px-4 py-2 bg-blue-800 font-bold">Admin Portal</a>
-          <a href="#" onclick="switchTab('dashboard')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Dashboard</a>
-          <a href="#" onclick="switchTab('drivers')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Driver Management</a>
-          <a href="#" onclick="switchTab('vehicles')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Vehicle/Equipment</a>
-          <a href="#" onclick="switchTab('ails')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• AIL Management</a>
-          <a href="#" onclick="switchTab('qrcodes')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• QR Code Generator</a>
-          <a href="#" onclick="switchTab('users')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• User Management</a>
-          <a href="#" onclick="switchTab('reports')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Reports & Analytics</a>
-          <div class="border-t border-blue-700 my-1"></div>
-          <a href="find-ail.html" class="block px-4 py-2 hover:bg-blue-800">Find AIL</a>
-          <a href="training.html" class="block px-4 py-2 hover:bg-blue-800">SFP Training</a>
-          <a id="logoutLink" href="#" onclick="signOutUser()" class="block px-4 py-2 text-red-300 hover:bg-red-800 hidden">Logout</a>
-        </nav>
-      </div>
-    </div>
-  </header>
+  <!-- Header Component -->
+  <div id="header-component"></div>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Page Header -->
@@ -241,9 +208,9 @@
               <div class="font-medium">View All Equipment</div>
               <div class="text-sm text-gray-500">Manage vehicles and inspections</div>
             </button>
-            <button onclick="switchTab('qrcodes')" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
-              <div class="font-medium">Generate QR Codes</div>
-              <div class="text-sm text-gray-500">Create SFPV stickers</div>
+            <button onclick="generateVehicleReport()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Inspection Report</div>
+              <div class="text-sm text-gray-500">Vehicles needing attention</div>
             </button>
           </div>
         </div>
@@ -265,7 +232,7 @@
 
       <!-- Recent Activity -->
       <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-bold text-gray-900 mb-6">Recent Driver Activity</h2>
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Recent System Activity</h2>
         <div id="recent-activity" class="space-y-3">
           <!-- This will be populated by JavaScript -->
         </div>
@@ -314,14 +281,56 @@
       </div>
     </div>
 
-    <!-- Other tabs would go here... for now just placeholders -->
+    <!-- Vehicle Management Tab -->
     <div id="content-vehicles" class="tab-content hidden">
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-bold text-gray-900 mb-6">Vehicle & Equipment Management</h2>
-        <p class="text-gray-600">Vehicle management features coming soon!</p>
+      <div class="bg-white rounded-lg shadow-md mb-8">
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 sm:mb-0">Vehicle & Equipment Management</h2>
+            <div class="flex flex-wrap gap-3">
+              <input type="search" id="vehicleSearch" placeholder="Search vehicles..." 
+                     class="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                     onkeyup="filterVehicles()">
+              <select id="vehicleStatusFilter" onchange="filterVehicles()" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                <option value="">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Expired">Expired</option>
+                <option value="Non-Compliant">Non-Compliant</option>
+              </select>
+              <button onclick="exportVehicles()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
+                Export CSV
+              </button>
+              <button onclick="refreshVehicleData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                Refresh Data
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vehicle</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registration</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expiry</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Inspection</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="vehicleTableBody" class="divide-y divide-gray-200">
+              <tr>
+                <td colspan="7" class="px-6 py-4 text-center text-gray-500">Loading vehicles...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
+    <!-- Other tabs placeholders -->
     <div id="content-ails" class="tab-content hidden">
       <div class="bg-white rounded-lg shadow-md p-6">
         <h2 class="text-xl font-bold text-gray-900 mb-6">AIL Management</h2>
@@ -359,45 +368,150 @@
   </div>
 </div>
 
-<footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
-  &copy; 2025 Safe Freight Program. All rights reserved.
-</footer>
+<!-- Footer Component -->
+<div id="footer-component"></div>
+
+<!-- Component Loading and Initialization Script -->
+<script>
+  // Load external components
+  async function loadComponents() {
+    try {
+      // Load header component
+      const headerResponse = await fetch('/components/header.html');
+      if (headerResponse.ok) {
+        const headerHTML = await headerResponse.text();
+        document.getElementById('header-component').innerHTML = headerHTML;
+        
+        // Initialize Alpine.js for header if needed
+        if (window.Alpine) {
+          window.Alpine.initTree(document.getElementById('header-component'));
+        }
+      } else {
+        console.warn('Header component not found, using fallback');
+        loadFallbackHeader();
+      }
+
+      // Load footer component
+      const footerResponse = await fetch('/components/footer.html');
+      if (footerResponse.ok) {
+        const footerHTML = await footerResponse.text();
+        document.getElementById('footer-component').innerHTML = footerHTML;
+      } else {
+        console.warn('Footer component not found, using fallback');
+        loadFallbackFooter();
+      }
+    } catch (error) {
+      console.error('Error loading components:', error);
+      loadFallbackHeader();
+      loadFallbackFooter();
+    }
+  }
+
+  // Fallback header if component file is not available
+  function loadFallbackHeader() {
+    document.getElementById('header-component').innerHTML = `
+      <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false }">
+        <div class="max-w-7xl mx-auto p-4 flex justify-between items-center relative">
+          <a href="index.html" class="text-xl font-bold">Safe Freight Program</a>
+          
+          <div class="flex items-center space-x-4">
+            <span id="userInfo" class="text-sm text-blue-200"></span>
+            
+            <button @click="open = !open" class="inline-flex">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+          
+          <div x-show="open" @click.away="open = false" x-transition class="absolute top-full right-0 bg-blue-900 text-white text-sm z-50 shadow-md min-w-48">
+            <nav class="flex flex-col">
+              <a href="lookup-driver.html" class="block px-4 py-2 hover:bg-blue-800">Driver Lookup</a>
+              <a href="lookup-vehicle.html" class="block px-4 py-2 hover:bg-blue-800">Vehicle Lookup</a>
+              <div class="border-t border-blue-700 my-1"></div>
+              <a href="admin-portal.html" class="block px-4 py-2 bg-blue-800 font-bold">Admin Portal</a>
+              <a href="#" onclick="switchTab('dashboard')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Dashboard</a>
+              <a href="#" onclick="switchTab('drivers')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Driver Management</a>
+              <a href="#" onclick="switchTab('vehicles')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Vehicle/Equipment</a>
+              <a href="#" onclick="switchTab('ails')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• AIL Management</a>
+              <a href="#" onclick="switchTab('qrcodes')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• QR Code Generator</a>
+              <a href="#" onclick="switchTab('users')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• User Management</a>
+              <a href="#" onclick="switchTab('reports')" class="block px-4 py-2 hover:bg-blue-800 pl-6 text-blue-200">• Reports & Analytics</a>
+              <div class="border-t border-blue-700 my-1"></div>
+              <a href="find-ail.html" class="block px-4 py-2 hover:bg-blue-800">Find AIL</a>
+              <a href="training.html" class="block px-4 py-2 hover:bg-blue-800">SFP Training</a>
+              <a id="logoutLink" href="#" onclick="signOutUser()" class="block px-4 py-2 text-red-300 hover:bg-red-800 hidden">Logout</a>
+            </nav>
+          </div>
+        </div>
+      </header>
+    `;
+  }
+
+  // Fallback footer if component file is not available
+  function loadFallbackFooter() {
+    document.getElementById('footer-component').innerHTML = `
+      <footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-8">
+        &copy; 2025 Safe Freight Program. All rights reserved.
+      </footer>
+    `;
+  }
+
+  // Load components when page loads
+  document.addEventListener('DOMContentLoaded', loadComponents);
+</script>
 
 <!-- JavaScript -->
 <script>
-  // Multiple Google Sheets URL formats to try
-  const SHEET_URLS = [
+  // Google Sheets URLs
+  const DRIVER_SHEET_URLS = [
     'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:json',
     'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/gviz/tq?tqx=out:csv',
     'https://docs.google.com/spreadsheets/d/1-kNJDzQVo9jfxSB25bgHRcfD3PHmaJyqsgSQ36TllRQ/export?format=csv'
+  ];
+
+  const VEHICLE_SHEET_URLS = [
+    'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFCekJjBtJNTP8/gviz/tq?tqx=out:json',
+    'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFCekJjBtJNTP8/gviz/tq?tqx=out:csv',
+    'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFCekJjBtJNTP8/export?format=csv'
   ];
   
   let driversData = [];
   let allDriversData = [];
   let vehiclesData = [];
+  let allVehiclesData = [];
   let ailsData = [];
   let usersData = [];
   let currentTab = 'dashboard';
-  let dataLoadStatus = 'unknown';
+  let dataLoadStatus = { drivers: 'unknown', vehicles: 'unknown' };
 
   // Initialize data when portal loads
   async function loadDashboardData() {
     try {
-      showStatus('Connecting to Google Sheets...', 'info');
+      showStatus('Loading system data...', 'info');
       updateConnectionStatus('connecting');
       
-      // Try to load from Google Sheets
-      const success = await tryLoadFromGoogleSheets();
+      // Load both drivers and vehicles
+      const [driversSuccess, vehiclesSuccess] = await Promise.all([
+        tryLoadDriversFromGoogleSheets(),
+        tryLoadVehiclesFromGoogleSheets()
+      ]);
       
-      if (success) {
-        showStatus('Data loaded successfully from Google Sheets!', 'success');
+      if (driversSuccess && vehiclesSuccess) {
+        showStatus('All data loaded successfully from Google Sheets!', 'success');
         updateConnectionStatus('connected');
-        dataLoadStatus = 'sheets';
+        dataLoadStatus = { drivers: 'sheets', vehicles: 'sheets' };
+      } else if (driversSuccess || vehiclesSuccess) {
+        showStatus('Partial data loaded - some sheets unavailable', 'warning');
+        updateConnectionStatus('partial');
+        dataLoadStatus.drivers = driversSuccess ? 'sheets' : 'fallback';
+        dataLoadStatus.vehicles = vehiclesSuccess ? 'sheets' : 'fallback';
+        loadFallbackData();
       } else {
         showStatus('Using sample data - Google Sheets connection failed', 'warning');
         updateConnectionStatus('failed');
         loadFallbackData();
-        dataLoadStatus = 'fallback';
+        dataLoadStatus = { drivers: 'fallback', vehicles: 'fallback' };
       }
       
       // Update dashboard statistics
@@ -409,25 +523,46 @@
       showStatus('Error loading system data', 'error');
       updateConnectionStatus('error');
       loadFallbackData();
-      dataLoadStatus = 'error';
+      dataLoadStatus = { drivers: 'error', vehicles: 'error' };
     }
   }
 
-  // Try multiple methods to fetch Google Sheets data
-  async function tryLoadFromGoogleSheets() {
-    for (const url of SHEET_URLS) {
+  // Try to load drivers from Google Sheets
+  async function tryLoadDriversFromGoogleSheets() {
+    for (const url of DRIVER_SHEET_URLS) {
       try {
-        console.log(`Trying to fetch from: ${url}`);
+        console.log(`Trying to fetch drivers from: ${url}`);
         const data = await fetchSheetData(url);
         
         if (data && data.length > 0) {
-          console.log(`Successfully loaded ${data.length} rows from Google Sheets`);
+          console.log(`Successfully loaded ${data.length} driver rows from Google Sheets`);
           allDriversData = data;
           driversData = data;
           return true;
         }
       } catch (error) {
-        console.error(`Failed to fetch from ${url}:`, error);
+        console.error(`Failed to fetch drivers from ${url}:`, error);
+        continue;
+      }
+    }
+    return false;
+  }
+
+  // Try to load vehicles from Google Sheets
+  async function tryLoadVehiclesFromGoogleSheets() {
+    for (const url of VEHICLE_SHEET_URLS) {
+      try {
+        console.log(`Trying to fetch vehicles from: ${url}`);
+        const data = await fetchSheetData(url);
+        
+        if (data && data.length > 0) {
+          console.log(`Successfully loaded ${data.length} vehicle rows from Google Sheets`);
+          allVehiclesData = data;
+          vehiclesData = data;
+          return true;
+        }
+      } catch (error) {
+        console.error(`Failed to fetch vehicles from ${url}:`, error);
         continue;
       }
     }
@@ -485,18 +620,32 @@
   function loadFallbackData() {
     console.log('Loading fallback data');
     
-    // Your actual data from the sheet
-    driversData = [
-      ['SFPD-001234', 'John', 'Smith', 'Active', '2026-06-01', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-001234&size=150x150', 'https://drive.google.com/file/d/1tLa4Lw5tjyDjnxGjeNSZwA11oi5bF1-i/view?usp=drive_link', '1J_J1FhAAAuyQYJmpwaxSsRrRrY4RQNVwhYAU-QLTW4E', 'https://drive.google.com/uc?export=view&id=1MbZAJsBHZ6HHYNyqARWvBkjgcpghbq51', 'y', 'y', 'n', 'y'],
-      ['SFPD-001567', 'Jane', 'Doe', 'Active', '2025-12-15', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-001567&size=150x150', 'https://drive.google.com/file/d/1kngn3JsZ8OkG4XR59OqDL5OiRyIxjqs2/view?usp=sharing', '17XpTnEMcmktzGbFrLBubQOjy23IS-iM1sGu2uGgRLrg', 'https://drive.google.com/uc?export=view&id=1qkZRo_X5-EEI4Ml4fj4S15CzkThBZxx4', 'n', 'n', 'y', 'n'],
-      ['SFPD-002001', 'Amandeep', 'Singh', 'Active', '2027-01-30', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-002001&size=150x150', 'https://drive.google.com/file/d/1EYrIwonGQs3r-RNsah6tehREaYo0FfuJ/view?usp=sharing', '1X8E9Bhgwk84NWzsfa0488eO73ez9IwHXyzDRHLEUhPo', 'https://drive.google.com/uc?export=view&id=1BJL9jXYjarR_rsfgCxXmYsZnzpN_iyha', 'y', 'y', 'n', 'y'],
-      ['SFPD-002009', 'Louisa', 'Tran', 'Expired', '2024-11-20', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-002009&size=150x150', 'https://drive.google.com/file/d/1_PpXiUhADnNvnKGMLyfFn6NLobFbkmeb/view?usp=drive_link', '1pdPW9D4GNOY6Na5kPosKL_l3nCzxTwuxEOhPDT1OdFQ', 'https://drive.google.com/uc?export=view&id=17EZmEdvw7z291gnNdgmKif_oad4Tc31D', 'n', 'n', 'y', 'n'],
-      ['SFPD-001111', 'Darren', 'Jenkins', 'Expires Soon', '2025-08-01', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-001111&size=150x150', '', '1rMnryUnH1KY7pEXC6AOl1mCsdDlyeU08bYrvczGruUw', 'https://drive.google.com/uc?export=view&id=12eCrbN-kr087xCQmvg549DLcjicttL4f', '', '', '', '']
-    ];
-    allDriversData = driversData;
+    // Load fallback driver data if needed
+    if (!allDriversData.length) {
+      driversData = [
+        ['SFPD-001234', 'John', 'Smith', 'Active', '2026-06-01', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-001234&size=150x150', 'https://drive.google.com/file/d/1tLa4Lw5tjyDjnxGjeNSZwA11oi5bF1-i/view?usp=drive_link', '1J_J1FhAAAuyQYJmpwaxSsRrRrY4RQNVwhYAU-QLTW4E', 'https://drive.google.com/uc?export=view&id=1MbZAJsBHZ6HHYNyqARWvBkjgcpghbq51', 'y', 'y', 'n', 'y'],
+        ['SFPD-001567', 'Jane', 'Doe', 'Active', '2025-12-15', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-001567&size=150x150', 'https://drive.google.com/file/d/1kngn3JsZ8OkG4XR59OqDL5OiRyIxjqs2/view?usp=sharing', '17XpTnEMcmktzGbFrLBubQOjy23IS-iM1sGu2uGgRLrg', 'https://drive.google.com/uc?export=view&id=1qkZRo_X5-EEI4Ml4fj4S15CzkThBZxx4', 'n', 'n', 'y', 'n'],
+        ['SFPD-002001', 'Amandeep', 'Singh', 'Active', '2027-01-30', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-002001&size=150x150', 'https://drive.google.com/file/d/1EYrIwonGQs3r-RNsah6tehREaYo0FfuJ/view?usp=sharing', '1X8E9Bhgwk84NWzsfa0488eO73ez9IwHXyzDRHLEUhPo', 'https://drive.google.com/uc?export=view&id=1BJL9jXYjarR_rsfgCxXmYsZnzpN_iyha', 'y', 'y', 'n', 'y'],
+        ['SFPD-002009', 'Louisa', 'Tran', 'Expired', '2024-11-20', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-002009&size=150x150', 'https://drive.google.com/file/d/1_PpXiUhADnNvnKGMLyfFn6NLobFbkmeb/view?usp=drive_link', '1pdPW9D4GNOY6Na5kPosKL_l3nCzxTwuxEOhPDT1OdFQ', 'https://drive.google.com/uc?export=view&id=17EZmEdvw7z291gnNdgmKif_oad4Tc31D', 'n', 'n', 'y', 'n'],
+        ['SFPD-001111', 'Darren', 'Jenkins', 'Expires Soon', '2025-08-01', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-driver?id=SFPD-001111&size=150x150', '', '1rMnryUnH1KY7pEXC6AOl1mCsdDlyeU08bYrvczGruUw', 'https://drive.google.com/uc?export=view&id=12eCrbN-kr087xCQmvg549DLcjicttL4f', '', '', '', '']
+      ];
+      allDriversData = driversData;
+    }
+
+    // Load fallback vehicle data if needed
+    if (!allVehiclesData.length) {
+      vehiclesData = [
+        ['SFPV-000001', 'Prime Mover', 'TEST123', 'VIN123456789', 'Active', '2025-11-04', '15/01/2025', 'Pass', '15/01/2026', 'test@example.com', 'Test AIL', 'Test inspection', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-vehicle?id=SFPV-000001&size=150x150', '23/07/2025'],
+        ['SFPV-000002', 'Tanker', 'LMN241', 'VIN309597', 'Active', '2026-01-28', '', '', '', '', '', '', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-vehicle?id=SFPV-000002&size=150x150', ''],
+        ['SFPV-000003', 'Tanker', 'BAB112', 'VIN111122223', 'Active', '2024-09-24', '23/07/2025', 'Pass', '23/07/2026', 'safefreightprogram@gmail.com', 'SFP Head Office', 'As you were', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-vehicle?id=SFPV-000003&size=150x150', '24/07/2025'],
+        ['SFPV-000004', 'Prime Mover', 'LMN372', 'VIN625466', 'Active', '2026-03-27', '', '', '', '', '', '', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-vehicle?id=SFPV-000004&size=150x150', ''],
+        ['SFPV-000005', 'Flat Bed', 'XYZ119', 'VIN140747', 'Non-Compliant', '2025-12-24', '', '', '', '', '', '', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-vehicle?id=SFPV-000005&size=150x150', ''],
+        ['SFPV-000006', 'Box Trailer', 'LLB137', 'VIN140788', 'Expired', '2024-09-24', '', '', '', '', '', '', 'https://api.qrserver.com/v1/create-qr-code/?data=https://www.safefreightprogram.com/lookup-vehicle?id=SFPV-000006&size=150x150', '']
+      ];
+      allVehiclesData = vehiclesData;
+    }
     
     // Mock data for other systems
-    loadMockVehicleData();
     loadMockAILData();
     loadMockUserData();
   }
@@ -528,6 +677,21 @@
                 <span class="text-green-800 font-medium">Connected to Google Sheets</span>
               </div>
               <button onclick="manualDataLoad()" class="text-green-600 hover:text-green-800 text-sm underline">Refresh</button>
+            </div>
+          </div>
+        `;
+        break;
+      case 'partial':
+        content = `
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="text-blue-800 font-medium">Partial data connection - some sheets using sample data</span>
+              </div>
+              <button onclick="manualDataLoad()" class="text-blue-600 hover:text-blue-800 text-sm underline">Retry</button>
             </div>
           </div>
         `;
@@ -569,30 +733,69 @@
 
   // Update dashboard statistics
   function updateDashboardStats() {
-    const total = driversData.length;
-    const active = driversData.filter(row => row[3] === 'Active').length;
-    const expiring = driversData.filter(row => row[3] === 'Expires Soon').length;
-    const expired = driversData.filter(row => row[3] === 'Expired').length;
+    const totalDrivers = driversData.length;
+    const totalVehicles = vehiclesData.length;
+    const activeVehicles = vehiclesData.filter(row => row[4] === 'Active').length;
+    const expiredVehicles = vehiclesData.filter(row => row[4] === 'Expired').length;
+    const nonCompliantVehicles = vehiclesData.filter(row => row[4] === 'Non-Compliant').length;
     
-    document.getElementById('stat-total-drivers').textContent = total;
-    document.getElementById('stat-total-vehicles').textContent = vehiclesData.length;
+    // Calculate inspections due (vehicles expiring in next 30 days)
+    const today = new Date();
+    const next30Days = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
+    let inspectionsDue = 0;
+    
+    vehiclesData.forEach(row => {
+      const expiryDate = parseDate(row[5]); // Expiry Date column
+      if (expiryDate && expiryDate <= next30Days && expiryDate >= today) {
+        inspectionsDue++;
+      }
+    });
+    
+    document.getElementById('stat-total-drivers').textContent = totalDrivers;
+    document.getElementById('stat-total-vehicles').textContent = totalVehicles;
     document.getElementById('stat-total-ails').textContent = ailsData.length;
-    document.getElementById('stat-inspections-due').textContent = Math.floor(vehiclesData.length * 0.3); // Mock calculation
+    document.getElementById('stat-inspections-due').textContent = inspectionsDue;
   }
 
-  // Update recent activity based on real driver data
+  // Parse date from various formats
+  function parseDate(dateStr) {
+    if (!dateStr) return null;
+    
+    // Try different date formats
+    const formats = [
+      /(\d{4})-(\d{2})-(\d{2})/, // YYYY-MM-DD
+      /(\d{2})\/(\d{2})\/(\d{4})/, // DD/MM/YYYY
+      /(\d{1,2})\/(\d{1,2})\/(\d{4})/ // D/M/YYYY
+    ];
+    
+    for (const format of formats) {
+      const match = dateStr.match(format);
+      if (match) {
+        if (format === formats[0]) { // YYYY-MM-DD
+          return new Date(match[1], match[2] - 1, match[3]);
+        } else { // DD/MM/YYYY or D/M/YYYY
+          return new Date(match[3], match[2] - 1, match[1]);
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  // Update recent activity based on real data
   function updateRecentActivity() {
     const recentActivityEl = document.getElementById('recent-activity');
     
-    if (driversData.length === 0) {
-      recentActivityEl.innerHTML = '<p class="text-gray-500 text-center py-4">No driver data available</p>';
+    if (driversData.length === 0 && vehiclesData.length === 0) {
+      recentActivityEl.innerHTML = '<p class="text-gray-500 text-center py-4">No system data available</p>';
       return;
     }
 
-    // Generate activity based on driver data
+    // Generate activity based on driver and vehicle data
     const activities = [];
     
-    driversData.forEach((driver, index) => {
+    // Driver activities
+    driversData.slice(0, 3).forEach((driver, index) => {
       const [id, firstName, surname, status] = driver;
       const name = `${firstName} ${surname}`;
       
@@ -610,22 +813,44 @@
           detail: `${id} • ${name}`,
           time: `${Math.floor(Math.random() * 7) + 1} days ago`
         });
-      } else if (status === 'Expires Soon') {
+      }
+    });
+
+    // Vehicle activities  
+    vehiclesData.slice(0, 3).forEach((vehicle, index) => {
+      const [id, type, rego, vin, status] = vehicle;
+      
+      if (status === 'Active') {
         activities.push({
-          type: 'info',
-          message: `Driver credential expiring soon`,
-          detail: `${id} • ${name}`,
+          type: 'success',
+          message: `Vehicle inspection current`,
+          detail: `${id} • ${type} (${rego})`,
           time: `${Math.floor(Math.random() * 24) + 1} hours ago`
+        });
+      } else if (status === 'Non-Compliant') {
+        activities.push({
+          type: 'error',
+          message: `Vehicle non-compliant`,
+          detail: `${id} • ${type} (${rego})`,
+          time: `${Math.floor(Math.random() * 3) + 1} days ago`
+        });
+      } else if (status === 'Expired') {
+        activities.push({
+          type: 'warning',
+          message: `Vehicle inspection expired`,
+          detail: `${id} • ${type} (${rego})`,
+          time: `${Math.floor(Math.random() * 14) + 1} days ago`
         });
       }
     });
 
-    // Shuffle and take first 5
-    const shuffled = activities.sort(() => 0.5 - Math.random()).slice(0, 5);
+    // Shuffle and take first 6
+    const shuffled = activities.sort(() => 0.5 - Math.random()).slice(0, 6);
     
     const activityHTML = shuffled.map(activity => {
       const colorClass = activity.type === 'success' ? 'bg-green-500' :
                         activity.type === 'warning' ? 'bg-orange-500' :
+                        activity.type === 'error' ? 'bg-red-500' :
                         'bg-blue-500';
       
       return `
@@ -646,14 +871,6 @@
   }
 
   // Load mock data for systems not yet implemented
-  function loadMockVehicleData() {
-    vehiclesData = [
-      ['SFPV-000001', 'ABC123', 'Semi-Trailer', '2025-01-15', '2025-07-15', 'Sydney Transport Inspections', 'Current'],
-      ['SFPV-000002', 'XYZ789', 'Rigid Truck', '2024-12-20', '2025-06-20', 'Melbourne Freight Check', 'Due Soon'],
-      ['SFPV-000003', 'DEF456', 'B-Double', '2025-02-10', '2025-08-10', 'Brisbane Heavy Vehicle', 'Current']
-    ];
-  }
-
   function loadMockAILData() {
     ailsData = [
       ['Sydney Transport Inspections', 'John Smith', 'john@sydneytransport.com', 'Full', 'Active', '2 days ago'],
@@ -677,6 +894,8 @@
     await loadDashboardData();
     if (currentTab === 'drivers') {
       renderDriverTable();
+    } else if (currentTab === 'vehicles') {
+      renderVehicleTable();
     }
   }
 
@@ -710,7 +929,7 @@
         renderDriverTable();
         break;
       case 'vehicles':
-        // renderVehicleTable();
+        renderVehicleTable();
         break;
       case 'ails':
         // renderAILTable();
@@ -752,28 +971,28 @@
           <td class="px-6 py-4">
             <div class="flex items-center">
               <div class="w-10 h-10 bg-gray-300 rounded-full mr-3 flex items-center justify-center text-sm font-medium text-gray-600">
-                ${firstName ? firstName.charAt(0) : '?'}${surname ? surname.charAt(0) : '?'}
+                ${vehicleIcon}
               </div>
               <div>
-                <div class="font-medium">${firstName || ''} ${surname || ''}</div>
-                <div class="text-sm text-gray-500">${id || ''}</div>
+                <div class="font-medium">${id || ''}</div>
+                <div class="text-sm text-gray-500">${vin || 'No VIN'}</div>
               </div>
             </div>
           </td>
-          <td class="px-6 py-4 text-sm text-gray-900">${id || ''}</td>
+          <td class="px-6 py-4 text-sm text-gray-900">${vehicleType || ''}</td>
+          <td class="px-6 py-4 text-sm text-gray-900">${rego || ''}</td>
           <td class="px-6 py-4">
             <span class="${statusClass} px-2 py-1 rounded text-xs font-medium">${status || 'Unknown'}</span>
           </td>
           <td class="px-6 py-4 text-sm text-gray-500">${formattedExpiry || 'N/A'}</td>
-          <td class="px-6 py-4">
-            <div class="flex flex-wrap gap-1">
-              ${certs.join(' ') || '<span class="text-gray-400 text-xs">None</span>'}
-            </div>
+          <td class="px-6 py-4 text-sm text-gray-500">
+            ${formattedLastInspection || 'N/A'}
+            ${outcome ? `<div class="text-xs ${outcome === 'Pass' ? 'text-green-600' : 'text-red-600'}">${outcome}</div>` : ''}
           </td>
           <td class="px-6 py-4">
             <div class="flex space-x-2">
-              <button onclick="viewDriver('${id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
-              <button onclick="editDriver('${id}')" class="text-green-600 hover:text-green-800 text-sm font-medium">Edit</button>
+              <button onclick="viewVehicle('${id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+              <button onclick="editVehicle('${id}')" class="text-green-600 hover:text-green-800 text-sm font-medium">Edit</button>
             </div>
           </td>
         </tr>
@@ -781,6 +1000,18 @@
     }).join('');
     
     tbody.innerHTML = rows;
+  }
+
+  // Get vehicle type icon
+  function getVehicleTypeIcon(vehicleType) {
+    const type = (vehicleType || '').toLowerCase();
+    if (type.includes('prime') || type.includes('truck')) return '🚛';
+    if (type.includes('trailer')) return '🚚';
+    if (type.includes('tanker')) return '🛢️';
+    if (type.includes('bus')) return '🚌';
+    if (type.includes('flat')) return '📦';
+    if (type.includes('box')) return '📦';
+    return '🚐';
   }
 
   // Date formatting (from driver lookup)
@@ -807,7 +1038,7 @@
     return d;
   }
 
-  // Action functions
+  // Action functions for drivers
   function viewDriver(driverId) {
     window.open(`/lookup-driver.html?id=${driverId}`, '_blank');
   }
@@ -816,7 +1047,16 @@
     showStatus(`Edit functionality for driver ${driverId} - Coming soon!`, 'info');
   }
 
-  // Filter functions
+  // Action functions for vehicles
+  function viewVehicle(vehicleId) {
+    window.open(`/lookup-vehicle.html?id=${vehicleId}`, '_blank');
+  }
+
+  function editVehicle(vehicleId) {
+    showStatus(`Edit functionality for vehicle ${vehicleId} - Coming soon!`, 'info');
+  }
+
+  // Filter functions for drivers
   function filterDrivers() {
     const searchTerm = document.getElementById('driverSearch').value.toLowerCase();
     
@@ -830,6 +1070,30 @@
     }
     
     renderDriverTable();
+  }
+
+  // Filter functions for vehicles
+  function filterVehicles() {
+    const searchTerm = document.getElementById('vehicleSearch').value.toLowerCase();
+    const statusFilter = document.getElementById('vehicleStatusFilter').value;
+    
+    let filteredData = allVehiclesData;
+    
+    // Apply search filter
+    if (searchTerm) {
+      filteredData = filteredData.filter(row => {
+        const searchString = `${row[0]} ${row[1]} ${row[2]} ${row[3]} ${row[4]}`.toLowerCase();
+        return searchString.includes(searchTerm);
+      });
+    }
+    
+    // Apply status filter
+    if (statusFilter) {
+      filteredData = filteredData.filter(row => row[4] === statusFilter);
+    }
+    
+    vehiclesData = filteredData;
+    renderVehicleTable();
   }
 
   // Export functions
@@ -852,6 +1116,25 @@
     showStatus('Driver data exported successfully!', 'success');
   }
 
+  function exportVehicles() {
+    if (vehiclesData.length === 0) {
+      showStatus('No data to export', 'warning');
+      return;
+    }
+    
+    const headers = ['ID', 'Vehicle Type', 'Registration', 'VIN', 'Status', 'Expiry Date', 'Last Inspection', 'Outcome', 'AIL Name'];
+    const csvContent = [
+      headers.join(','),
+      ...vehiclesData.map(row => [
+        row[0] || '', row[1] || '', row[2] || '', row[3] || '', row[4] || '',
+        formatDate(row[5]) || '', formatDate(row[6]) || '', row[7] || '', row[10] || ''
+      ].join(','))
+    ].join('\n');
+    
+    downloadCSV(csvContent, `sfp-vehicles-${new Date().toISOString().split('T')[0]}.csv`);
+    showStatus('Vehicle data exported successfully!', 'success');
+  }
+
   function downloadCSV(content, filename) {
     const blob = new Blob([content], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -866,6 +1149,12 @@
   function refreshDriverData() {
     allDriversData = [];
     driversData = [];
+    loadDashboardData();
+  }
+
+  function refreshVehicleData() {
+    allVehiclesData = [];
+    vehiclesData = [];
     loadDashboardData();
   }
 
@@ -884,6 +1173,23 @@
     renderDriverTable();
     switchTab('drivers');
     showStatus(`Showing ${expiringDrivers.length} drivers requiring attention`, 'info');
+  }
+
+  function generateVehicleReport() {
+    const problemVehicles = allVehiclesData.filter(row => {
+      const status = row[4];
+      return status === 'Expired' || status === 'Non-Compliant';
+    });
+    
+    if (problemVehicles.length === 0) {
+      showStatus('No vehicles requiring attention', 'info');
+      return;
+    }
+    
+    vehiclesData = problemVehicles;
+    renderVehicleTable();
+    switchTab('vehicles');
+    showStatus(`Showing ${problemVehicles.length} vehicles requiring attention`, 'info');
   }
 
   // Status message system
@@ -928,4 +1234,64 @@
 </script>
 
 </body>
-</html>
+</html>flex items-center justify-center text-sm font-medium text-gray-600">
+                ${firstName ? firstName.charAt(0) : '?'}${surname ? surname.charAt(0) : '?'}
+              </div>
+              <div>
+                <div class="font-medium">${firstName || ''} ${surname || ''}</div>
+                <div class="text-sm text-gray-500">${id || ''}</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-900">${id || ''}</td>
+          <td class="px-6 py-4">
+            <span class="${statusClass} px-2 py-1 rounded text-xs font-medium">${status || 'Unknown'}</span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">${formattedExpiry || 'N/A'}</td>
+          <td class="px-6 py-4">
+            <div class="flex flex-wrap gap-1">
+              ${certs.join(' ') || '<span class="text-gray-400 text-xs">None</span>'}
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex space-x-2">
+              <button onclick="viewDriver('${id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+              <button onclick="editDriver('${id}')" class="text-green-600 hover:text-green-800 text-sm font-medium">Edit</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    
+    tbody.innerHTML = rows;
+  }
+
+  // Render vehicle table
+  function renderVehicleTable() {
+    const tbody = document.getElementById('vehicleTableBody');
+    
+    if (!vehiclesData || vehiclesData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No vehicles found</td></tr>';
+      return;
+    }
+    
+    const rows = vehiclesData.map(row => {
+      const [id, vehicleType, rego, vin, status, expiryDate, lastInspectionDate, outcome, nextDue, inspectorEmail, ailName, notes, qrUrl, lastUpdated] = row;
+      
+      const statusClass = 
+        status === 'Active' ? 'bg-green-100 text-green-800' :
+        status === 'Expired' ? 'bg-red-100 text-red-800' :
+        status === 'Non-Compliant' ? 'bg-orange-100 text-orange-800' :
+        'bg-gray-100 text-gray-800';
+      
+      const formattedExpiry = formatDate(expiryDate);
+      const formattedLastInspection = formatDate(lastInspectionDate);
+      
+      // Get vehicle type icon
+      const vehicleIcon = getVehicleTypeIcon(vehicleType);
+      
+      return `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4">
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-gray-300 rounded-full mr-3
