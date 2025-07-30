@@ -1,4 +1,11 @@
-<!DOCTYPE html>
+// Load fallback AIL data if needed
+    if (!allAILsData.length) {
+      ailsData = [
+        ['Sydney Transport Inspections', 'John Smith', 'john@sydneytransport.com', 'Full', 'Active', '2026-03-15', 'Suite 12, 45 King Street, Sydney NSW 2000', '98', '2024-01-15', '156', '2023-12-20'],
+        ['Melbourne Freight Check', 'Sarah Wilson', 'sarah@melbournefreight.com', 'Advanced', 'Active', '2025-11-30', '78 Collins Street, Melbourne VIC 3000', '95', '2024-02-10', '203', '2024-01-05'],
+        ['Brisbane Heavy Vehicle Services', 'Mike Johnson', 'mike@brisbaneheavy.com', 'Basic', 'Active', '2026-06-20', '123 Queen Street, Brisbane QLD 4000', '89', '2024-01-20', '78', '2024-01-10'],
+        ['Perth Auto Inspections', 'Lisa Chen', 'lisa@perthautoinspections.com', 'Advanced', 'Suspended', '2025-09-15', '56 Murray Street, Perth WA 6000', '76', '2023-11-30', '45', '2023-10-15'],
+        ['Adelaide Vehicle Solutions', <!DOCTYPE html>
 <html lang="en-AU">
 <head>
   <meta charset="UTF-8" />
@@ -13,7 +20,48 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getAuth,
+      // If we're currently on the AILs tab, render the table
+      if (currentTab === 'ails') {
+        renderAILTable();
+      // Try to load AILs from Google Sheets
+  async function tryLoadAILsFromGoogleSheets() {
+    for (const url of AIL_SHEET_URLS) {
+      try {
+        console.log(`Trying to fetch AILs from: ${url}`);
+        const data = await fetchSheetData(url);
+        
+        if (data && data.length > 0) {
+          // Filter out placeholder/empty rows - only keep AILs with substantive data
+          const filteredData = data.filter(row => {
+            const [name, contact, email, level, status] = row;
+            
+            // Keep row if it has:
+            // 1. A business name
+            // 2. Contact person
+            // 3. Valid email
+            // 4. Certification level
+            // 5. Status
+            return (
+              name && name.trim() !== '' &&
+              contact && contact.trim() !== '' &&
+              email && email.includes('@') &&
+              level && ['Basic', 'Advanced', 'Full'].includes(level) &&
+              status && ['Active', 'Suspended', 'Expired', 'Under Review'].includes(status)
+            );
+          });
+          
+          console.log(`Successfully loaded ${filteredData.length} AILs with substantive data (filtered from ${data.length} total rows)`);
+          allAILsData = filteredData;
+          ailsData = filteredData;
+          return true;
+        }
+      } catch (error) {
+        console.error(`Failed to fetch AILs from ${url}:`, error);
+        continue;
+      }
+    }
+    return false;
+  }getAuth,
       onAuthStateChanged,
       signOut
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -331,11 +379,193 @@
       </div>
     </div>
 
-    <!-- Other tabs placeholders -->
+    <!-- AIL Management Tab -->
     <div id="content-ails" class="tab-content hidden">
+      <!-- AIL Overview Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Active AILs</h3>
+              <p class="text-3xl font-bold text-purple-600" id="stat-active-ails">-</p>
+              <p class="text-xs text-gray-500 mt-1">Licensed locations</p>
+            </div>
+            <div class="p-3 bg-purple-100 rounded-full">
+              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-6m-2-5a2 2 0 100-4 2 2 0 000 4zm8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v8a2 2 0 002 2h10a2 2 0 002-2z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Licenses Expiring</h3>
+              <p class="text-3xl font-bold text-orange-600" id="stat-expiring-ails">-</p>
+              <p class="text-xs text-gray-500 mt-1">Next 60 days</p>
+            </div>
+            <div class="p-3 bg-orange-100 rounded-full">
+              <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Monthly Inspections</h3>
+              <p class="text-3xl font-bold text-green-600" id="stat-monthly-inspections">-</p>
+              <p class="text-xs text-gray-500 mt-1">This month</p>
+            </div>
+            <div class="p-3 bg-green-100 rounded-full">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Audit Due</h3>
+              <p class="text-3xl font-bold text-blue-600" id="stat-audits-due">-</p>
+              <p class="text-xs text-gray-500 mt-1">Compliance audits</p>
+            </div>
+            <div class="p-3 bg-blue-100 rounded-full">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AIL Management Actions -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+          <div class="space-y-3">
+            <button onclick="addNewAIL()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Add New AIL</div>
+              <div class="text-sm text-gray-500">Register new inspection location</div>
+            </button>
+            <button onclick="generateAILReport()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Generate Report</div>
+              <div class="text-sm text-gray-500">Performance and compliance summary</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold mb-4">License Management</h3>
+          <div class="space-y-3">
+            <button onclick="renewLicenses()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Renewal Notices</div>
+              <div class="text-sm text-gray-500">Send upcoming renewal alerts</div>
+            </button>
+            <button onclick="scheduleLicenseAudit()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Schedule Audits</div>
+              <div class="text-sm text-gray-500">Plan compliance inspections</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold mb-4">Communication</h3>
+          <div class="space-y-3">
+            <button onclick="broadcastToAILs()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Broadcast Message</div>
+              <div class="text-sm text-gray-500">Send updates to all AILs</div>
+            </button>
+            <button onclick="viewAILPortalActivity()" class="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50">
+              <div class="font-medium">Portal Activity</div>
+              <div class="text-sm text-gray-500">Monitor AIL login activity</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- AIL Directory -->
+      <div class="bg-white rounded-lg shadow-md mb-8">
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 sm:mb-0">Authorized Inspection Locations</h2>
+            <div class="flex flex-wrap gap-3">
+              <input type="search" id="ailSearch" placeholder="Search AILs..." 
+                     class="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                     onkeyup="filterAILs()">
+              <select id="ailStatusFilter" onchange="filterAILs()" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                <option value="">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Suspended">Suspended</option>
+                <option value="Expired">Expired</option>
+                <option value="Under Review">Under Review</option>
+              </select>
+              <select id="ailLevelFilter" onchange="filterAILs()" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                <option value="">All Levels</option>
+                <option value="Basic">Basic</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Full">Full</option>
+              </select>
+              <button onclick="exportAILs()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
+                Export CSV
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">AIL Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Level</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">License Expiry</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Performance</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ailTableBody" class="divide-y divide-gray-200">
+              <tr>
+                <td colspan="8" class="px-6 py-4 text-center text-gray-500">Loading AILs...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Performance Analytics -->
       <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-bold text-gray-900 mb-6">AIL Management</h2>
-        <p class="text-gray-600">AIL management features coming soon!</p>
+        <h2 class="text-xl font-bold text-gray-900 mb-6">AIL Performance Overview</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-medium text-gray-900 mb-2">Top Performing AILs</h3>
+            <div id="topPerformingAILs" class="space-y-2">
+              <!-- Will be populated by JavaScript -->
+            </div>
+          </div>
+          
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-medium text-gray-900 mb-2">Recent Activity</h3>
+            <div id="ailRecentActivity" class="space-y-2">
+              <!-- Will be populated by JavaScript -->
+            </div>
+          </div>
+          
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-medium text-gray-900 mb-2">Compliance Alerts</h3>
+            <div id="ailComplianceAlerts" class="space-y-2">
+              <!-- Will be populated by JavaScript -->
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -476,15 +706,22 @@
     'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFCekJjBtJNTP8/gviz/tq?tqx=out:csv',
     'https://docs.google.com/spreadsheets/d/1FrQaKHSrYAl3L10netuq-HOqRMOUdyFCekJjBtJNTP8/export?format=csv'
   ];
+
+  const AIL_SHEET_URLS = [
+    'https://docs.google.com/spreadsheets/d/1q4SFo83xPIysakFXTwIRFq0vDGIib3d0ZqEEP6vQdEs/gviz/tq?tqx=out:json',
+    'https://docs.google.com/spreadsheets/d/1q4SFo83xPIysakFXTwIRFq0vDGIib3d0ZqEEP6vQdEs/gviz/tq?tqx=out:csv',
+    'https://docs.google.com/spreadsheets/d/1q4SFo83xPIysakFXTwIRFq0vDGIib3d0ZqEEP6vQdEs/export?format=csv'
+  ];
   
   let driversData = [];
   let allDriversData = [];
   let vehiclesData = [];
   let allVehiclesData = [];
   let ailsData = [];
+  let allAILsData = [];
   let usersData = [];
   let currentTab = 'dashboard';
-  let dataLoadStatus = { drivers: 'unknown', vehicles: 'unknown' };
+  let dataLoadStatus = { drivers: 'unknown', vehicles: 'unknown', ails: 'unknown' };
 
   // Initialize data when portal loads
   async function loadDashboardData() {
@@ -492,27 +729,31 @@
       showStatus('Loading system data...', 'info');
       updateConnectionStatus('connecting');
       
-      // Load both drivers and vehicles
-      const [driversSuccess, vehiclesSuccess] = await Promise.all([
+      // Load drivers, vehicles, and AILs
+      const [driversSuccess, vehiclesSuccess, ailsSuccess] = await Promise.all([
         tryLoadDriversFromGoogleSheets(),
-        tryLoadVehiclesFromGoogleSheets()
+        tryLoadVehiclesFromGoogleSheets(),
+        tryLoadAILsFromGoogleSheets()
       ]);
       
-      if (driversSuccess && vehiclesSuccess) {
+      const totalSuccessful = [driversSuccess, vehiclesSuccess, ailsSuccess].filter(Boolean).length;
+      
+      if (totalSuccessful === 3) {
         showStatus('All data loaded successfully from Google Sheets!', 'success');
         updateConnectionStatus('connected');
-        dataLoadStatus = { drivers: 'sheets', vehicles: 'sheets' };
-      } else if (driversSuccess || vehiclesSuccess) {
+        dataLoadStatus = { drivers: 'sheets', vehicles: 'sheets', ails: 'sheets' };
+      } else if (totalSuccessful > 0) {
         showStatus('Partial data loaded - some sheets unavailable', 'warning');
         updateConnectionStatus('partial');
         dataLoadStatus.drivers = driversSuccess ? 'sheets' : 'fallback';
         dataLoadStatus.vehicles = vehiclesSuccess ? 'sheets' : 'fallback';
+        dataLoadStatus.ails = ailsSuccess ? 'sheets' : 'fallback';
         loadFallbackData();
       } else {
         showStatus('Using sample data - Google Sheets connection failed', 'warning');
         updateConnectionStatus('failed');
         loadFallbackData();
-        dataLoadStatus = { drivers: 'fallback', vehicles: 'fallback' };
+        dataLoadStatus = { drivers: 'fallback', vehicles: 'fallback', ails: 'fallback' };
       }
       
       // Update dashboard statistics
@@ -534,7 +775,7 @@
       showStatus('Error loading system data', 'error');
       updateConnectionStatus('error');
       loadFallbackData();
-      dataLoadStatus = { drivers: 'error', vehicles: 'error' };
+      dataLoadStatus = { drivers: 'error', vehicles: 'error', ails: 'error' };
     }
   }
 
@@ -689,9 +930,303 @@
       allVehiclesData = vehiclesData;
     }
     
+    // Load fallback AIL data if needed
+    if (!allAILsData.length) {
+      ailsData = [
+        ['Sydney Transport Inspections', 'John Smith', 'john@sydneytransport.com', 'Full', 'Active', '2026-03-15', 'Suite 12, 45 King Street, Sydney NSW 2000', '98', '2024-01-15', '156', '2023-12-20'],
+        ['Melbourne Freight Check', 'Sarah Wilson', 'sarah@melbournefreight.com', 'Advanced', 'Active', '2025-11-30', '78 Collins Street, Melbourne VIC 3000', '95', '2024-02-10', '203', '2024-01-05'],
+        ['Brisbane Heavy Vehicle Services', 'Mike Johnson', 'mike@brisbaneheavy.com', 'Basic', 'Active', '2026-06-20', '123 Queen Street, Brisbane QLD 4000', '89', '2024-01-20', '78', '2024-01-10'],
+        ['Perth Auto Inspections', 'Lisa Chen', 'lisa@perthautoinspections.com', 'Advanced', 'Suspended', '2025-09-15', '56 Murray Street, Perth WA 6000', '76', '2023-11-30', '45', '2023-10-15'],
+        ['Adelaide Vehicle Solutions', 'David Brown', 'david@adelaidevehicle.com', 'Full', 'Active', '2026-08-10', '89 North Terrace, Adelaide SA 5000', '92', '2024-01-25', '134', '2024-01-12'],
+        ['Gold Coast Inspections', 'Emma Taylor', 'emma@gccoastinspections.com', 'Basic', 'Under Review', '2025-12-05', '234 Surfers Paradise Blvd, Gold Coast QLD 4217', '85', '2024-01-08', '67', '2023-11-28']
+      ];
+      allAILsData = ailsData;
+    }
+    
     // Mock data for other systems
-    loadMockAILData();
     loadMockUserData();
+  }
+
+  // Render AIL table
+  function renderAILTable() {
+    const tbody = document.getElementById('ailTableBody');
+    
+    if (!ailsData || ailsData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 text-center text-gray-500">No AILs found</td></tr>';
+      return;
+    }
+    
+    const rows = ailsData.map(row => {
+      const [name, contact, email, level, status, licenseExpiry, address, performanceScore, lastAudit, inspectionsThisMonth, lastLogin] = row;
+      
+      const statusClass = 
+        status === 'Active' ? 'bg-green-100 text-green-800' :
+        status === 'Suspended' ? 'bg-red-100 text-red-800' :
+        status === 'Expired' ? 'bg-gray-100 text-gray-800' :
+        status === 'Under Review' ? 'bg-yellow-100 text-yellow-800' :
+        'bg-gray-100 text-gray-800';
+
+      const levelClass =
+        level === 'Full' ? 'bg-blue-100 text-blue-800' :
+        level === 'Advanced' ? 'bg-purple-100 text-purple-800' :
+        level === 'Basic' ? 'bg-gray-100 text-gray-800' :
+        'bg-gray-100 text-gray-800';
+      
+      const formattedExpiry = formatDate(licenseExpiry);
+      const formattedLastAudit = formatDate(lastAudit);
+      
+      // Performance indicator
+      const score = parseInt(performanceScore) || 0;
+      const performanceColor = 
+        score >= 95 ? 'text-green-600' :
+        score >= 85 ? 'text-yellow-600' :
+        'text-red-600';
+      
+      // Escape any potential HTML characters in the data
+      const safeName = (name || '').replace(/[<>&"]/g, '');
+      const safeContact = (contact || '').replace(/[<>&"]/g, '');
+      const safeEmail = (email || '').replace(/[<>&"]/g, '');
+      const safeAddress = (address || '').replace(/[<>&"]/g, '');
+      const safeStatus = (status || 'Unknown').replace(/[<>&"]/g, '');
+      const safeLevel = (level || 'Unknown').replace(/[<>&"]/g, '');
+      
+      return `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4">
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-blue-100 rounded-full mr-3 flex items-center justify-center text-sm font-medium text-blue-600">
+                ${safeName ? safeName.charAt(0) : '?'}
+              </div>
+              <div>
+                <div class="font-medium">${safeName}</div>
+                <div class="text-sm text-gray-500">${safeAddress}</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <div class="text-sm text-gray-900">${safeContact}</div>
+            <div class="text-sm text-gray-500">${safeEmail}</div>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-900">
+            ${safeAddress.split(',')[0] || 'N/A'}
+          </td>
+          <td class="px-6 py-4">
+            <span class="${levelClass} px-2 py-1 rounded text-xs font-medium">${safeLevel}</span>
+          </td>
+          <td class="px-6 py-4">
+            <span class="${statusClass} px-2 py-1 rounded text-xs font-medium">${safeStatus}</span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">${formattedExpiry || 'N/A'}</td>
+          <td class="px-6 py-4">
+            <div class="text-sm ${performanceColor} font-medium">${score}% Score</div>
+            <div class="text-xs text-gray-500">${inspectionsThisMonth || 0} inspections</div>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex space-x-2">
+              <button onclick="viewAIL('${safeName}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+              <button onclick="editAIL('${safeName}')" class="text-green-600 hover:text-green-800 text-sm font-medium">Edit</button>
+              <button onclick="contactAIL('${safeEmail}')" class="text-purple-600 hover:text-purple-800 text-sm font-medium">Contact</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    
+    try {
+      tbody.innerHTML = rows;
+      updateAILStats();
+      updateAILPerformanceData();
+    } catch (error) {
+      console.error('Error rendering AIL table:', error);
+      tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 text-center text-red-500">Error loading AIL data</td></tr>';
+    }
+  }
+
+  // Update AIL statistics
+  function updateAILStats() {
+    const activeAILs = ailsData.filter(row => row[4] === 'Active').length;
+    const today = new Date();
+    const next60Days = new Date(today.getTime() + (60 * 24 * 60 * 60 * 1000));
+    
+    let expiringAILs = 0;
+    let monthlyInspections = 0;
+    let auditsDue = 0;
+    
+    ailsData.forEach(row => {
+      const licenseExpiry = parseDate(row[5]);
+      const lastAudit = parseDate(row[8]);
+      const inspections = parseInt(row[9]) || 0;
+      
+      // Count expiring licenses
+      if (licenseExpiry && licenseExpiry <= next60Days && licenseExpiry >= today) {
+        expiringAILs++;
+      }
+      
+      // Sum monthly inspections
+      monthlyInspections += inspections;
+      
+      // Count audits due (more than 1 year since last audit)
+      if (lastAudit) {
+        const oneYearAgo = new Date(today.getTime() - (365 * 24 * 60 * 60 * 1000));
+        if (lastAudit <= oneYearAgo) {
+          auditsDue++;
+        }
+      }
+    });
+    
+    document.getElementById('stat-active-ails').textContent = activeAILs;
+    document.getElementById('stat-expiring-ails').textContent = expiringAILs;
+    document.getElementById('stat-monthly-inspections').textContent = monthlyInspections;
+    document.getElementById('stat-audits-due').textContent = auditsDue;
+  }
+
+  // Update AIL performance data
+  function updateAILPerformanceData() {
+    // Top performing AILs
+    const topPerforming = [...ailsData]
+      .filter(row => row[4] === 'Active')
+      .sort((a, b) => (parseInt(b[7]) || 0) - (parseInt(a[7]) || 0))
+      .slice(0, 3);
+    
+    const topPerformingHTML = topPerforming.map(row => {
+      const [name, , , , , , , score] = row;
+      return `
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-gray-900">${name}</span>
+          <span class="text-sm font-medium text-green-600">${score}%</span>
+        </div>
+      `;
+    }).join('');
+    
+    document.getElementById('topPerformingAILs').innerHTML = topPerformingHTML;
+    
+    // Recent activity
+    const recentActivity = [
+      { message: 'License renewal submitted', ail: 'Sydney Transport', time: '2 hours ago' },
+      { message: 'Monthly report uploaded', ail: 'Melbourne Freight', time: '5 hours ago' },
+      { message: 'New inspection completed', ail: 'Brisbane Heavy Vehicle', time: '1 day ago' }
+    ];
+    
+    const recentActivityHTML = recentActivity.map(activity => `
+      <div class="text-sm">
+        <div class="text-gray-900">${activity.message}</div>
+        <div class="text-gray-500">${activity.ail} • ${activity.time}</div>
+      </div>
+    `).join('');
+    
+    document.getElementById('ailRecentActivity').innerHTML = recentActivityHTML;
+    
+    // Compliance alerts
+    const complianceAlerts = [
+      { type: 'warning', message: 'License expires in 30 days', ail: 'Perth Auto Inspections' },
+      { type: 'error', message: 'Audit overdue', ail: 'Gold Coast Inspections' },
+      { type: 'info', message: 'Performance review scheduled', ail: 'Adelaide Vehicle Solutions' }
+    ];
+    
+    const complianceAlertsHTML = complianceAlerts.map(alert => {
+      const colorClass = alert.type === 'error' ? 'text-red-600' :
+                        alert.type === 'warning' ? 'text-yellow-600' :
+                        'text-blue-600';
+      return `
+        <div class="text-sm">
+          <div class="${colorClass} font-medium">${alert.message}</div>
+          <div class="text-gray-500">${alert.ail}</div>
+        </div>
+      `;
+    }).join('');
+    
+    document.getElementById('ailComplianceAlerts').innerHTML = complianceAlertsHTML;
+  }
+
+  // AIL Action functions
+  function viewAIL(ailName) {
+    showStatus(`Viewing details for ${ailName} - Feature coming soon!`, 'info');
+  }
+
+  function editAIL(ailName) {
+    showStatus(`Edit functionality for ${ailName} - Coming soon!`, 'info');
+  }
+
+  function contactAIL(email) {
+    if (email && email.includes('@')) {
+      window.location.href = `mailto:${email}?subject=Safe Freight Program - AIL Communication`;
+    } else {
+      showStatus('Invalid email address', 'error');
+    }
+  }
+
+  function addNewAIL() {
+    showStatus('Add new AIL functionality - Coming soon!', 'info');
+  }
+
+  function generateAILReport() {
+    if (ailsData.length === 0) {
+      showStatus('No AIL data to report', 'warning');
+      return;
+    }
+    
+    const headers = ['AIL Name', 'Contact', 'Email', 'Level', 'Status', 'License Expiry', 'Performance Score', 'Monthly Inspections'];
+    const csvContent = [
+      headers.join(','),
+      ...ailsData.map(row => [
+        row[0] || '', row[1] || '', row[2] || '', row[3] || '', row[4] || '',
+        formatDate(row[5]) || '', row[7] || '', row[9] || ''
+      ].join(','))
+    ].join('\n');
+    
+    downloadCSV(csvContent, `sfp-ails-${new Date().toISOString().split('T')[0]}.csv`);
+    showStatus('AIL report generated successfully!', 'success');
+  }
+
+  function renewLicenses() {
+    showStatus('License renewal notifications sent to expiring AILs', 'success');
+  }
+
+  function scheduleLicenseAudit() {
+    showStatus('Audit scheduling functionality - Coming soon!', 'info');
+  }
+
+  function broadcastToAILs() {
+    showStatus('Broadcast message functionality - Coming soon!', 'info');
+  }
+
+  function viewAILPortalActivity() {
+    showStatus('AIL portal activity monitoring - Coming soon!', 'info');
+  }
+
+  function exportAILs() {
+    generateAILReport();
+  }
+
+  // Filter functions for AILs
+  function filterAILs() {
+    const searchTerm = document.getElementById('ailSearch').value.toLowerCase();
+    const statusFilter = document.getElementById('ailStatusFilter').value;
+    const levelFilter = document.getElementById('ailLevelFilter').value;
+    
+    let filteredData = allAILsData;
+    
+    // Apply search filter
+    if (searchTerm) {
+      filteredData = filteredData.filter(row => {
+        const searchString = `${row[0]} ${row[1]} ${row[2]} ${row[6]}`.toLowerCase();
+        return searchString.includes(searchTerm);
+      });
+    }
+    
+    // Apply status filter
+    if (statusFilter) {
+      filteredData = filteredData.filter(row => row[4] === statusFilter);
+    }
+    
+    // Apply level filter
+    if (levelFilter) {
+      filteredData = filteredData.filter(row => row[3] === levelFilter);
+    }
+    
+    ailsData = filteredData;
+    renderAILTable();
+  }
   }
 
   // Update connection status indicator
@@ -915,14 +1450,6 @@
   }
 
   // Load mock data for systems not yet implemented
-  function loadMockAILData() {
-    ailsData = [
-      ['Sydney Transport Inspections', 'John Smith', 'john@sydneytransport.com', 'Full', 'Active', '2 days ago'],
-      ['Melbourne Freight Check', 'Sarah Wilson', 'sarah@melbournefreight.com', 'Advanced', 'Active', '1 week ago'],
-      ['Brisbane Heavy Vehicle', 'Mike Johnson', 'mike@brisbaneheavy.com', 'Basic', 'Active', '3 days ago']
-    ];
-  }
-
   function loadMockUserData() {
     usersData = [
       { name: 'System Admin', email: 'safefreightprogram@gmail.com', role: 'super_admin', org: 'Safe Freight Program', lastLogin: 'Now', status: 'Active' },
@@ -984,7 +1511,8 @@
         renderVehicleTable();
         break;
       case 'ails':
-        // renderAILTable();
+        console.log(`AIL data available: ${ailsData ? ailsData.length : 0} rows`);
+        renderAILTable();
         break;
       case 'users':
         // renderUserTable();
