@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find an AIL – Safe Freight Program</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/ail-finder.css" />
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col">
+
+  <!-- Injected Header -->
+  <div id="header"></div>
+
+  <!-- Map and Content Container -->
+  <main x-data="domainStyleAilFinder()">
+    <div id="map"></div>
+  </main>
+
+  <!-- Injected Footer -->
+  <div id="footer"></div>
+
+  <!-- Scripts -->
+  <script src="js/ail-finder.js"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPnUqhxYzzgoRJ32Rh6-bg5wmKuXtBmKI&callback=initMap&libraries=geometry"></script>
+
+  <!-- Inject header/footer and Alpine.js with delayed resize -->
+  <script>
+    async function include(id, file) {
+      const res = await fetch(file);
+      if (!res.ok) throw new Error(`${file} not found`);
+      document.getElementById(id).innerHTML = await res.text();
+    }
+
+    async function initPage() {
+      await include("header", "components/header.html");
+      await include("footer", "components/footer.html");
+
+      const alpine = document.createElement('script');
+      alpine.src = 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js';
+      alpine.defer = true;
+      document.body.appendChild(alpine);
+
+      // Fallback to ensure watermark shows
+      setTimeout(() => {
+        if (window.map) {
+          google.maps.event.trigger(map, "resize");
+        }
+      }, 500);
+    }
+
+    initPage();
+  </script>
+</body>
+</html>
