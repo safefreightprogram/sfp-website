@@ -8,13 +8,42 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <link rel="stylesheet" href="css/ail-finder.css">
+  <style>
+    /* Additional CSS to fix map container height issue */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden; /* Prevent body scroll since map handles its own */
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      min-height: 0; /* Important for flex children */
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 font-sans min-h-screen flex flex-col">
+<body class="bg-gray-100 font-sans">
 
   <!-- Injected shared header -->
   <div id="header-placeholder"></div>
 
-<main class="flex-grow relative w-full overflow-hidden" x-data="domainStyleAilFinder()">
+<main class="relative w-full overflow-hidden" x-data="domainStyleAilFinder()">
     
     <!-- Full Screen Map Container -->
     <div id="map" class="w-full h-full absolute inset-0"></div>
@@ -306,3 +335,5 @@
 <!-- Existing JS and Maps API (Separate Scripts) -->
 <script src="js/ail-finder.js"></script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPnUqhxYzzgoRJ32Rh6-bg5wmKuXtBmKI&callback=initMap&libraries=geometry"></script>
+</body>
+</html>
