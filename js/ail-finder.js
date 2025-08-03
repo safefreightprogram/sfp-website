@@ -244,12 +244,15 @@ function domainStyleAilFinder() {
     handleSearch() {
       this.filterLocations();
       this.updateSearchSuggestions();
-      this.highlightedIndex = this.searchSuggestions.length > 0 ? 0 : -1; // Start with first suggestion highlighted if any exist
+      // Reset highlight when search changes
+      this.highlightedIndex = -1;
     },
 
     clearAllFilters() {
       this.selectedState = 'all';
       this.searchQuery = '';
+      this.searchSuggestions = [];
+      this.highlightedIndex = -1;
       this.filterLocations();
       if (mapInitialized) this.fitMapToAustralia();
     },
@@ -362,60 +365,126 @@ function domainStyleAilFinder() {
     updateSearchSuggestions() {
       if (!this.searchQuery.trim()) {
         this.searchSuggestions = [];
+        this.highlightedIndex = -1;
         return;
       }
+      
       const q = this.searchQuery.toLowerCase().trim();
       this.searchSuggestions = ailData.filter(loc =>
         loc.name.toLowerCase().includes(q) ||
         loc.suburb.toLowerCase().includes(q) ||
         loc.address.toLowerCase().includes(q) ||
         loc.state.toLowerCase().includes(q)
-      ).slice(0, 10);
+      ).slice(0, 6); // Match the template limit of 6 items
+      
+      // Reset highlight index if it's out of bounds
+      if (this.highlightedIndex >= this.searchSuggestions.length) {
+        this.highlightedIndex = -1;
+      }
     },
 
     selectSuggestion(suggestion) {
       this.selectedLocation = suggestion;
       this.searchQuery = suggestion.name;
+      this.searchSuggestions = []; // Clear suggestions
+      this.highlightedIndex = -1; // Reset highlight
+      this.showSearch = false; // Close search dropdown
+      
       if (mapInitialized) {
         const pos = new google.maps.LatLng(suggestion.lat, suggestion.lng);
         map.setCenter(pos);
-        map.setZoom(12);
+        map.setZoom(15); // Zoom in more for better view
+        
+        // Optional: Find and trigger the marker click for consistency
+        const marker = markers.find(m => 
+          Math.abs(m.getPosition().lat() - suggestion.lat) < 0.0001 &&
+          Math.abs(m.getPosition().lng() - suggestion.lng) < 0.0001
+        );
+        if (marker) {
+          // Trigger marker animation or info window if you have them
+          google.maps.event.trigger(marker, 'click');
+        }
       }
     },
 
     handleSearchKeydown(event) {
-      if (!this.searchSuggestions.length) return;
+      // Get the visible suggestions (limited to 6 like in template)
+      const visibleSuggestions = this.searchSuggestions.slice(0, 6);
+      
+      if (!visibleSuggestions.length) {
+        // If no suggestions, only handle escape
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          this.showSearch = false;
+          this.highlightedIndex = -1;
+        }
+        return;
+      }
 
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault();
-          if (this.highlightedIndex < this.searchSuggestions.length - 1) {
+          if (this.highlightedIndex < visibleSuggestions.length - 1) {
             this.highlightedIndex++;
           } else {
             this.highlightedIndex = 0; // Loop back to first
           }
+          this.scrollHighlightedIntoView();
           break;
+          
         case 'ArrowUp':
           event.preventDefault();
           if (this.highlightedIndex > 0) {
             this.highlightedIndex--;
           } else {
-            this.highlightedIndex = this.searchSuggestions.length - 1; // Loop to last
+            this.highlightedIndex = visibleSuggestions.length - 1; // Loop to last
           }
+          this.scrollHighlightedIntoView();
           break;
+          
         case 'Enter':
           event.preventDefault();
-          if (this.highlightedIndex >= 0 && this.highlightedIndex < this.searchSuggestions.length) {
-            this.selectSuggestion(this.searchSuggestions[this.highlightedIndex]);
-            this.showSearch = false;
+          if (this.highlightedIndex >= 0 && this.highlightedIndex < visibleSuggestions.length) {
+            this.selectSuggestion(visibleSuggestions[this.highlightedIndex]);
           }
           break;
+          
         case 'Escape':
           event.preventDefault();
           this.showSearch = false;
           this.highlightedIndex = -1;
+          this.searchSuggestions = [];
+          break;
+          
+        case 'Tab':
+          // Allow tab to close search and move focus
+          this.showSearch = false;
+          this.highlightedIndex = -1;
+          break;
+          
+        default:
+          // Reset highlight when typing new characters
+          if (event.key.length === 1 || event.key === 'Backspace' || event.key === 'Delete') {
+            this.highlightedIndex = -1;
+          }
           break;
       }
+    },
+
+    // New method to ensure highlighted item is visible in scrollable dropdown
+    scrollHighlightedIntoView() {
+      this.$nextTick(() => {
+        const dropdown = document.querySelector('.absolute.top-full.left-0.right-0.bg-white');
+        if (!dropdown) return;
+        
+        const highlightedItem = dropdown.children[this.highlightedIndex];
+        if (highlightedItem) {
+          highlightedItem.scrollIntoView({
+            block: 'nearest',
+            behavior: 'smooth'
+          });
+        }
+      });
     },
 
     formatPhoneNumber(phone) {
