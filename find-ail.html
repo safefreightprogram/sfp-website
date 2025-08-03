@@ -9,12 +9,12 @@
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <link rel="stylesheet" href="css/ail-finder.css">
 </head>
-<body class="bg-gray-100 font-sans overflow-hidden">
+<body class="bg-gray-100 font-sans">
 
   <!-- Injected shared header -->
   <div id="header-placeholder"></div>
 
-   <div class="relative w-full" x-data="domainStyleAilFinder()" style="height: calc(100vh - 73px);">
+<main class="flex-grow relative w-full overflow-hidden" x-data="domainStyleAilFinder()">
     
     <!-- Full Screen Map Container -->
     <div id="map" class="w-full h-full absolute inset-0"></div>
@@ -294,37 +294,50 @@
       </div>
     </div>
 
-   </div>
-
-  <!-- Injected shared footer --><!-- Injected shared footer -->
+</main>
 <div id="footer-placeholder"></div>
-
+  
+<!-- Header/Footer Loader -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-
-    // Load header
+    // Load header with error handling
     fetch('components/header.html')
-      .then(res => res.text())
+      .then(res => {
+        if (!res.ok) throw new Error('Header not found');
+        return res.text();
+      })
       .then(html => {
         document.getElementById('header-placeholder').innerHTML = html;
-        // After header loads, inject page-specific title
         const titleContainer = document.querySelector('#header-placeholder #page-title');
         if (titleContainer) {
-          titleContainer.innerHTML = `<h1 class="text-lg font-semibold text-white leading-tight">
+          titleContainer.innerHTML = `<h1 class="text-base sm:text-lg font-medium sm:font-semibold text-white leading-tight">
             Find an Authorised Inspection Location (AIL)
           </h1>`;
         }
+      })
+      .catch(err => {
+        console.error('Error loading header:', err);
+        document.getElementById('header-placeholder').innerHTML =
+          '<div class="bg-red-100 text-red-800 p-4">Failed to load header</div>';
       });
 
-    // Load footer
+    // Load footer with error handling
     fetch('components/footer.html')
-      .then(res => res.text())
-      .then(html => document.getElementById('footer-placeholder').innerHTML = html);
+      .then(res => {
+        if (!res.ok) throw new Error('Footer not found');
+        return res.text();
+      })
+      .then(html => {
+        document.getElementById('footer-placeholder').innerHTML = html;
+      })
+      .catch(err => {
+        console.error('Error loading footer:', err);
+        document.getElementById('footer-placeholder').innerHTML =
+          '<div class="bg-red-100 text-red-800 p-4">Failed to load footer</div>';
+      });
   });
 </script>
-  
-  <!-- Existing JS and Maps API -->
-  <script src="js/ail-finder.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPnUqhxYzzgoRJ32Rh6-bg5wmKuXtBmKI&callback=initMap&libraries=geometry"></script>
-</body>
-</html>
+
+<!-- Existing JS and Maps API (Separate Scripts) -->
+<script src="js/ail-finder.js"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPnUqhxYzzgoRJ32Rh6-bg5wmKuXtBmKI&callback=initMap&libraries=geometry"></script>
