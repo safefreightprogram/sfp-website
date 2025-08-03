@@ -93,6 +93,14 @@
                     </a>
                   </div>
                 </div>
+                
+                <!-- Phone number display -->
+                <div class="text-xs text-gray-500 mb-3 flex items-center">
+                  <svg class="w-3 h-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                  </svg>
+                  <span class="font-medium text-gray-700" x-text="formatPhoneNumber(selectedLocation.phone)"></span>
+                </div>
               </div>
             </template>
             
@@ -114,7 +122,7 @@
     <div class="absolute top-2 left-1/2 transform -translate-x-1/2 z-40 transition-all duration-300">
       <div class="flex items-center gap-2 bg-white rounded-full shadow-lg border border-gray-200 px-3 py-2">
         
-        <!-- Enhanced Search Button/Input -->
+        <!-- Search Button/Input -->
         <div class="relative">
           <button @click="showSearch = !showSearch" 
                   x-show="!showSearch"
@@ -127,35 +135,24 @@
           
           <!-- Expanded Search Input -->
           <div x-show="showSearch" x-transition class="relative">
-            <input type="text" 
-                   placeholder="Search locations..."
-                   class="w-56 px-3 py-1.5 bg-gray-50 rounded-full border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                   x-model="searchQuery" 
-                   @input="handleSearch" 
-                   @keyup="handleSearch"
-                   @keydown="handleSearchKeydown($event)"
-                   @blur="setTimeout(() => { showSearch = false; highlightedIndex = -1; }, 200)"
-                   x-init="$watch('showSearch', value => value && $nextTick(() => $el.focus()))" />
+            <input type="text" placeholder="Search locations..."
+              class="w-56 px-3 py-1.5 bg-gray-50 rounded-full border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              x-model="searchQuery" 
+              @input="handleSearch" 
+              @keyup="handleSearch"
+              @keydown="handleSearchKeydown($event)"
+              @blur="setTimeout(() => showSearch = false, 300)"
+              x-init="$watch('showSearch', value => value && $nextTick(() => $el.focus()))" />
             
-            <!-- Fixed Search Suggestions Dropdown -->
+            <!-- Search Suggestions Dropdown -->
             <div x-show="showSearch && searchQuery.trim() !== '' && searchSuggestions.length > 0" 
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 transform scale-95"
-                 x-transition:enter-end="opacity-100 transform scale-100"
-                 x-transition:leave="transition ease-in duration-150"
-                 x-transition:leave-start="opacity-100 transform scale-100"
-                 x-transition:leave-end="opacity-0 transform scale-95"
                  class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 z-50 max-h-60 overflow-y-auto">
               <template x-for="(suggestion, index) in searchSuggestions.slice(0, 6)" :key="suggestion.id">
-                <div @mousedown.prevent="selectSuggestion(suggestion);" 
-                     @touchstart.prevent="selectSuggestion(suggestion);"
+                <div @mousedown.prevent="selectSuggestion(suggestion); showSearch = false;" 
+                     @touchstart.prevent="selectSuggestion(suggestion); showSearch = false;"
                      @mouseenter="highlightedIndex = index"
-                     @mouseleave="highlightedIndex = -1"
-                     :class="{
-                       'bg-blue-50 border-l-4 border-blue-500': highlightedIndex === index,
-                       'hover:bg-gray-50': highlightedIndex !== index
-                     }"
-                     class="px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition-all duration-150">
+                     :class="highlightedIndex === index ? 'bg-blue-50' : 'hover:bg-gray-50'"
+                     class="px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors">
                   <div class="font-medium text-gray-900 text-sm" 
                        :class="highlightedIndex === index ? 'text-blue-700' : ''"
                        x-text="suggestion.name"></div>
@@ -167,12 +164,6 @@
                   </div>
                 </div>
               </template>
-              
-              <!-- No results message -->
-              <div x-show="searchQuery.trim() !== '' && searchSuggestions.length === 0"
-                   class="px-4 py-3 text-sm text-gray-500 text-center">
-                No locations found matching "<span x-text="searchQuery" class="font-medium"></span>"
-              </div>
             </div>
           </div>
         </div>
@@ -318,14 +309,6 @@
                 </div>
               </div>
               
-              <!-- Phone number display -->
-              <div class="flex items-start">
-                <svg class="w-5 h-5 text-gray-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                </svg>
-                <span class="text-sm font-medium text-gray-700" x-text="formatPhoneNumber(selectedLocation.phone)"></span>
-              </div>
-              
               <div x-show="hasNamedInspector(selectedLocation)" class="flex items-start">
                 <svg class="w-5 h-5 text-gray-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
@@ -352,6 +335,14 @@
                     Call
                   </a>
                 </div>
+              </div>
+              
+              <!-- Phone number display -->
+              <div class="text-xs text-gray-500 mb-3 flex items-center">
+                <svg class="w-3 h-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                </svg>
+                <span class="font-medium text-gray-700" x-text="formatPhoneNumber(selectedLocation.phone)"></span>
               </div>
             </div>
           </div>
