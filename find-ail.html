@@ -15,7 +15,7 @@
 
   <!-- ✅ Inject page title BEFORE loading header -->
   <script>
-    const injectPageTitle = "Find an Authorised Inspection Location (AIL)";
+    const injectPageTitle = "Find an AIL";
   </script>
   <script src="js/load-header-footer.js"></script>
 
@@ -218,7 +218,7 @@
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
-          <span class="hidden sm:inline">Clear</span>
+          <span class="p-1 bg-red-100 text-red-700 hover:bg-red-200 rounded-full transition-colors">Clear</span>
         </button>
       </div>
     </div>
@@ -242,7 +242,7 @@
               <div x-show="searchQuery.trim() !== '' && searchSuggestions.length > 0" 
                    class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 z-50 max-h-48 overflow-y-auto">
                 <template x-for="(suggestion, index) in searchSuggestions.slice(0, 8)" :key="suggestion.id">
-                  <div @click="selectSuggestion(suggestion); searchSuggestions = []; showSearch = false;" 
+                  <div @click="selectSuggestion(suggestion); searchSuggestions = []; showSearch = false; document.activeElement.blur();" 
                        @touchstart.prevent="selectSuggestion(suggestion); searchSuggestions = []; showSearch = false;"
                        @mouseenter="highlightedIndex = index"
                        :class="highlightedIndex === index ? 'bg-blue-50' : 'hover:bg-gray-50'"
