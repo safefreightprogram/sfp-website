@@ -4,12 +4,19 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex-grow: 1;
+  position: relative;
   overflow: hidden;
 }
 
 #map {
   width: 100%;
-  height: calc(100vh - 73px); /* Matches header height for stable layout */
+  height: 100%;
   position: relative;
 }
 
