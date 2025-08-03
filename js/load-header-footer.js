@@ -10,10 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (headerEl) {
         headerEl.innerHTML = html;
 
-        // Optional dynamic title injection
-        const titleContainer = headerEl.querySelector('#page-title');
-        if (titleContainer && window.injectPageTitle) {
-          titleContainer.innerHTML = `<h1 class="text-base sm:text-lg font-medium sm:font-semibold text-white leading-tight">${injectPageTitle}</h1>`;
+        // Inject dynamic page title after DOM is ready
+        if (window.injectPageTitle) {
+          requestAnimationFrame(() => {
+            const titleContainer = headerEl.querySelector('#page-title');
+            if (titleContainer) {
+              titleContainer.innerHTML = `<h1 class="text-base sm:text-lg font-medium sm:font-semibold text-white leading-tight">${injectPageTitle}</h1>`;
+            }
+          });
         }
       }
     })
