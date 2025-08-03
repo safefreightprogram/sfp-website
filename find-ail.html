@@ -10,67 +10,16 @@
   <link rel="stylesheet" href="css/ail-finder.css">
 </head>
 <body class="bg-gray-100 font-sans overflow-hidden">
-  <!-- Header with Title -->
-  <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false, showSearch: false }">
-    <div class="max-w-7xl mx-auto p-4 flex justify-between items-center relative">
-      <!-- Left: Logo -->
-      <div class="flex items-center space-x-3 flex-shrink-0">
-        <a href="index.html" class="transition-transform transform hover:scale-[1.05]">
-          <img src="SFP-Logo.png" alt="Safe Freight Program" class="h-8 w-auto">
-        </a>
-      </div>
-      
-      <!-- Center: Page Title -->
-      <div class="flex-1 flex justify-center items-center px-4">
-        <h1 class="text-lg font-semibold text-white text-center leading-tight">
-          Find an Authorised Inspection Location (AIL)
-        </h1>
-      </div>
-      
-      <!-- Right: Controls -->
-      <div class="flex items-center space-x-4 flex-shrink-0">
-        <button @click="showSearch = !showSearch" class="inline-flex transition-transform transform hover:scale-105">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </button>
-        
-        <button @click="open = !open" class="inline-flex transition-transform transform hover:scale-105">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      </div>
-      
-      <!-- Search bar -->
-      <div x-show="showSearch" @click.away="showSearch = false" x-transition 
-           class="absolute top-full right-0 bg-blue-900 shadow-md z-40 w-full sm:w-80 md:w-72 lg:w-64">
-        <div class="p-4">
-          <form action="search.html" method="GET">
-            <input type="search" name="q" placeholder="Type a word"
-                   class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-500 text-black">
-          </form>
-        </div>
-      </div>
-      
-      <!-- Navigation menu -->
-      <div x-show="open" @click.away="open = false" x-transition 
-           class="absolute top-full right-0 bg-blue-900 text-white text-sm z-50 shadow-md"
-           :class="showSearch ? 'mt-16 sm:mt-0 sm:right-80 md:right-72 lg:right-64' : ''">
-        <nav class="flex flex-col">
-          <a href="about.html" class="block px-4 py-2 hover:bg-blue-800">About</a>
-          <a href="lookup-driver.html" class="block px-4 py-2 hover:bg-blue-800">Driver Lookup</a>
-          <a href="lookup-vehicle.html" class="block px-4 py-2 hover:bg-blue-800">Vehicle Lookup</a>
-          <a href="find-ail.html" class="block px-4 py-2 hover:bg-blue-800" data-active="find-ail">Find AIL</a>
-          <a href="training.html" class="block px-4 py-2 hover:bg-blue-800">SFP Training</a>
-          <a href="ail-login.html" class="block px-4 py-2 hover:bg-blue-800">AIL Portal</a>
-          <a href="trainer-login.html" class="block px-4 py-2 hover:bg-blue-800">Trainer Login</a>
-          <a href="contact.html" class="block px-4 py-2 hover:bg-blue-800">Contact</a>
-          <a href="subscription.html" class="block px-4 py-2 hover:bg-blue-800">Subscribe</a>
-        </nav>
-      </div>
-    </div>
-  </header>
+
+  <!-- Injected shared header -->
+  <div id="header-placeholder"></div>
+
+  <!-- Unique page heading for this page -->
+  <div class="bg-blue-900 text-white py-4 text-center shadow z-40">
+    <h1 class="text-lg font-semibold">
+      Find an Authorised Inspection Location (AIL)
+    </h1>
+  </div>
 
   <div class="relative w-full" x-data="domainStyleAilFinder()" style="height: calc(100vh - 73px);">
     
@@ -352,14 +301,25 @@
       </div>
     </div>
 
-  </div>
+   </div>
 
-  <!-- Footer -->
-  <footer class="bg-gray-100 border-t border-gray-200 text-sm text-center text-gray-600 p-4 mt-16">
-    &copy; 2025 Safe Freight Program. All rights reserved.
-  </footer>
+  <!-- Injected shared footer -->
+  <div id="footer-placeholder"></div>
 
-  <!-- External Scripts -->
+  <!-- Load shared header/footer via JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('components/header.html')
+        .then(res => res.text())
+        .then(html => document.getElementById('header-placeholder').innerHTML = html);
+
+      fetch('components/footer.html')
+        .then(res => res.text())
+        .then(html => document.getElementById('footer-placeholder').innerHTML = html);
+    });
+  </script>
+
+  <!-- Existing JS and Maps API -->
   <script src="js/ail-finder.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPnUqhxYzzgoRJ32Rh6-bg5wmKuXtBmKI&callback=initMap&libraries=geometry"></script>
 </body>
