@@ -120,6 +120,7 @@ function domainStyleAilFinder() {
     showSearch: false,
     showStateDropdown: false,
     showMobileFilters: false,
+    keyboardNavigation: false, // Track if user is using keyboard
     stateOptions: [
       { value: 'all', label: 'All States' },
       { value: 'NSW', label: 'NSW' }, { value: 'QLD', label: 'QLD' },
@@ -242,10 +243,13 @@ function domainStyleAilFinder() {
     },
 
     handleSearch() {
+      // Only reset highlight if not using keyboard navigation
+      if (!this.keyboardNavigation) {
+        this.highlightedIndex = -1;
+      }
+      
       this.filterLocations();
       this.updateSearchSuggestions();
-      // Reset highlight when search changes
-      this.highlightedIndex = -1;
     },
 
     clearAllFilters() {
@@ -253,6 +257,7 @@ function domainStyleAilFinder() {
       this.searchQuery = '';
       this.searchSuggestions = [];
       this.highlightedIndex = -1;
+      this.keyboardNavigation = false;
       this.filterLocations();
       if (mapInitialized) this.fitMapToAustralia();
     },
@@ -366,6 +371,7 @@ function domainStyleAilFinder() {
       if (!this.searchQuery.trim()) {
         this.searchSuggestions = [];
         this.highlightedIndex = -1;
+        this.keyboardNavigation = false;
         return;
       }
       
@@ -376,11 +382,6 @@ function domainStyleAilFinder() {
         loc.address.toLowerCase().includes(q) ||
         loc.state.toLowerCase().includes(q)
       ).slice(0, 6); // Match the template limit of 6 items
-      
-      // Reset highlight index if it's out of bounds
-      if (this.highlightedIndex >= this.searchSuggestions.length) {
-        this.highlightedIndex = -1;
-      }
     },
 
     selectSuggestion(suggestion) {
@@ -389,6 +390,7 @@ function domainStyleAilFinder() {
       this.searchSuggestions = []; // Clear suggestions
       this.highlightedIndex = -1; // Reset highlight
       this.showSearch = false; // Close search dropdown
+      this.keyboardNavigation = false;
       
       if (mapInitialized) {
         const pos = new google.maps.LatLng(suggestion.lat, suggestion.lng);
@@ -408,6 +410,9 @@ function domainStyleAilFinder() {
     },
 
     handleSearchKeydown(event) {
+      // Mark that user is using keyboard navigation
+      this.keyboardNavigation = true;
+      
       // Get the visible suggestions (limited to 6 like in template)
       const visibleSuggestions = this.searchSuggestions.slice(0, 6);
       
@@ -417,6 +422,7 @@ function domainStyleAilFinder() {
           event.preventDefault();
           this.showSearch = false;
           this.highlightedIndex = -1;
+          this.keyboardNavigation = false;
         }
         return;
       }
@@ -429,7 +435,6 @@ function domainStyleAilFinder() {
           } else {
             this.highlightedIndex = 0; // Loop back to first
           }
-          this.scrollHighlightedIntoView();
           break;
           
         case 'ArrowUp':
@@ -439,7 +444,6 @@ function domainStyleAilFinder() {
           } else {
             this.highlightedIndex = visibleSuggestions.length - 1; // Loop to last
           }
-          this.scrollHighlightedIntoView();
           break;
           
         case 'Enter':
@@ -454,37 +458,42 @@ function domainStyleAilFinder() {
           this.showSearch = false;
           this.highlightedIndex = -1;
           this.searchSuggestions = [];
+          this.keyboardNavigation = false;
           break;
           
         case 'Tab':
           // Allow tab to close search and move focus
           this.showSearch = false;
           this.highlightedIndex = -1;
+          this.keyboardNavigation = false;
           break;
           
         default:
-          // Reset highlight when typing new characters
-          if (event.key.length === 1 || event.key === 'Backspace' || event.key === 'Delete') {
-            this.highlightedIndex = -1;
+          // Only reset highlight when typing if not actively using keyboard nav
+          if ((event.key.length === 1 || event.key === 'Backspace' || event.key === 'Delete')) {
+            // Don't reset if we were just navigating with keyboard
+            if (!this.keyboardNavigation) {
+              this.highlightedIndex = -1;
+            }
+            this.keyboardNavigation = false;
           }
           break;
       }
     },
 
-    // New method to ensure highlighted item is visible in scrollable dropdown
-    scrollHighlightedIntoView() {
-      this.$nextTick(() => {
-        const dropdown = document.querySelector('.absolute.top-full.left-0.right-0.bg-white');
-        if (!dropdown) return;
-        
-        const highlightedItem = dropdown.children[this.highlightedIndex];
-        if (highlightedItem) {
-          highlightedItem.scrollIntoView({
-            block: 'nearest',
-            behavior: 'smooth'
-          });
-        }
-      });
+    // Method to handle mouse interactions without interfering with keyboard
+    handleMouseEnter(index) {
+      // Only update highlight if not actively using keyboard navigation
+      if (!this.keyboardNavigation) {
+        this.highlightedIndex = index;
+      }
+    },
+
+    handleMouseLeave() {
+      // Only clear highlight if not actively using keyboard navigation
+      if (!this.keyboardNavigation) {
+        this.highlightedIndex = -1;
+      }
     },
 
     formatPhoneNumber(phone) {
