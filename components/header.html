@@ -1,16 +1,13 @@
 <!-- components/header.html -->
 <header class="bg-blue-900 text-white sticky top-0 z-50 shadow" x-data="{ open: false, showSearch: false }">
+  <!-- Top row: Logo and controls -->
   <div class="max-w-7xl mx-auto px-4 flex justify-between items-center h-14">
-    
     <!-- Left: Logo -->
     <div class="flex items-center space-x-3">
       <a href="index.html" class="transition-transform transform hover:scale-[1.05] flex items-center">
         <img src="SFP-Logo.png" alt="Safe Freight Program" class="h-9 w-auto">
       </a>
     </div>
-
-    <!-- Center: Dynamic Page Title -->
-    <div id="page-title" class="text-center w-full px-2 text-white text-sm sm:text-base font-medium"></div>
 
     <!-- Right: Controls -->
     <div class="flex items-center space-x-4">
@@ -26,6 +23,11 @@
         </svg>
       </button>
     </div>
+  </div>
+
+  <!-- ✅ Page-specific heading below the top row -->
+  <div class="max-w-7xl mx-auto px-4 py-2">
+    <div id="page-title" class="text-center text-white text-base sm:text-lg font-medium"></div>
   </div>
 
   <!-- Search Bar -->
