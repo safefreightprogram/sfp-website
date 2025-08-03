@@ -9,7 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <link rel="stylesheet" href="css/ail-finder.css">
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col">
 
   <!-- Injected shared header -->
   <div id="header-placeholder"></div>
@@ -296,48 +296,12 @@
 
 </main>
 <div id="footer-placeholder"></div>
-  
-<!-- Header/Footer Loader -->
+
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // Load header with error handling
-    fetch('components/header.html')
-      .then(res => {
-        if (!res.ok) throw new Error('Header not found');
-        return res.text();
-      })
-      .then(html => {
-        document.getElementById('header-placeholder').innerHTML = html;
-        const titleContainer = document.querySelector('#header-placeholder #page-title');
-        if (titleContainer) {
-          titleContainer.innerHTML = `<h1 class="text-base sm:text-lg font-medium sm:font-semibold text-white leading-tight">
-            Find an Authorised Inspection Location (AIL)
-          </h1>`;
-        }
-      })
-      .catch(err => {
-        console.error('Error loading header:', err);
-        document.getElementById('header-placeholder').innerHTML =
-          '<div class="bg-red-100 text-red-800 p-4">Failed to load header</div>';
-      });
-
-    // Load footer with error handling
-    fetch('components/footer.html')
-      .then(res => {
-        if (!res.ok) throw new Error('Footer not found');
-        return res.text();
-      })
-      .then(html => {
-        document.getElementById('footer-placeholder').innerHTML = html;
-      })
-      .catch(err => {
-        console.error('Error loading footer:', err);
-        document.getElementById('footer-placeholder').innerHTML =
-          '<div class="bg-red-100 text-red-800 p-4">Failed to load footer</div>';
-      });
-  });
+  const injectPageTitle = "Find an Authorised Inspection Location (AIL)";
 </script>
-
+<script src="js/load-header-footer.js"></script>
+  
 <!-- Existing JS and Maps API (Separate Scripts) -->
 <script src="js/ail-finder.js"></script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPnUqhxYzzgoRJ32Rh6-bg5wmKuXtBmKI&callback=initMap&libraries=geometry"></script>
