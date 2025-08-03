@@ -244,7 +244,7 @@ function domainStyleAilFinder() {
     handleSearch() {
       this.filterLocations();
       this.updateSearchSuggestions();
-      this.highlightedIndex = -1; // Reset highlight when search changes
+      this.highlightedIndex = 0; // Start with first suggestion highlighted
     },
 
     clearAllFilters() {
@@ -389,11 +389,15 @@ function domainStyleAilFinder() {
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault();
-          this.highlightedIndex = Math.min(this.highlightedIndex + 1, this.searchSuggestions.length - 1);
+          this.highlightedIndex = this.highlightedIndex < this.searchSuggestions.length - 1 
+            ? this.highlightedIndex + 1 
+            : 0; // Loop back to first
           break;
         case 'ArrowUp':
           event.preventDefault();
-          this.highlightedIndex = Math.max(this.highlightedIndex - 1, -1);
+          this.highlightedIndex = this.highlightedIndex > 0 
+            ? this.highlightedIndex - 1 
+            : this.searchSuggestions.length - 1; // Loop to last
           break;
         case 'Enter':
           event.preventDefault();
