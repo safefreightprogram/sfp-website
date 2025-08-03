@@ -21,7 +21,7 @@ const stateBounds = {
 function initMap() {
   try {
     map = new google.maps.Map(document.getElementById("map"), {
-      zoom: 6,
+      zoom: 7,
       center: { lat: -25.0, lng: 134.0 },
       mapTypeId: 'roadmap',
       zoomControl: true,
@@ -348,8 +348,8 @@ function domainStyleAilFinder() {
       // Optional: Set a maximum zoom level to ensure we don't zoom in too much
       setTimeout(() => {
         const currentZoom = map.getZoom();
-        if (currentZoom > 7) {
-          map.setZoom(7);
+        if (currentZoom > 8) {
+          map.setZoom(8);
         }
       }, 500);
     },
