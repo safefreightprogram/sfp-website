@@ -242,10 +242,10 @@ function domainStyleAilFinder() {
     },
 
     handleSearch() {
-      this.filterLocations();
-      this.updateSearchSuggestions();
-      this.highlightedIndex = this.searchSuggestions.length > 0 ? 0 : -1; // Start with first suggestion highlighted if any exist
-    },
+  this.filterLocations();
+  this.updateSearchSuggestions();
+  // Don't reset highlightedIndex here - let keyboard navigation control it
+},
 
     clearAllFilters() {
       this.selectedState = 'all';
