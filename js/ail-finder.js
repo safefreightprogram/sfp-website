@@ -1,480 +1,375 @@
-let map, markers = [], ailData = [], mapInitialized = false, ailFinderComponent = null;
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find an AIL – Safe Freight Program</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <link rel="stylesheet" href="css/ail-finder.css">
+</head>
+<body>
 
-// Expanded Australia bounds to ensure Tasmania and top end are included
-const australiaBounds = { 
-  north: -8.0,    // Top end (Darwin area)
-  south: -43.8,   // Tasmania bottom
-  west: 112.0,    // Western Australia
-  east: 154.0     // Eastern coast
-};
+  <!-- Injected shared header -->
+  <div id="header-placeholder"></div>
 
-const stateBounds = {
-  NSW: { north: -28.15, south: -37.5, west: 140.9, east: 153.6 },
-  QLD: { north: -10.0, south: -29.2, west: 137.9, east: 154.0 },
-  VIC: { north: -33.9, south: -39.2, west: 140.9, east: 150.0 },
-  SA: { north: -25.9, south: -38.1, west: 129.0, east: 141.0 },
-  WA: { north: -13.7, south: -35.1, west: 112.9, east: 129.0 },
-  NT: { north: -10.9, south: -26.0, west: 129.0, east: 138.0 },
-  TAS: { north: -39.2, south: -43.6, west: 143.8, east: 148.4 }
-};
+<main class="relative w-full overflow-hidden" x-data="domainStyleAilFinder()">
+    
+    <!-- Full Screen Map Container -->
+    <div id="map" class="w-full h-full absolute inset-0"></div>
 
-function initMap() {
-  try {
-    map = new google.maps.Map(document.getElementById("map"), {
-      zoom: 5,
-      center: { lat: -25.0, lng: 134.0 },
-      mapTypeId: 'roadmap',
-      zoomControl: true,
-      zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_BOTTOM },
-      streetViewControl: false,
-      mapTypeControl: false,
-      fullscreenControl: true,
-      disableDefaultUI: false,
-      styles: [
-        { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-        { featureType: "transit", elementType: "labels", stylers: [{ visibility: "off" }] },
-        { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] }
-      ]
-    });
+    <!-- Loading Overlay -->
+    <div x-show="loading" class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-8 shadow-xl">
+        <div class="flex items-center space-x-4">
+          <div class="pulse-dot w-3 h-3 bg-blue-600 rounded-full"></div>
+          <div class="pulse-dot w-3 h-3 bg-blue-600 rounded-full" style="animation-delay: 0.2s;"></div>
+          <div class="pulse-dot w-3 h-3 bg-blue-600 rounded-full" style="animation-delay: 0.4s;"></div>
+          <span class="text-gray-700 font-medium ml-4">Loading locations...</span>
+        </div>
+      </div>
+    </div>
 
-    mapInitialized = true;
-
-    // Wait for map to be fully loaded before fitting bounds
-    google.maps.event.addListenerOnce(map, 'idle', () => {
-      // Trigger a resize to ensure proper rendering
-      google.maps.event.trigger(map, 'resize');
-      
-      // Fit Australia bounds after a short delay
-      setTimeout(() => {
-        if (ailFinderComponent) {
-          ailFinderComponent.fitMapToAustralia();
-        }
-      }, 500);
-    });
-
-    // Clear selected location when clicking on map
-    map.addListener('click', () => {
-      if (ailFinderComponent?.selectedLocation) ailFinderComponent.selectedLocation = null;
-    });
-
-  } catch (error) {
-    console.error('Error initializing map:', error);
-  }
-}
-
-function loadMarkers() {
-  if (!mapInitialized || !ailData.length) return;
-
-  markers.forEach(marker => marker.setMap(null));
-  markers = [];
-
-  ailData.forEach(ail => {
-    const marker = new google.maps.Marker({
-      position: new google.maps.LatLng(ail.lat, ail.lng),
-      map: map,
-      title: ail.name,
-      icon: {
-        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-          <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="8" cy="8" r="6" fill="#1e40af" stroke="white" stroke-width="2"/>
-          </svg>`),
-        scaledSize: new google.maps.Size(16, 16),
-        anchor: new google.maps.Point(8, 8)
-      },
-      animation: google.maps.Animation.DROP
-    });
-
-    marker.addListener("click", () => {
-      if (ailFinderComponent) {
-        ailFinderComponent.selectedLocation = ail;
-        map.panTo(marker.getPosition());
-      }
-    });
-
-    markers.push(marker);
-  });
-
-  // Ensure map is resized and fitted after markers are loaded
-  setTimeout(() => {
-    google.maps.event.trigger(map, 'resize');
-    if (ailFinderComponent) {
-      ailFinderComponent.fitMapToAustralia();
-    }
-  }, 500);
-}
-
-function domainStyleAilFinder() {
-  return {
-    filteredLocations: [],
-    selectedLocation: null,
-    loadingLocation: false,
-    loading: true,
-    userLocation: null,
-    selectedState: 'all',
-    searchQuery: '',
-    showFilters: false,
-    showList: false,
-    showSearchResults: false,
-    searchSuggestions: [],
-    highlightedIndex: -1,
-    showSearch: false,
-    showStateDropdown: false,
-    showMobileFilters: false,
-    stateOptions: [
-      { value: 'all', label: 'All States' },
-      { value: 'NSW', label: 'NSW' }, { value: 'QLD', label: 'QLD' },
-      { value: 'VIC', label: 'VIC' }, { value: 'SA', label: 'SA' },
-      { value: 'WA', label: 'WA' }, { value: 'NT', label: 'NT' },
-      { value: 'TAS', label: 'TAS' }
-    ],
-
-    async init() {
-      ailFinderComponent = this;
-      try {
-        const paths = ['./data/ail-locations.json', 'data/ail-locations.json', '/data/ail-locations.json', './ail-locations.json'];
-        let jsonText = null;
-        for (const path of paths) {
-          try {
-            const response = await fetch(path);
-            if (response.ok) {
-              jsonText = await response.text();
-              break;
-            }
-          } catch (e) {}
-        }
-
-        if (!jsonText) throw new Error('Could not load AIL data');
-
-        const rawData = JSON.parse(jsonText);
-        ailData = rawData.map(loc => ({
-          ...loc,
-          lat: parseFloat(loc.lat),
-          lng: parseFloat(loc.lng),
-          id: parseInt(loc.id),
-          address: loc.address || '',
-          suburb: loc.suburb || '',
-          inspector: loc.inspector || '-'
-        })).filter(loc => !isNaN(loc.lat) && !isNaN(loc.lng));
-
-        this.filteredLocations = [...ailData];
-        this.loading = false;
-
-        if (mapInitialized) {
-          loadMarkers();
-        } else {
-          // Wait for map initialization
-          setTimeout(() => {
-            if (window.google?.maps && !mapInitialized) {
-              initMap();
-            }
-          }, 500);
-        }
-
-      } catch (err) {
-        console.error('Failed to load locations:', err);
-        this.loading = false;
-        alert('Failed to load location data.');
-      }
-    },
-
-    returnToAustraliaView() {
-      this.userLocation = null;
-      this.selectedState = 'all';
-      this.searchQuery = '';
-      this.filteredLocations = [...ailData];
-
-      if (mapInitialized) {
-        this.updateMapMarkers();
-        this.fitMapToAustralia();
-      }
-    },
-
-    filterLocations() {
-      let filtered = [...ailData];
-
-      if (this.selectedState !== 'all') {
-        filtered = filtered.filter(loc => loc.state === this.selectedState);
-      }
-
-      if (this.searchQuery.trim()) {
-        const q = this.searchQuery.toLowerCase().trim();
-        filtered = filtered.filter(loc =>
-          loc.name.toLowerCase().includes(q) ||
-          loc.suburb.toLowerCase().includes(q) ||
-          loc.address.toLowerCase().includes(q) ||
-          loc.state.toLowerCase().includes(q)
-        );
-      }
-
-      this.filteredLocations = filtered;
-
-      if (mapInitialized) this.updateMapMarkers();
-    },
-
-    updateMapMarkers() {
-      if (!mapInitialized) return;
-      markers.forEach(marker => {
-        const match = this.filteredLocations.find(loc =>
-          Math.abs(marker.getPosition().lat() - loc.lat) < 0.0001 &&
-          Math.abs(marker.getPosition().lng() - loc.lng) < 0.0001
-        );
-        marker.setVisible(!!match);
-      });
-    },
-
-    selectState(state) {
-      this.selectedState = state;
-      this.filterLocations();
-
-      if (!mapInitialized) return;
-
-      setTimeout(() => {
-        const bounds = state === 'all'
-          ? new google.maps.LatLngBounds(
-              new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
-              new google.maps.LatLng(australiaBounds.north, australiaBounds.east))
-          : new google.maps.LatLngBounds(
-              new google.maps.LatLng(stateBounds[state].south, stateBounds[state].west),
-              new google.maps.LatLng(stateBounds[state].north, stateBounds[state].east));
+    <!-- List View Sidebar - LEFT SIDE -->
+    <div x-show="showList" x-transition:enter="slide-in-left" x-transition:leave="slide-out-left"
+         class="absolute top-0 left-0 w-96 h-full bg-white shadow-2xl z-50">
+      <div class="h-full flex flex-col">
+        <div class="p-6 border-b border-gray-200 bg-white">
+          <div class="flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-900">AIL Locations</h2>
+            <button @click="showList = false" 
+                    class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="text-gray-500 text-sm mt-1">
+            <span x-text="filteredLocations.length"></span> locations found
+          </p>
+        </div>
         
-        map.fitBounds(bounds, { padding: 20 }); // Add padding for better fit
-      }, 300);
-    },
+        <div class="flex-1 overflow-y-auto">
+          <div class="p-4 space-y-3">
+            <template x-for="location in filteredLocations.slice(0, 50)" :key="location.id">
+              <div @click="viewOnMap(location)" class="bg-white rounded-xl p-4 cursor-pointer border border-gray-200 hover:shadow-md transition-all">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="font-semibold text-gray-900 text-sm leading-tight flex-1 pr-2" x-text="location.name"></h3>
+                  <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-md font-medium flex-shrink-0" x-text="location.state"></span>
+                </div>
+                
+                <p class="text-gray-600 text-xs mb-3 leading-relaxed" x-text="getDisplayAddress(location)"></p>
+                
+                <!-- Phone number display -->
+                <div class="text-xs text-gray-500 mb-3 flex items-center">
+                  <svg class="w-3 h-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                  </svg>
+                  <span class="font-medium text-gray-700" x-text="formatPhoneNumber(location.phone)"></span>
+                </div>
+                
+                <!-- Inspector name display -->
+                <div x-show="hasNamedInspector(location)" class="text-xs text-gray-500 mb-3 flex items-center">
+                  <svg class="w-3 h-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                  <span class="text-gray-400">Inspector:</span>
+                  <span class="font-medium text-gray-700 ml-1" x-text="location.inspector"></span>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                  <div class="flex space-x-2">
+                    <button @click.stop="getDirections(location)"
+                      class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center">
+                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"></path>
+                      </svg>
+                      Directions
+                    </button>
+                    <a :href="'tel:' + location.phone" @click.stop
+                       class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition-colors">
+                      Call
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </template>
+            
+            <div x-show="filteredLocations.length === 0 && !loading" class="text-center py-12">
+              <div class="text-4xl mb-4">🔍</div>
+              <h3 class="text-lg font-semibold text-gray-900 mb-2">No locations found</h3>
+              <p class="text-gray-500 text-sm mb-4">Try adjusting your search or filters</p>
+              <button @click="clearAllFilters()"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+                Clear all filters
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    handleSearch() {
-      this.filterLocations();
-      this.updateSearchSuggestions();
-      // Don't reset highlightedIndex here anymore
-    },
-
-    clearAllFilters() {
-      this.selectedState = 'all';
-      this.searchQuery = '';
-      this.searchSuggestions = [];
-      this.highlightedIndex = -1;
-      this.filterLocations();
-      if (mapInitialized) this.fitMapToAustralia();
-    },
-
-    fitMapToAustralia() {
-      if (!mapInitialized) return;
-      
-      const bounds = new google.maps.LatLngBounds(
-        new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
-        new google.maps.LatLng(australiaBounds.north, australiaBounds.east)
-      );
-      
-      // Use fitBounds with padding to ensure everything fits nicely
-      map.fitBounds(bounds, { padding: 40 });
-      
-      // Optional: Set a maximum zoom level to ensure we don't zoom in too much
-      setTimeout(() => {
-        const currentZoom = map.getZoom();
-        if (currentZoom > 6) {
-          map.setZoom(6);
-        }
-      }, 500);
-    },
-
-    findNearest() {
-      if (!navigator.geolocation) {
-        alert('Geolocation is not supported by your browser.');
-        return;
-      }
-
-      this.loadingLocation = true;
-
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          this.userLocation = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude
-          };
-
-          const sorted = ailData.map(loc => ({
-            ...loc,
-            distance: this.calculateDistance(
-              this.userLocation.lat,
-              this.userLocation.lng,
-              loc.lat,
-              loc.lng
-            )
-          })).sort((a, b) => a.distance - b.distance);
-
-          this.filteredLocations = sorted;
-          this.selectedState = 'all';
-          this.searchQuery = '';
-
-          if (mapInitialized) {
-            map.setCenter(this.userLocation);
-            map.setZoom(10);
-            this.updateMapMarkers();
-          }
-
-          this.loadingLocation = false;
-        },
-        (err) => {
-          console.error('Geolocation error:', err);
-          alert('Unable to access your location. Please check browser settings.');
-          this.loadingLocation = false;
-        }
-      );
-    },
-
-    calculateDistance(lat1, lng1, lat2, lng2) {
-      const R = 6371;
-      const dLat = this.toRadians(lat2 - lat1);
-      const dLng = this.toRadians(lng2 - lng1);
-      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) *
-        Math.sin(dLng / 2) * Math.sin(dLng / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
-    },
-
-    toRadians(deg) {
-      return deg * (Math.PI / 180);
-    },
-
-    getDisplayAddress(loc) {
-      if (loc.address === 'Mobile Inspector') return `Mobile Inspector – ${loc.state}`;
-      return [loc.address, loc.suburb, loc.state + ' ' + loc.postcode].filter(Boolean).join(', ');
-    },
-
-    hasNamedInspector(loc) {
-      return loc.inspector && loc.inspector !== '-';
-    },
-
-    getDirections(loc) {
-      const encoded = encodeURIComponent(this.getDisplayAddress(loc));
-      const web = `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
-      window.open(web, '_blank');
-    },
-
-    viewOnMap(loc) {
-      this.selectedLocation = loc;
-      this.showList = false;
-      if (mapInitialized) {
-        const pos = new google.maps.LatLng(loc.lat, loc.lng);
-        map.setCenter(pos);
-        map.setZoom(12);
-      }
-    },
-
-    updateSearchSuggestions() {
-      if (!this.searchQuery.trim()) {
-        this.searchSuggestions = [];
-        this.highlightedIndex = -1;
-        return;
-      }
-      
-      const q = this.searchQuery.toLowerCase().trim();
-      this.searchSuggestions = ailData.filter(loc =>
-        loc.name.toLowerCase().includes(q) ||
-        loc.suburb.toLowerCase().includes(q) ||
-        loc.address.toLowerCase().includes(q) ||
-        loc.state.toLowerCase().includes(q)
-      ).slice(0, 6); // Match the template limit of 6 items
-    },
-
-    selectSuggestion(suggestion) {
-      this.selectedLocation = suggestion;
-      this.searchQuery = suggestion.name;
-      this.searchSuggestions = []; // Clear suggestions
-      this.highlightedIndex = -1; // Reset highlight
-      this.showSearch = false; // Close search dropdown
-      
-      if (mapInitialized) {
-        const pos = new google.maps.LatLng(suggestion.lat, suggestion.lng);
-        map.setCenter(pos);
-        map.setZoom(15); // Zoom in more for better view
+    <!-- Top Filter Bar - Reduced width and centered -->
+    <div class="absolute top-2 left-1/2 transform -translate-x-1/2 z-40 transition-all duration-300">
+      <div class="flex items-center gap-2 bg-white rounded-full shadow-lg border border-gray-200 px-3 py-2">
         
-        // Optional: Find and trigger the marker click for consistency
-        const marker = markers.find(m => 
-          Math.abs(m.getPosition().lat() - suggestion.lat) < 0.0001 &&
-          Math.abs(m.getPosition().lng() - suggestion.lng) < 0.0001
-        );
-        if (marker) {
-          // Trigger marker animation or info window if you have them
-          google.maps.event.trigger(marker, 'click');
-        }
-      }
-    },
-
-    handleSearchKeydown(event) {
-      const visibleSuggestions = this.searchSuggestions.slice(0, 6);
-      
-      if (!visibleSuggestions.length) {
-        if (event.key === 'Escape') {
-          event.preventDefault();
-          this.showSearch = false;
-          this.highlightedIndex = -1;
-        }
-        return;
-      }
-
-      switch (event.key) {
-        case 'ArrowDown':
-          event.preventDefault();
-          this.highlightedIndex = this.highlightedIndex < visibleSuggestions.length - 1 
-            ? this.highlightedIndex + 1 
-            : 0;
-          break;
+        <!-- Enhanced Search Button/Input -->
+        <div class="relative">
+          <button @click="showSearch = !showSearch" 
+                  x-show="!showSearch"
+                  class="flex items-center space-x-1 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors">
+            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-4.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span class="text-xs text-gray-700 hidden sm:inline">Search</span>
+          </button>
           
-        case 'ArrowUp':
-          event.preventDefault();
-          this.highlightedIndex = this.highlightedIndex > 0 
-            ? this.highlightedIndex - 1 
-            : visibleSuggestions.length - 1;
-          break;
-          
-        case 'Enter':
-          event.preventDefault();
-          if (this.highlightedIndex >= 0 && this.highlightedIndex < visibleSuggestions.length) {
-            this.selectSuggestion(visibleSuggestions[this.highlightedIndex]);
-          }
-          break;
-          
-        case 'Escape':
-          event.preventDefault();
-          this.showSearch = false;
-          this.highlightedIndex = -1;
-          break;
-          
-        default:
-          // Only reset highlight when typing new characters (not arrow keys)
-          if (event.key.length === 1 || event.key === 'Backspace' || event.key === 'Delete') {
-            this.highlightedIndex = -1;
-          }
-          break;
-      }
-    },
+          <!-- Expanded Search Input -->
+          <div x-show="showSearch" x-transition class="relative">
+            <input type="text" 
+                   placeholder="Search locations..."
+                   class="w-56 px-3 py-1.5 bg-gray-50 rounded-full border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                   x-model="searchQuery" 
+                   @input="handleSearch" 
+                   @keyup="handleSearch"
+                   @keydown="handleSearchKeydown($event)"
+                   @blur="setTimeout(() => { showSearch = false; highlightedIndex = -1; }, 200)"
+                   x-init="$watch('showSearch', value => value && $nextTick(() => $el.focus()))" />
+            
+            <!-- Fixed Search Suggestions Dropdown -->
+            <div x-show="showSearch && searchQuery.trim() !== '' && searchSuggestions.length > 0" 
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95"
+                 class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 z-50 max-h-60 overflow-y-auto">
+              <template x-for="(suggestion, index) in searchSuggestions.slice(0, 6)" :key="suggestion.id">
+                <div @mousedown.prevent="selectSuggestion(suggestion);" 
+                     @touchstart.prevent="selectSuggestion(suggestion);"
+                     @mouseenter="highlightedIndex = index"
+                     @mouseleave="highlightedIndex = -1"
+                     :class="{
+                       'bg-blue-50 border-l-4 border-blue-500': highlightedIndex === index,
+                       'hover:bg-gray-50': highlightedIndex !== index
+                     }"
+                     class="px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition-all duration-150">
+                  <div class="font-medium text-gray-900 text-sm" 
+                       :class="highlightedIndex === index ? 'text-blue-700' : ''"
+                       x-text="suggestion.name"></div>
+                  <div class="text-xs text-gray-500 mt-1"
+                       :class="highlightedIndex === index ? 'text-blue-600' : ''">
+                    <span x-text="suggestion.suburb"></span>
+                    <span x-show="suggestion.suburb && suggestion.state">, </span>
+                    <span x-text="suggestion.state"></span>
+                  </div>
+                </div>
+              </template>
+              
+              <!-- No results message -->
+              <div x-show="searchQuery.trim() !== '' && searchSuggestions.length === 0"
+                   class="px-4 py-3 text-sm text-gray-500 text-center">
+                No locations found matching "<span x-text="searchQuery" class="font-medium"></span>"
+              </div>
+            </div>
+          </div>
+        </div>
 
-    formatPhoneNumber(phone) {
-      if (!phone) return '';
-      
-      // Remove all non-digits
-      const digits = phone.replace(/\D/g, '');
-      
-      if (digits.length === 10) {
-        // Landline format: (02) 9999 9999
-        if (digits.startsWith('02') || digits.startsWith('03') || digits.startsWith('07') || digits.startsWith('08')) {
-          return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)} ${digits.slice(6)}`;
-        }
-        // Mobile format: 0444 444 444
-        else if (digits.startsWith('04')) {
-          return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
-        }
-      }
-      
-      // Fallback: return as-is if format doesn't match
-      return phone;
-    }
-  };
-}
+        <!-- Find Near Me Button - Fixed to start without blue shading -->
+        <button @click="userLocation ? returnToAustraliaView() : findNearest()" :disabled="loadingLocation"
+          :class="userLocation ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'"
+          class="flex items-center space-x-1 px-3 py-1.5 rounded-full transition-colors disabled:opacity-50 text-xs">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  :d="userLocation ? 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z' : 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z'"></path>
+          </svg>
+          <span x-show="!loadingLocation && !userLocation" class="hidden sm:inline">Near me</span>
+          <span x-show="!loadingLocation && userLocation" class="hidden sm:inline">Show all</span>
+          <div x-show="loadingLocation" class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+        </button>
 
-window.initMap = initMap;
+        <!-- State Filter Dropdown -->
+        <div class="relative" @click.away="showStateDropdown = false">
+          <button @click="showStateDropdown = !showStateDropdown"
+                  :class="selectedState !== 'all' ? 'bg-blue-100 text-blue-700' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'"
+                  class="flex items-center space-x-1 px-3 py-1.5 rounded-full transition-colors text-xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+            </svg>
+            <span x-text="selectedState === 'all' ? 'All States' : selectedState"></span>
+            <svg class="w-3 h-3 transform transition-transform" :class="showStateDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+          
+          <div x-show="showStateDropdown" x-transition
+               class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-48">
+            <template x-for="state in stateOptions" :key="state.value">
+              <button @click="selectState(state.value); showStateDropdown = false"
+                      :class="selectedState === state.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'"
+                      class="w-full text-left px-4 py-2 text-sm transition-colors first:rounded-t-lg last:rounded-b-lg"
+                      x-text="state.label">
+              </button>
+            </template>
+          </div>
+        </div>
 
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.google?.maps && !mapInitialized) setTimeout(initMap, 1000);
-});
+        <!-- Clear Filters Button -->
+        <button x-show="selectedState !== 'all' || searchQuery.trim() !== ''" 
+                @click="clearAllFilters()"
+                class="flex items-center space-x-1 px-2 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-full transition-colors text-xs">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+          <span class="hidden sm:inline">Clear</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Filter Bar - Show on smaller screens, also aligned closer to header -->
+    <div class="sm:hidden absolute top-2 left-6 right-6 z-40">
+      <div class="bg-white rounded-xl shadow-xl border border-gray-200 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <button @click="showMobileFilters = !showMobileFilters"
+                  class="flex items-center space-x-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+            </svg>
+            <span class="text-sm">Filters</span>
+          </button>
+          
+          <div class="text-sm text-gray-600">
+            <span x-text="filteredLocations.length"></span> found
+          </div>
+        </div>
+        
+        <div x-show="showMobileFilters" x-transition class="space-y-3">
+          <!-- Mobile Search -->
+          <input type="text" placeholder="Search locations..."
+            class="w-full px-4 py-2 bg-gray-50 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            x-model="searchQuery" @input="handleSearch" />
+          
+          <!-- Mobile Controls -->
+          <div class="flex space-x-2">
+            <button @click="userLocation ? returnToAustraliaView() : findNearest()" :disabled="loadingLocation"
+              :class="userLocation ? 'bg-green-600 text-white' : 'bg-blue-600 text-white'"
+              class="flex-1 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+              <span x-show="!loadingLocation" x-text="userLocation ? 'Show All' : 'Near Me'"></span>
+              <span x-show="loadingLocation">Finding...</span>
+            </button>
+            
+            <select x-model="selectedState" @change="selectState($event.target.value)"
+                    class="px-3 py-2 bg-gray-50 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+              <template x-for="state in stateOptions" :key="state.value">
+                <option :value="state.value" x-text="state.label"></option>
+              </template>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- List View Toggle - Bottom Right (Domain.com.au style) - Centered -->
+    <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30">
+      <button @click="showList = !showList"
+              :class="showList ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+              class="flex items-center space-x-2 px-4 py-3 rounded-full shadow-lg border border-gray-200 transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+        <span class="text-sm font-medium">List view</span>
+      </button>
+    </div>
+
+    <!-- Location Details Panel - Right Side -->
+    <div x-show="selectedLocation" x-transition:enter="slide-in-right" x-transition:leave="slide-out-right"
+         class="absolute top-6 right-6 w-80 z-40">
+      <div class="bg-white rounded-2xl p-6 shadow-xl border border-gray-200">
+        <template x-if="selectedLocation">
+          <div>
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="font-bold text-gray-900 text-lg leading-tight pr-3" x-text="selectedLocation.name"></h3>
+              <button @click="selectedLocation = null" 
+                      class="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            
+            <div class="space-y-4">
+              <div class="flex items-start">
+                <svg class="w-5 h-5 text-gray-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                </svg>
+                <div class="text-gray-600 text-sm leading-relaxed">
+                  <div x-show="selectedLocation.address && selectedLocation.address !== 'Mobile Inspector'" 
+                       x-text="selectedLocation.address" class="font-medium"></div>
+                  <div x-show="selectedLocation.address === 'Mobile Inspector'" 
+                       class="font-medium text-blue-600">Mobile Inspector</div>
+                  <div class="flex space-x-1 text-gray-500">
+                    <span x-show="selectedLocation.suburb" x-text="selectedLocation.suburb"></span>
+                    <span x-show="selectedLocation.suburb && selectedLocation.state">,</span>
+                    <span x-show="selectedLocation.state" x-text="selectedLocation.state"></span>
+                    <span x-show="selectedLocation.postcode" x-text="selectedLocation.postcode"></span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Phone number display -->
+              <div class="flex items-start">
+                <svg class="w-5 h-5 text-gray-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                </svg>
+                <span class="text-sm font-medium text-gray-700" x-text="formatPhoneNumber(selectedLocation.phone)"></span>
+              </div>
+              
+              <div x-show="hasNamedInspector(selectedLocation)" class="flex items-start">
+                <svg class="w-5 h-5 text-gray-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                <div class="text-sm">
+                  <span class="text-gray-500">Inspector:</span>
+                  <span class="text-gray-700 font-medium ml-1" x-text="selectedLocation.inspector"></span>
+                </div>
+              </div>
+              
+              <div class="flex items-center justify-between pt-2">
+                <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full font-medium" 
+                      x-text="selectedLocation.state"></span>
+                <div class="flex space-x-2">
+                  <button @click="getDirections(selectedLocation)"
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"></path>
+                    </svg>
+                    Directions
+                  </button>
+                  <a :href="'tel:' + selectedLocation.phone" 
+                     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+                    Call
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+</main>
+  
+<div id="footer-placeholder"></div>
+
+<script>
+  const injectPageTitle = "Find an Authorised Inspection Location (AIL)";
+</script>
+<script src="js/load-header-footer.js"></script>
+  
+<!-- Existing JS and Maps API (Separate Scripts) -->
+<script src="js/ail-finder.js"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPnUqhxYzzgoRJ32Rh6-bg5wmKuXtBmKI&callback=initMap&libraries=geometry"></script>
+</body>
+</html>
