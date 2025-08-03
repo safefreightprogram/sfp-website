@@ -242,8 +242,8 @@
               <div x-show="searchQuery.trim() !== '' && searchSuggestions.length > 0" 
                    class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 z-50 max-h-48 overflow-y-auto">
                 <template x-for="(suggestion, index) in searchSuggestions.slice(0, 8)" :key="suggestion.id">
-                  <div @click="selectSuggestion(suggestion);" 
-                       @touchstart.prevent="selectSuggestion(suggestion);"
+                  <div @click="selectSuggestion(suggestion); searchSuggestions = []; showSearch = false;" 
+                       @touchstart.prevent="selectSuggestion(suggestion); searchSuggestions = []; showSearch = false;"
                        @mouseenter="highlightedIndex = index"
                        :class="highlightedIndex === index ? 'bg-blue-50' : 'hover:bg-gray-50'"
                        class="px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors">
@@ -396,11 +396,6 @@
   
 <div id="footer-placeholder"></div>
 
-<script>
-  const injectPageTitle = "Find an Authorised Inspection Location (AIL)";
-</script>
-<script src="js/load-header-footer.js"></script>
-  
 <!-- Existing JS and Maps API (Separate Scripts) -->
 <script src="js/ail-finder.js"></script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPnUqhxYzzgoRJ32Rh6-bg5wmKuXtBmKI&callback=initMap&libraries=geometry"></script>
