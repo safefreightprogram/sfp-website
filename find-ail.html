@@ -31,9 +31,9 @@
       </div>
     </div>
 
-    <!-- List View Sidebar - LEFT SIDE -->
+    <!-- List View Sidebar - LEFT SIDE - Reduced width to avoid search bar overlap -->
     <div x-show="showList" x-transition:enter="slide-in-left" x-transition:leave="slide-out-left"
-         class="absolute top-0 left-0 w-96 h-full bg-white shadow-2xl z-50">
+         class="absolute top-0 left-0 w-80 h-full bg-white shadow-2xl z-50">
       <div class="h-full flex flex-col">
         <div class="p-6 border-b border-gray-200 bg-white">
           <div class="flex justify-between items-center">
@@ -110,8 +110,8 @@
       </div>
     </div>
 
-    <!-- Top Filter Bar - Reduced width and centered -->
-    <div class="absolute top-2 left-1/2 transform -translate-x-1/2 z-40 transition-all duration-300">
+    <!-- Top Filter Bar - Hidden on mobile, only shown on sm and larger screens -->
+    <div class="hidden sm:block absolute top-2 left-1/2 transform -translate-x-1/2 z-40 transition-all duration-300">
       <div class="flex items-center gap-2 bg-white rounded-full shadow-lg border border-gray-200 px-3 py-2">
         
         <!-- Search Button/Input -->
