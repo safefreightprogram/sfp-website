@@ -227,10 +227,38 @@
         </div>
         
         <div x-show="showMobileFilters" x-transition class="space-y-3">
-          <!-- Mobile Search -->
-          <input type="text" placeholder="Search locations..."
-            class="w-full px-4 py-2 bg-gray-50 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            x-model="searchQuery" @input="handleSearch" />
+          <!-- Mobile Search with Autosuggest -->
+          <div class="relative">
+            <input type="text" placeholder="Search locations..."
+              class="w-full px-4 py-2 bg-gray-50 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              x-model="searchQuery" 
+              @input="handleSearch" 
+              @keyup="handleSearch"
+              @keydown="handleSearchKeydown($event)"
+              @focus="updateSearchSuggestions()" />
+            
+            <!-- Mobile Search Suggestions Dropdown -->
+            <div x-show="searchQuery.trim() !== '' && searchSuggestions.length > 0" 
+                 class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 z-50 max-h-48 overflow-y-auto">
+              <template x-for="(suggestion, index) in searchSuggestions.slice(0, 8)" :key="suggestion.id">
+                <div @click="selectSuggestion(suggestion); showMobileFilters = false;" 
+                     @touchstart.prevent="selectSuggestion(suggestion); showMobileFilters = false;"
+                     @mouseenter="highlightedIndex = index"
+                     :class="highlightedIndex === index ? 'bg-blue-50' : 'hover:bg-gray-50'"
+                     class="px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors">
+                  <div class="font-medium text-gray-900 text-sm" 
+                       :class="highlightedIndex === index ? 'text-blue-700' : ''"
+                       x-text="suggestion.name"></div>
+                  <div class="text-xs text-gray-500 mt-1"
+                       :class="highlightedIndex === index ? 'text-blue-600' : ''">
+                    <span x-text="suggestion.suburb"></span>
+                    <span x-show="suggestion.suburb && suggestion.state">, </span>
+                    <span x-text="suggestion.state"></span>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
           
           <!-- Mobile Controls -->
           <div class="flex space-x-2">
