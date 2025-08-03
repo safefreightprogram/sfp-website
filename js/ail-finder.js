@@ -244,7 +244,7 @@ function domainStyleAilFinder() {
     handleSearch() {
       this.filterLocations();
       this.updateSearchSuggestions();
-      this.highlightedIndex = 0; // Start with first suggestion highlighted
+      this.highlightedIndex = this.searchSuggestions.length > 0 ? 0 : -1; // Start with first suggestion highlighted if any exist
     },
 
     clearAllFilters() {
@@ -389,15 +389,19 @@ function domainStyleAilFinder() {
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault();
-          this.highlightedIndex = this.highlightedIndex < this.searchSuggestions.length - 1 
-            ? this.highlightedIndex + 1 
-            : 0; // Loop back to first
+          if (this.highlightedIndex < this.searchSuggestions.length - 1) {
+            this.highlightedIndex++;
+          } else {
+            this.highlightedIndex = 0; // Loop back to first
+          }
           break;
         case 'ArrowUp':
           event.preventDefault();
-          this.highlightedIndex = this.highlightedIndex > 0 
-            ? this.highlightedIndex - 1 
-            : this.searchSuggestions.length - 1; // Loop to last
+          if (this.highlightedIndex > 0) {
+            this.highlightedIndex--;
+          } else {
+            this.highlightedIndex = this.searchSuggestions.length - 1; // Loop to last
+          }
           break;
         case 'Enter':
           event.preventDefault();
@@ -407,6 +411,7 @@ function domainStyleAilFinder() {
           }
           break;
         case 'Escape':
+          event.preventDefault();
           this.showSearch = false;
           this.highlightedIndex = -1;
           break;
