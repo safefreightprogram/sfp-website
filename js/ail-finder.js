@@ -244,7 +244,7 @@ function domainStyleAilFinder() {
     handleSearch() {
       this.filterLocations();
       this.updateSearchSuggestions();
-      this.highlightedIndex = -1;
+      this.highlightedIndex = -1; // Reset highlight when search changes
     },
 
     clearAllFilters() {
@@ -381,6 +381,53 @@ function domainStyleAilFinder() {
         map.setCenter(pos);
         map.setZoom(12);
       }
+    },
+
+    handleSearchKeydown(event) {
+      if (!this.searchSuggestions.length) return;
+
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          this.highlightedIndex = Math.min(this.highlightedIndex + 1, this.searchSuggestions.length - 1);
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          this.highlightedIndex = Math.max(this.highlightedIndex - 1, -1);
+          break;
+        case 'Enter':
+          event.preventDefault();
+          if (this.highlightedIndex >= 0 && this.highlightedIndex < this.searchSuggestions.length) {
+            this.selectSuggestion(this.searchSuggestions[this.highlightedIndex]);
+            this.showSearch = false;
+          }
+          break;
+        case 'Escape':
+          this.showSearch = false;
+          this.highlightedIndex = -1;
+          break;
+      }
+    },
+
+    formatPhoneNumber(phone) {
+      if (!phone) return '';
+      
+      // Remove all non-digits
+      const digits = phone.replace(/\D/g, '');
+      
+      if (digits.length === 10) {
+        // Landline format: (02) 9999 9999
+        if (digits.startsWith('02') || digits.startsWith('03') || digits.startsWith('07') || digits.startsWith('08')) {
+          return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)} ${digits.slice(6)}`;
+        }
+        // Mobile format: 0444 444 444
+        else if (digits.startsWith('04')) {
+          return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+        }
+      }
+      
+      // Fallback: return as-is if format doesn't match
+      return phone;
     }
   };
 }
