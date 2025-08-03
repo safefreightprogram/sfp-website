@@ -117,6 +117,9 @@ function domainStyleAilFinder() {
     showSearchResults: false,
     searchSuggestions: [],
     highlightedIndex: -1,
+    showSearch: false,
+    showStateDropdown: false,
+    showMobileFilters: false,
     stateOptions: [
       { value: 'all', label: 'All States' },
       { value: 'NSW', label: 'NSW' }, { value: 'QLD', label: 'QLD' },
@@ -368,6 +371,16 @@ function domainStyleAilFinder() {
         loc.address.toLowerCase().includes(q) ||
         loc.state.toLowerCase().includes(q)
       ).slice(0, 10);
+    },
+
+    selectSuggestion(suggestion) {
+      this.selectedLocation = suggestion;
+      this.searchQuery = suggestion.name;
+      if (mapInitialized) {
+        const pos = new google.maps.LatLng(suggestion.lat, suggestion.lng);
+        map.setCenter(pos);
+        map.setZoom(12);
+      }
     }
   };
 }
