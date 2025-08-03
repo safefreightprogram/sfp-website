@@ -1,6 +1,13 @@
 let map, markers = [], ailData = [], mapInitialized = false, ailFinderComponent = null;
 
-const australiaBounds = { north: -8.0, south: -44.0, west: 112.0, east: 154.0 };
+// Expanded Australia bounds to ensure Tasmania and top end are included
+const australiaBounds = { 
+  north: -8.0,    // Top end (Darwin area)
+  south: -43.8,   // Tasmania bottom
+  west: 112.0,    // Western Australia
+  east: 154.0     // Eastern coast
+};
+
 const stateBounds = {
   NSW: { north: -28.15, south: -37.5, west: 140.9, east: 153.6 },
   QLD: { north: -10.0, south: -29.2, west: 137.9, east: 154.0 },
@@ -32,13 +39,24 @@ function initMap() {
 
     mapInitialized = true;
 
+    // Wait for map to be fully loaded before fitting bounds
     google.maps.event.addListenerOnce(map, 'idle', () => {
+      // Trigger a resize to ensure proper rendering
       google.maps.event.trigger(map, 'resize');
+      
+      // Fit Australia bounds after a short delay
+      setTimeout(() => {
+        if (ailFinderComponent) {
+          ailFinderComponent.fitMapToAustralia();
+        }
+      }, 500);
     });
 
+    // Clear selected location when clicking on map
     map.addListener('click', () => {
       if (ailFinderComponent?.selectedLocation) ailFinderComponent.selectedLocation = null;
     });
+
   } catch (error) {
     console.error('Error initializing map:', error);
   }
@@ -76,9 +94,12 @@ function loadMarkers() {
     markers.push(marker);
   });
 
+  // Ensure map is resized and fitted after markers are loaded
   setTimeout(() => {
     google.maps.event.trigger(map, 'resize');
-    markers.forEach(m => m.setPosition(m.getPosition()));
+    if (ailFinderComponent) {
+      ailFinderComponent.fitMapToAustralia();
+    }
   }, 500);
 }
 
@@ -137,10 +158,12 @@ function domainStyleAilFinder() {
 
         if (mapInitialized) {
           loadMarkers();
-          this.fitMapToAustralia();
         } else {
+          // Wait for map initialization
           setTimeout(() => {
-            if (window.google?.maps && !mapInitialized) initMap();
+            if (window.google?.maps && !mapInitialized) {
+              initMap();
+            }
           }, 500);
         }
 
@@ -210,7 +233,8 @@ function domainStyleAilFinder() {
           : new google.maps.LatLngBounds(
               new google.maps.LatLng(stateBounds[state].south, stateBounds[state].west),
               new google.maps.LatLng(stateBounds[state].north, stateBounds[state].east));
-        map.fitBounds(bounds);
+        
+        map.fitBounds(bounds, { padding: 20 }); // Add padding for better fit
       }, 300);
     },
 
@@ -228,12 +252,23 @@ function domainStyleAilFinder() {
     },
 
     fitMapToAustralia() {
+      if (!mapInitialized) return;
+      
       const bounds = new google.maps.LatLngBounds(
         new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
         new google.maps.LatLng(australiaBounds.north, australiaBounds.east)
       );
-      map.fitBounds(bounds);
-      setTimeout(() => map.setZoom(Math.max(map.getZoom() - 0.5, 4.0)), 300);
+      
+      // Use fitBounds with padding to ensure everything fits nicely
+      map.fitBounds(bounds, { padding: 40 });
+      
+      // Optional: Set a maximum zoom level to ensure we don't zoom in too much
+      setTimeout(() => {
+        const currentZoom = map.getZoom();
+        if (currentZoom > 6) {
+          map.setZoom(6);
+        }
+      }, 500);
     },
 
     findNearest() {
