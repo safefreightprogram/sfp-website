@@ -120,7 +120,6 @@ function domainStyleAilFinder() {
     showSearch: false,
     showStateDropdown: false,
     showMobileFilters: false,
-    keyboardNavigation: false, // Track if user is using keyboard
     stateOptions: [
       { value: 'all', label: 'All States' },
       { value: 'NSW', label: 'NSW' }, { value: 'QLD', label: 'QLD' },
@@ -243,13 +242,9 @@ function domainStyleAilFinder() {
     },
 
     handleSearch() {
-      // Only reset highlight if not using keyboard navigation
-      if (!this.keyboardNavigation) {
-        this.highlightedIndex = -1;
-      }
-      
       this.filterLocations();
       this.updateSearchSuggestions();
+      // Don't reset highlightedIndex here anymore
     },
 
     clearAllFilters() {
@@ -257,7 +252,6 @@ function domainStyleAilFinder() {
       this.searchQuery = '';
       this.searchSuggestions = [];
       this.highlightedIndex = -1;
-      this.keyboardNavigation = false;
       this.filterLocations();
       if (mapInitialized) this.fitMapToAustralia();
     },
@@ -371,7 +365,6 @@ function domainStyleAilFinder() {
       if (!this.searchQuery.trim()) {
         this.searchSuggestions = [];
         this.highlightedIndex = -1;
-        this.keyboardNavigation = false;
         return;
       }
       
@@ -390,7 +383,6 @@ function domainStyleAilFinder() {
       this.searchSuggestions = []; // Clear suggestions
       this.highlightedIndex = -1; // Reset highlight
       this.showSearch = false; // Close search dropdown
-      this.keyboardNavigation = false;
       
       if (mapInitialized) {
         const pos = new google.maps.LatLng(suggestion.lat, suggestion.lng);
@@ -410,19 +402,13 @@ function domainStyleAilFinder() {
     },
 
     handleSearchKeydown(event) {
-      // Mark that user is using keyboard navigation
-      this.keyboardNavigation = true;
-      
-      // Get the visible suggestions (limited to 6 like in template)
       const visibleSuggestions = this.searchSuggestions.slice(0, 6);
       
       if (!visibleSuggestions.length) {
-        // If no suggestions, only handle escape
         if (event.key === 'Escape') {
           event.preventDefault();
           this.showSearch = false;
           this.highlightedIndex = -1;
-          this.keyboardNavigation = false;
         }
         return;
       }
@@ -430,20 +416,16 @@ function domainStyleAilFinder() {
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault();
-          if (this.highlightedIndex < visibleSuggestions.length - 1) {
-            this.highlightedIndex++;
-          } else {
-            this.highlightedIndex = 0; // Loop back to first
-          }
+          this.highlightedIndex = this.highlightedIndex < visibleSuggestions.length - 1 
+            ? this.highlightedIndex + 1 
+            : 0;
           break;
           
         case 'ArrowUp':
           event.preventDefault();
-          if (this.highlightedIndex > 0) {
-            this.highlightedIndex--;
-          } else {
-            this.highlightedIndex = visibleSuggestions.length - 1; // Loop to last
-          }
+          this.highlightedIndex = this.highlightedIndex > 0 
+            ? this.highlightedIndex - 1 
+            : visibleSuggestions.length - 1;
           break;
           
         case 'Enter':
@@ -457,42 +439,14 @@ function domainStyleAilFinder() {
           event.preventDefault();
           this.showSearch = false;
           this.highlightedIndex = -1;
-          this.searchSuggestions = [];
-          this.keyboardNavigation = false;
-          break;
-          
-        case 'Tab':
-          // Allow tab to close search and move focus
-          this.showSearch = false;
-          this.highlightedIndex = -1;
-          this.keyboardNavigation = false;
           break;
           
         default:
-          // Only reset highlight when typing if not actively using keyboard nav
-          if ((event.key.length === 1 || event.key === 'Backspace' || event.key === 'Delete')) {
-            // Don't reset if we were just navigating with keyboard
-            if (!this.keyboardNavigation) {
-              this.highlightedIndex = -1;
-            }
-            this.keyboardNavigation = false;
+          // Only reset highlight when typing new characters (not arrow keys)
+          if (event.key.length === 1 || event.key === 'Backspace' || event.key === 'Delete') {
+            this.highlightedIndex = -1;
           }
           break;
-      }
-    },
-
-    // Method to handle mouse interactions without interfering with keyboard
-    handleMouseEnter(index) {
-      // Only update highlight if not actively using keyboard navigation
-      if (!this.keyboardNavigation) {
-        this.highlightedIndex = index;
-      }
-    },
-
-    handleMouseLeave() {
-      // Only clear highlight if not actively using keyboard navigation
-      if (!this.keyboardNavigation) {
-        this.highlightedIndex = -1;
       }
     },
 
