@@ -39,7 +39,21 @@ function initMap() {
 
     mapInitialized = true;
 
-    // Wait for map to be fully loaded before fitting bounds
+    // Enhanced map ready detection - wait for tiles to load completely
+    google.maps.event.addListenerOnce(map, 'tilesloaded', () => {
+      // Ensure map is fully loaded including tiles
+      google.maps.event.trigger(map, 'resize');
+      
+      // Load markers and fit bounds if data is ready
+      if (ailFinderComponent && ailData.length > 0) {
+        loadMarkers();
+        setTimeout(() => {
+          ailFinderComponent.fitMapToAustralia();
+        }, 300);
+      }
+    });
+
+    // Backup idle listener for additional safety
     google.maps.event.addListenerOnce(map, 'idle', () => {
       // Trigger a resize to ensure proper rendering
       google.maps.event.trigger(map, 'resize');
@@ -100,7 +114,7 @@ function loadMarkers() {
     if (ailFinderComponent) {
       ailFinderComponent.fitMapToAustralia();
     }
-  }, 500);
+  }, 200);
 }
 
 function domainStyleAilFinder() {
@@ -130,6 +144,18 @@ function domainStyleAilFinder() {
 
     async init() {
       ailFinderComponent = this;
+      
+      // Add viewport resize listener for responsive layout changes
+      window.addEventListener('resize', () => {
+        if (mapInitialized && map) {
+          // Debounce resize events
+          clearTimeout(this.resizeTimeout);
+          this.resizeTimeout = setTimeout(() => {
+            this.handleResponsiveResize();
+          }, 150);
+        }
+      });
+
       try {
         const paths = ['./data/ail-locations.json', 'data/ail-locations.json', '/data/ail-locations.json', './ail-locations.json'];
         let jsonText = null;
@@ -159,15 +185,26 @@ function domainStyleAilFinder() {
         this.filteredLocations = [...ailData];
         this.loading = false;
 
+        // Enhanced map initialization check
         if (mapInitialized) {
           loadMarkers();
         } else {
-          // Wait for map initialization
+          // Set up a more robust initialization check
+          const checkMapReady = setInterval(() => {
+            if (mapInitialized && window.google?.maps) {
+              clearInterval(checkMapReady);
+              setTimeout(() => {
+                loadMarkers();
+              }, 100);
+            }
+          }, 100);
+          
+          // Fallback timeout
           setTimeout(() => {
-            if (window.google?.maps && !mapInitialized) {
+            if (!mapInitialized && window.google?.maps) {
               initMap();
             }
-          }, 500);
+          }, 1000);
         }
 
       } catch (err) {
@@ -175,6 +212,42 @@ function domainStyleAilFinder() {
         this.loading = false;
         alert('Failed to load location data.');
       }
+    },
+
+    handleResponsiveResize() {
+      if (!mapInitialized || !map) return;
+      
+      // Force map refresh on layout changes
+      google.maps.event.trigger(map, 'resize');
+      
+      // Re-center and fit bounds if needed
+      setTimeout(() => {
+        if (this.userLocation) {
+          map.setCenter(this.userLocation);
+        } else if (this.selectedLocation) {
+          map.setCenter(new google.maps.LatLng(this.selectedLocation.lat, this.selectedLocation.lng));
+        } else {
+          this.fitMapToAustralia();
+        }
+        
+        // Update marker visibility
+        if (this.filteredLocations.length > 0) {
+          this.updateMapMarkers();
+        }
+      }, 100);
+    },
+
+    handleMobileLayout() {
+      if (!mapInitialized) return;
+      
+      // Force map refresh specifically for mobile layout changes
+      setTimeout(() => {
+        google.maps.event.trigger(map, 'resize');
+        if (this.filteredLocations.length > 0) {
+          this.updateMapMarkers();
+        }
+        this.fitMapToAustralia();
+      }, 200);
     },
 
     returnToAustraliaView() {
@@ -229,6 +302,9 @@ function domainStyleAilFinder() {
       if (!mapInitialized) return;
 
       setTimeout(() => {
+        // Trigger resize before fitting bounds
+        google.maps.event.trigger(map, 'resize');
+        
         const bounds = state === 'all'
           ? new google.maps.LatLngBounds(
               new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
@@ -242,20 +318,24 @@ function domainStyleAilFinder() {
     },
 
     handleSearch() {
-  this.filterLocations();
-  this.updateSearchSuggestions();
-  // Don't reset highlightedIndex here - let keyboard navigation control it
-},
+      this.filterLocations();
+      this.updateSearchSuggestions();
+      // Don't reset highlightedIndex here - let keyboard navigation control it
+    },
 
     clearAllFilters() {
       this.selectedState = 'all';
       this.searchQuery = '';
+      this.userLocation = null;
       this.filterLocations();
       if (mapInitialized) this.fitMapToAustralia();
     },
 
     fitMapToAustralia() {
       if (!mapInitialized) return;
+      
+      // Ensure map is properly sized before fitting bounds
+      google.maps.event.trigger(map, 'resize');
       
       const bounds = new google.maps.LatLngBounds(
         new google.maps.LatLng(australiaBounds.south, australiaBounds.west),
@@ -304,9 +384,13 @@ function domainStyleAilFinder() {
           this.searchQuery = '';
 
           if (mapInitialized) {
-            map.setCenter(this.userLocation);
-            map.setZoom(10);
-            this.updateMapMarkers();
+            // Ensure map is properly resized before setting center
+            google.maps.event.trigger(map, 'resize');
+            setTimeout(() => {
+              map.setCenter(this.userLocation);
+              map.setZoom(10);
+              this.updateMapMarkers();
+            }, 100);
           }
 
           this.loadingLocation = false;
@@ -353,9 +437,13 @@ function domainStyleAilFinder() {
       this.selectedLocation = loc;
       this.showList = false;
       if (mapInitialized) {
-        const pos = new google.maps.LatLng(loc.lat, loc.lng);
-        map.setCenter(pos);
-        map.setZoom(12);
+        // Ensure map is resized before setting position
+        google.maps.event.trigger(map, 'resize');
+        setTimeout(() => {
+          const pos = new google.maps.LatLng(loc.lat, loc.lng);
+          map.setCenter(pos);
+          map.setZoom(12);
+        }, 100);
       }
     },
 
@@ -377,9 +465,13 @@ function domainStyleAilFinder() {
       this.selectedLocation = suggestion;
       this.searchQuery = suggestion.name;
       if (mapInitialized) {
-        const pos = new google.maps.LatLng(suggestion.lat, suggestion.lng);
-        map.setCenter(pos);
-        map.setZoom(12);
+        // Ensure map is resized before setting position
+        google.maps.event.trigger(map, 'resize');
+        setTimeout(() => {
+          const pos = new google.maps.LatLng(suggestion.lat, suggestion.lng);
+          map.setCenter(pos);
+          map.setZoom(12);
+        }, 100);
       }
     },
 
