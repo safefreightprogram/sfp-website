@@ -14,14 +14,7 @@
   <!-- Injected shared header -->
   <div id="header-placeholder"></div>
 
-  <!-- Unique page heading for this page -->
-  <div class="bg-blue-900 text-white py-4 text-center shadow z-40">
-    <h1 class="text-lg font-semibold">
-      Find an Authorised Inspection Location (AIL)
-    </h1>
-  </div>
-
-  <div class="relative w-full" x-data="domainStyleAilFinder()" style="height: calc(100vh - 73px);">
+   <div class="relative w-full" x-data="domainStyleAilFinder()" style="height: calc(100vh - 73px);">
     
     <!-- Full Screen Map Container -->
     <div id="map" class="w-full h-full absolute inset-0"></div>
@@ -303,22 +296,33 @@
 
    </div>
 
-  <!-- Injected shared footer -->
-  <div id="footer-placeholder"></div>
+  <!-- Injected shared footer --><!-- Injected shared footer -->
+<div id="footer-placeholder"></div>
 
-  <!-- Load shared header/footer via JavaScript -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      fetch('components/header.html')
-        .then(res => res.text())
-        .then(html => document.getElementById('header-placeholder').innerHTML = html);
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
 
-      fetch('components/footer.html')
-        .then(res => res.text())
-        .then(html => document.getElementById('footer-placeholder').innerHTML = html);
-    });
-  </script>
+    // Load header
+    fetch('components/header.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('header-placeholder').innerHTML = html;
+        // After header loads, inject page-specific title
+        const titleContainer = document.querySelector('#header-placeholder #page-title');
+        if (titleContainer) {
+          titleContainer.innerHTML = `<h1 class="text-lg font-semibold text-white leading-tight">
+            Find an Authorised Inspection Location (AIL)
+          </h1>`;
+        }
+      });
 
+    // Load footer
+    fetch('components/footer.html')
+      .then(res => res.text())
+      .then(html => document.getElementById('footer-placeholder').innerHTML = html);
+  });
+</script>
+  
   <!-- Existing JS and Maps API -->
   <script src="js/ail-finder.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPnUqhxYzzgoRJ32Rh6-bg5wmKuXtBmKI&callback=initMap&libraries=geometry"></script>
