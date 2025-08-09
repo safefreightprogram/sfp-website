@@ -182,5 +182,45 @@
         });
     };
   </script>
+  <script>
+  // util: get query string value
+  function qs(name) {
+    const p = new URLSearchParams(location.search);
+    return p.get(name) || "";
+  }
+
+  // Handle login form submit
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.querySelector("#sfp-login-form");
+    if (!form) return;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      // TODO: replace with your real auth call
+      const email = (document.querySelector("#email")?.value || "").trim();
+      const roles = ["ail"]; // or come from API
+      const user = { email, roles, ts: Date.now() };
+
+      localStorage.setItem("sfp_user", JSON.stringify(user));
+
+      // Respect ?next=... if present and safe
+      const next = qs("next");
+      if (next && next.startsWith("/")) {
+        location.href = next;
+        return;
+      }
+
+      // Fallbacks: if you have an AIL role, send to AIL Portal
+      if (roles.includes("ail")) {
+        location.href = "/ail-portal.html";
+        return;
+      }
+
+      // Absolute last fallback: home
+      location.href = "/";
+    });
+  });
+</script>
 </body>
 </html>
