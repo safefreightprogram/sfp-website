@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AIL Portal – Safe Freight Program</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="css/ail-finder.css"><!-- reuse tokens/utilities -->
+  <script defer src="js/load-header-footer.js"></script>
+  <script defer src="js/sfp-auth.js"></script>
+  <script>
+    // Optional: show page title in the shared header
+    window.injectPageTitle = "AIL Portal";
+    // Gate the page after header/footer load
+    document.addEventListener("DOMContentLoaded", () => {
+      // Simple guard; replace with your real session/JWT check
+      if (!window.SFPAuth?.isLoggedIn()) {
+        // Preserve return target so login can bounce back here
+        const dest = encodeURIComponent(location.pathname + location.search);
+        location.href = `/login.html?next=${dest}`;
+      }
+    });
+  </script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <!-- Shared header -->
+  <div id="header-placeholder"></div>
+
+  <main class="flex-grow">
+    <!-- Hero -->
+    <section class="bg-blue-900 text-white">
+      <div class="max-w-7xl mx-auto px-4 py-8">
+        <h1 class="text-2xl font-semibold">Authorised Inspection Locations</h1>
+        <p class="text-blue-100 mt-1">Quick access to inspections, history, and resources.</p>
+      </div>
+    </section>
+
+    <!-- Cards -->
+    <section class="max-w-7xl mx-auto px-4 py-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+        <!-- Submit Inspection -->
+        <a href="/inspect.html" class="block rounded-2xl shadow bg-white p-5 hover:shadow-md transition">
+          <div class="flex items-start justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">Submit Vehicle Inspection</h2>
+          </div>
+          <p class="text-gray-600 mt-2">Start a new inspection. Vehicle type auto‑loads the right checklist.</p>
+          <div class="mt-4 text-blue-700 font-medium">Open →</div>
+        </a>
+
+        <!-- Past Inspections -->
+        <a href="/inspections.html" class="block rounded-2xl shadow bg-white p-5 hover:shadow-md transition">
+          <h2 class="text-lg font-semibold text-gray-900">Inspection History</h2>
+          <p class="text-gray-600 mt-2">View submissions by date, SFPV‑ID, rego, or status.</p>
+          <div class="mt-4 text-blue-700 font-medium">Open →</div>
+        </a>
+
+        <!-- Update AIL Details -->
+        <a href="/ail-profile.html" class="block rounded-2xl shadow bg-white p-5 hover:shadow-md transition">
+          <h2 class="text-lg font-semibold text-gray-900">Update AIL Details</h2>
+          <p class="text-gray-600 mt-2">Keep your contact and licensing info current.</p>
+          <div class="mt-4 text-blue-700 font-medium">Open →</div>
+        </a>
+
+        <!-- Resources -->
+        <a href="/resources-ail.html" class="block rounded-2xl shadow bg-white p-5 hover:shadow-md transition">
+          <h2 class="text-lg font-semibold text-gray-900">Guides & Templates</h2>
+          <p class="text-gray-600 mt-2">Download checklists, how‑to videos, and SOPs.</p>
+          <div class="mt-4 text-blue-700 font-medium">Open →</div>
+        </a>
+
+        <!-- Support -->
+        <a href="/support.html" class="block rounded-2xl shadow bg-white p-5 hover:shadow-md transition">
+          <h2 class="text-lg font-semibold text-gray-900">Support</h2>
+          <p class="text-gray-600 mt-2">Raise a ticket or contact the SFP team.</p>
+          <div class="mt-4 text-blue-700 font-medium">Open →</div>
+        </a>
+
+        <!-- Admin (role‑gated) -->
+        <a href="/admin.html" class="block rounded-2xl shadow bg-white p-5 hover:shadow-md transition"
+           x-data x-show="window.SFPAuth?.hasRole('admin')" style="display:none">
+          <h2 class="text-lg font-semibold text-gray-900">Admin</h2>
+          <p class="text-gray-600 mt-2">Manage AILs, forms, and user access.</p>
+          <div class="mt-4 text-blue-700 font-medium">Open →</div>
+        </a>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Shared footer -->
+  <div id="footer-placeholder"></div>
+</body>
+</html>
