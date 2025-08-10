@@ -25,7 +25,7 @@ async function getIdToken(forceRefresh = false) {
   return await u.getIdToken(forceRefresh);
 }
 
-// --- Minimal global auth API (attach to window for easy use) ---
+// --- Minimal global auth API ---
 async function sfpLogin(email, password) {
   const cred = await signInWithEmailAndPassword(auth, email, password);
   await sfpAfterAuth(cred.user);
@@ -52,8 +52,6 @@ async function sfpReset(email) {
 // Called after login/signup to pull role once per session
 async function sfpAfterAuth(user) {
   try {
-    // Uses SFPApi (defined in /js/sfp-api.js). If that file hasn't loaded yet,
-    // we’ll do a lazy inline fetch as a fallback.
     if (window.SFPApi?.postJson) {
       const data = await window.SFPApi.postJson(window.SFP_ROLES_URL || "/roles", { email: user.email });
       localStorage.setItem("sfpRole", data.role || "Guest");
@@ -82,7 +80,6 @@ onAuthStateChanged(auth, (user) => {
   window.dispatchEvent(new CustomEvent("sfp-auth-changed", { detail: { user, role: sfpGetCurrentRole() } }));
 });
 
-// Expose small surface
 window.SFPAuth = {
   login: sfpLogin,
   signup: sfpSignup,
@@ -91,6 +88,6 @@ window.SFPAuth = {
   user: sfpGetCurrentUser,
   role: sfpGetCurrentRole,
   orgId: sfpGetOrgId,
-  getIdToken,        // <— important export for API calls
-  _auth: auth        // (optional) debugging
+  getIdToken,
+  _auth: auth
 };
