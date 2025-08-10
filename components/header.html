@@ -1,3 +1,13 @@
+<!-- Firebase auth + API wrapper -->
+<script type="module" src="/js/sfp-auth.js"></script>
+<script type="module" src="/js/sfp-api.js"></script>
+
+<!-- Set your GAS endpoints -->
+<script>
+  // Replace with your deployed Web App URL
+  window.SFP_GAS_BASE = "https://script.google.com/macros/s/PASTE_WEB_APP_URL_HERE/exec";
+  window.SFP_ROLES_URL = `${window.SFP_GAS_BASE}?action=getRole`;
+</script>
 <!-- components/header.html -->
 <header class="bg-blue-900 text-white sticky top-0 z-50 shadow"
         x-data="{ open:false, showSearch:false }">
