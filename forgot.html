@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Password reset – Safe Freight Program</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- Auth Core -->
+  <script type="module" src="/js/auth.js"></script>
+  <script src="/js/role-guard.js"></script>
+  <script src="/js/account-indicator.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+  <!-- Header -->
+  <div id="header-placeholder"></div>
+
+  <main class="flex-grow">
+    <section class="max-w-md mx-auto mt-12 bg-white rounded-2xl shadow p-6">
+      <h1 class="text-2xl font-semibold mb-1">Reset your password</h1>
+      <p class="text-sm text-gray-600 mb-6">We’ll send a reset link to your email.</p>
+
+      <div id="reset-alert" class="hidden mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"></div>
+      <div id="reset-success" class="hidden mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700"></div>
+
+      <form id="reset-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1" for="email">Email</label>
+          <input id="email" type="email" required autocomplete="email"
+                 class="w-full rounded-lg border-gray-300 focus:border-blue-600 focus:ring-blue-600"/>
+        </div>
+        <button type="submit"
+                class="w-full rounded-lg bg-blue-700 hover:bg-blue-800 text-white py-2 font-medium">
+          Send reset link
+        </button>
+      </form>
+
+      <div class="mt-4 text-sm">
+        <a href="/login.html" class="text-blue-700 hover:underline">Back to sign in</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-placeholder" class="mt-12"></div>
+
+  <script>
+    (async function(){
+      try {
+        const h = await fetch('/components/header.html').then(r=>r.text());
+        const hp = document.getElementById('header-placeholder'); if (hp) hp.innerHTML = h;
+        const f = await fetch('/components/footer.html').then(r=>r.text());
+        const fp = document.getElementById('footer-placeholder'); if (fp) fp.innerHTML = f;
+      } catch(_) {}
+    })();
+
+    document.getElementById('reset-form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const alertBox = document.getElementById('reset-alert');
+      const successBox = document.getElementById('reset-success');
+      alertBox.classList.add('hidden');
+      successBox.classList.add('hidden');
+
+      const email = document.getElementById('email').value.trim();
+      try {
+        await SFPAuth.reset(email);
+        successBox.textContent = "Reset email sent. Check your inbox.";
+        successBox.classList.remove('hidden');
+      } catch (err) {
+        alertBox.textContent = err?.message || 'Could not send reset email. Please try again.';
+        alertBox.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>
