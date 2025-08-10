@@ -1,7 +1,4 @@
 // /js/sfp-api.js
-// A tiny wrapper around fetch that adds the Firebase ID token.
-// Retries once on 401 with a forced token refresh.
-
 async function withAuthHeaders(headers = {}) {
   const t = await window.SFPAuth.getIdToken().catch(() => null);
   return {
@@ -20,7 +17,6 @@ async function request(url, { method = "GET", body = undefined, headers = {} } =
   });
 
   if (res.status === 401 && !_retry) {
-    // Force refresh token and retry once
     await window.SFPAuth.getIdToken(true).catch(() => null);
     return request(url, { method, body, headers }, true);
   }
@@ -38,10 +34,8 @@ async function request(url, { method = "GET", body = undefined, headers = {} } =
 async function getJson(url) { return request(url, { method: "GET" }); }
 async function postJson(url, body) { return request(url, { method: "POST", body }); }
 
-// Expose
 window.SFPApi = { request, getJson, postJson };
 
-// === Configure your GAS endpoints here (so pages can import nothing else) ===
-// Example:
-// window.SFP_GAS_BASE = "https://script.google.com/macros/s/AKfycbx.../exec";
+// Configure these in your page (or header)
+// window.SFP_GAS_BASE = "https://script.google.com/macros/s/XXXXX/exec";
 // window.SFP_ROLES_URL = `${window.SFP_GAS_BASE}?action=getRole`;
