@@ -1,25 +1,37 @@
 <!-- components/header.html -->
 <header class="bg-blue-900 text-white sticky top-0 z-50 shadow"
         x-data="{ open:false, showSearch:false }">
-  <!-- Top bar -->
-  <div class="max-w-7xl mx-auto px-4 flex justify-between items-center h-14">
+  <div class="relative max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
     <!-- Left: Logo -->
     <div class="flex items-center gap-3">
-      <a href="/index.html" class="transition-transform transform hover:scale-[1.05] flex items-center">
+      <a href="/index.html" class="transition-transform hover:scale-[1.05] flex items-center">
         <img src="/SFP-Logo.png" alt="Safe Freight Program" class="h-9 w-auto">
       </a>
-      <!-- Optional inline page title injection target (kept small, not a hero) -->
-      <div id="page-title" class="hidden text-sm sm:text-base font-semibold opacity-90"></div>
     </div>
 
-    <!-- Right: (optional) search, account, hamburger -->
+    <!-- Center: Page title (overlays, keeps left/right clickable) -->
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div id="page-title" class="hidden text-base sm:text-lg font-semibold opacity-95"></div>
+    </div>
+
+    <!-- Right: Search, Account, Hamburger -->
     <div class="flex items-center gap-1">
-      <!-- Account indicator (replaced by /js/account-indicator.js when logged in) -->
+      <!-- Search toggle -->
+      <button @click="showSearch=!showSearch"
+              class="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 focus:outline-none"
+              aria-label="Search">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+             viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-4.35-4.35M10 18a8 8 0 110-16 8 8 0 010 16z"/>
+        </svg>
+      </button>
+
+      <!-- Account indicator (swapped by /js/account-indicator.js if logged in) -->
       <a id="account-indicator"
          href="/login.html"
          class="inline-flex items-center justify-center h-9 w-9 rounded-full hover:bg-white/10 focus:outline-none"
          title="Sign in">
-        <!-- user-circle icon (outline) -->
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
              viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -30,7 +42,7 @@
       <!-- Hamburger -->
       <button @click="open=!open"
               class="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 focus:outline-none"
-              aria-label="Open menu" aria-expanded="false">
+              :aria-expanded="open.toString()" aria-label="Menu">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
              viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -40,8 +52,19 @@
     </div>
   </div>
 
-  <!-- Mobile menu -->
-  <nav x-show="open" x-collapse class="lg:hidden border-t border-white/10 bg-blue-900/95 backdrop-blur">
+  <!-- Search bar (slides under header) -->
+  <div x-show="showSearch" x-transition
+       class="bg-blue-900/95 border-t border-white/10">
+    <div class="max-w-7xl mx-auto px-4 py-2">
+      <input type="search" placeholder="Type a word"
+             class="w-full rounded-md px-3 py-2 text-sm text-gray-900"
+             onkeydown="if(event.key==='Enter'){window.location.href='/search.html?q='+encodeURIComponent(this.value)}">
+    </div>
+  </div>
+
+  <!-- Mobile menu (no x-collapse plugin needed) -->
+  <nav x-show="open" x-transition.opacity
+       class="lg:hidden bg-blue-900/95 backdrop-blur border-t border-white/10">
     <div class="max-w-7xl mx-auto px-4 py-3 space-y-1">
       <a href="/about.html" class="block px-3 py-2 rounded hover:bg-white/10">About</a>
       <a href="/lookup-driver.html" class="block px-3 py-2 rounded hover:bg-white/10">Driver Lookup</a>
