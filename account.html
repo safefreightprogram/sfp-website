@@ -107,7 +107,11 @@
 
       // Optional: fetch phone/displayName override from Profiles sheet
       try {
-        const res = await fetch('/api/getProfile', {
+const { profile } = await sfpApi('getProfile', { email: user.email });
+if (profile) {
+  if (profile.displayName && !user.displayName) document.getElementById('displayName').value = profile.displayName;
+  if (profile.phone) document.getElementById('phone').value = profile.phone;
+}
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: user.email })
@@ -145,7 +149,7 @@
         }).catch(()=>{});
 
         // Persist to Profiles sheet (source of truth for phone, etc.)
-        await fetch('/api/updateProfile', {
+await sfpApi('updateProfile', { email: user.email, displayName, phone });
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({ email: user.email, displayName, phone })
