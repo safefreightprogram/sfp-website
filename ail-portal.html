@@ -2,130 +2,147 @@
 <html lang="en-AU">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AIL Portal – Safe Freight Program</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Modular header/footer -->
-  <script defer src="/js/load-header-footer.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <style>
-    /* Subtle tile lift */
-    .sfp-card { transition: transform .15s ease, box-shadow .15s ease; }
-    .sfp-card:hover { transform: translateY(-2px); box-shadow: 0 10px 18px rgba(0,0,0,0.12); }
-    /* Ensure page can scroll normally */
-    html, body { height: auto; }
+    /* Optional: slightly larger hit area for cards on touch */
+    .tile-card { transition: box-shadow .15s ease, transform .15s ease; }
+    .tile-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,.12); transform: translateY(-1px); }
   </style>
-
-  <script>
-    // Page title for shared header
-    window.injectPageTitle = "AIL Portal";
-
-    // Simple guard (works with our current localStorage approach)
-    document.addEventListener("DOMContentLoaded", () => {
-      try {
-        const u = JSON.parse(localStorage.getItem("sfp_user") || "{}");
-        if (!u || !u.email) {
-          const dest = encodeURIComponent(location.pathname + location.search);
-          location.replace(`/login.html?next=${dest}`);
-        }
-      } catch {
-        const dest = encodeURIComponent(location.pathname + location.search);
-        location.replace(`/login.html?next=${dest}`);
-      }
-    });
-  </script>
 </head>
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col">
 
-<!-- Normal flow; NO overflow hidden -->
-<body class="bg-gray-100 min-h-screen flex flex-col">
-
-  <!-- Shared header -->
+  <!-- Injected shared header -->
   <div id="header-placeholder"></div>
 
-  <main class="flex-grow">
-    <!-- Hero -->
-    <section class="bg-blue-900 text-white">
-      <div class="max-w-7xl mx-auto px-4 py-8">
-        <h1 class="text-2xl font-semibold">Authorised Inspection Locations</h1>
-        <p class="text-blue-100 mt-1">Your hub for inspections, history, and resources.</p>
-      </div>
-    </section>
-
-    <!-- Tiles -->
-    <section class="max-w-7xl mx-auto px-4 py-8">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Submit Inspection -->
-        <a href="/inspect.html" class="sfp-card block rounded-2xl bg-white p-5 shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <div class="flex items-start justify-between">
-            <div>
-              <h2 class="text-lg font-semibold text-gray-900">Submit Vehicle Inspection</h2>
-              <p class="text-gray-600 mt-2">Start a new inspection; vehicle type selects the right checklist.</p>
-            </div>
-            <span aria-hidden="true" class="text-blue-700 font-medium">→</span>
+  <main class="flex-grow w-full mt-2 px-4 sm:px-6 lg:px-8">
+    <!-- No banner/hero; tiles start right away -->
+    <section class="max-w-7xl mx-auto py-4">
+      <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <!-- Submit Vehicle Inspection -->
+        <a href="/inspect.html" class="tile-card block rounded-2xl bg-white p-6 shadow">
+          <div class="flex items-center gap-3">
+            <!-- Clipboard Check -->
+            <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 5h6m-5 8l2 2 4-4M9 3h6a2 2 0 012 2v14a2 2 0 01-2 2H9a2 2 0 01-2-2V5a2 2 0 012-2z"/>
+            </svg>
+            <h3 class="text-xl font-semibold">Submit Vehicle Inspection</h3>
           </div>
+          <p class="mt-2 text-gray-600">Start a new inspection; vehicle type selects the right checklist.</p>
         </a>
 
         <!-- Inspection History -->
-        <a href="/inspections.html" class="sfp-card block rounded-2xl bg-white p-5 shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <div class="flex items-start justify-between">
-            <div>
-              <h2 class="text-lg font-semibold text-gray-900">Inspection History</h2>
-              <p class="text-gray-600 mt-2">Browse by date, SFPV‑ID, rego, or status.</p>
-            </div>
-            <span aria-hidden="true" class="text-blue-700 font-medium">→</span>
+        <a href="/inspection-history.html" class="tile-card block rounded-2xl bg-white p-6 shadow">
+          <div class="flex items-center gap-3">
+            <!-- Clock -->
+            <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <h3 class="text-xl font-semibold">Inspection History</h3>
           </div>
+          <p class="mt-2 text-gray-600">Browse by date, SFPV‑ID, rego, or status.</p>
         </a>
 
-        <!-- Update AIL Profile -->
-        <a href="/ail-profile.html" class="sfp-card block rounded-2xl bg-white p-5 shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <div class="flex items-start justify-between">
-            <div>
-              <h2 class="text-lg font-semibold text-gray-900">Update AIL Details</h2>
-              <p class="text-gray-600 mt-2">Keep contact and licensing info current.</p>
-            </div>
-            <span aria-hidden="true" class="text-blue-700 font-medium">→</span>
+        <!-- Update AIL Details -->
+        <a href="/update-ail.html" class="tile-card block rounded-2xl bg-white p-6 shadow">
+          <div class="flex items-center gap-3">
+            <!-- Identification / Pencil -->
+            <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-5M18.5 2.5l3 3m-8.5 8.5l6-6"/>
+            </svg>
+            <h3 class="text-xl font-semibold">Update AIL Details</h3>
           </div>
+          <p class="mt-2 text-gray-600">Keep contact and licensing info current.</p>
         </a>
 
-        <!-- Resources -->
-        <a href="/resources-ail.html" class="sfp-card block rounded-2xl bg-white p-5 shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <div class="flex items-start justify-between">
-            <div>
-              <h2 class="text-lg font-semibold text-gray-900">Guides & Templates</h2>
-              <p class="text-gray-600 mt-2">Checklists, SOPs, and how‑to videos.</p>
-            </div>
-            <span aria-hidden="true" class="text-blue-700 font-medium">→</span>
+        <!-- Guides & Templates -->
+        <a href="/guides.html" class="tile-card block rounded-2xl bg-white p-6 shadow">
+          <div class="flex items-center gap-3">
+            <!-- Book Open -->
+            <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 6l-2-1-6 2v10l6-2 2 1m0-10l2-1 6 2v10l-6-2-2 1M12 6v10"/>
+            </svg>
+            <h3 class="text-xl font-semibold">Guides & Templates</h3>
           </div>
+          <p class="mt-2 text-gray-600">Checklists, SOPs, and how‑to videos.</p>
         </a>
 
         <!-- Support -->
-        <a href="/support.html" class="sfp-card block rounded-2xl bg-white p-5 shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <div class="flex items-start justify-between">
-            <div>
-              <h2 class="text-lg font-semibold text-gray-900">Support</h2>
-              <p class="text-gray-600 mt-2">Raise a ticket or contact SFP.</p>
-            </div>
-            <span aria-hidden="true" class="text-blue-700 font-medium">→</span>
+        <a href="/support.html" class="tile-card block rounded-2xl bg-white p-6 shadow">
+          <div class="flex items-center gap-3">
+            <!-- Lifebuoy -->
+            <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 6a6 6 0 016 6m-6 6a6 6 0 01-6-6m0 0a6 6 0 016-6m0 0v4m0 8v4m-6-6h4m8 0h4"/>
+            </svg>
+            <h3 class="text-xl font-semibold">Support</h3>
           </div>
+          <p class="mt-2 text-gray-600">Raise a ticket or contact SFP.</p>
         </a>
 
-        <!-- Admin (optional role-gate visually later) -->
-        <a href="/admin.html" class="sfp-card block rounded-2xl bg-white p-5 shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <div class="flex items-start justify-between">
-            <div>
-              <h2 class="text-lg font-semibold text-gray-900">Admin</h2>
-              <p class="text-gray-600 mt-2">Manage AILs, forms, and access.</p>
-            </div>
-            <span aria-hidden="true" class="text-blue-700 font-medium">→</span>
+        <!-- Admin -->
+        <a href="/admin.html" class="tile-card block rounded-2xl bg-white p-6 shadow">
+          <div class="flex items-center gap-3">
+            <!-- Cog -->
+            <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10.325 4.317l.86-1.48a1 1 0 011.73 0l.86 1.48a1 1 0 00.75.5l1.7.25a1 1 0 01.83 1.15l-.32 1.69a1 1 0 00.29.9l1.22 1.22a1 1 0 010 1.41l-1.22 1.22a1 1 0 00-.29.9l.32 1.69a1 1 0 01-.83 1.15l-1.7.25a1 1 0 00-.75.5l-.86 1.48a1 1 0 01-1.73 0l-.86-1.48a1 1 0 00-.75-.5l-1.7-.25a1 1 0 01-.83-1.15l.32-1.69a1 1 0 00-.29-.9L6.1 12.34a1 1 0 010-1.41l1.22-1.22a1 1 0 00.29-.9l-.32-1.69A1 1 0 017.92 5.07l1.7-.25a1 1 0 00.705-.5zM12 9a3 3 0 100 6 3 3 0 000-6z"/>
+            </svg>
+            <h3 class="text-xl font-semibold">Admin</h3>
           </div>
+          <p class="mt-2 text-gray-600">Manage AILs, forms, and access.</p>
         </a>
       </div>
     </section>
   </main>
 
-  <!-- Shared footer -->
+  <!-- Injected shared footer -->
   <div id="footer-placeholder"></div>
+
+  <!-- Load header/footer then account indicator -->
+  <script>
+    // Load header
+    fetch('/components/header.html')
+      .then(res => res.text())
+      .then(headerText => {
+        const headerEl = document.getElementById("header-placeholder");
+        if (!headerEl) return;
+        headerEl.innerHTML = headerText;
+
+        // Inject small page title (not a hero)
+        window.requestAnimationFrame(() => {
+          const titleContainer = headerEl.querySelector('#page-title');
+          if (titleContainer) {
+            titleContainer.textContent = 'AIL Portal';
+            titleContainer.classList.remove('hidden');
+          }
+        });
+
+        // Load account-indicator AFTER header is in DOM
+        const s = document.createElement("script");
+        s.src = "/js/account-indicator.js";
+        document.body.appendChild(s);
+      })
+      .catch(err => console.error("Failed to load header:", err));
+
+    // Load footer
+    fetch('/components/footer.html')
+      .then(res => res.text())
+      .then(html => (document.getElementById('footer-placeholder').innerHTML = html))
+      .catch(err => console.error("Failed to load footer:", err));
+  </script>
 </body>
 </html>
