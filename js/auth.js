@@ -49,7 +49,7 @@ async function sfpReset(email) {
 async function sfpAfterAuth(user) {
   // Fetch role once per session
   try {
-    const res = await fetch("/api/getRole", {
+const data = await sfpApi("getRole", { email: user.email });
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: user.email })
