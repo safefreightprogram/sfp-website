@@ -8,10 +8,13 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <style>
-    /* Optional: slightly larger hit area for cards on touch */
     .tile-card { transition: box-shadow .15s ease, transform .15s ease; }
     .tile-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,.12); transform: translateY(-1px); }
   </style>
+  <script>
+    // Set title for centered header text
+    const injectPageTitle = 'AIL Portal';
+  </script>
 </head>
 <body class="bg-gray-100 font-sans min-h-screen flex flex-col">
 
@@ -19,7 +22,7 @@
   <div id="header-placeholder"></div>
 
   <main class="flex-grow w-full mt-2 px-4 sm:px-6 lg:px-8">
-    <!-- No banner/hero; tiles start right away -->
+    <!-- Tiles immediately under header -->
     <section class="max-w-7xl mx-auto py-4">
       <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         <!-- Submit Vehicle Inspection -->
@@ -53,7 +56,7 @@
         <!-- Update AIL Details -->
         <a href="/update-ail.html" class="tile-card block rounded-2xl bg-white p-6 shadow">
           <div class="flex items-center gap-3">
-            <!-- Identification / Pencil -->
+            <!-- ID/Pencil -->
             <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
                  viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -117,21 +120,19 @@
     // Load header
     fetch('/components/header.html')
       .then(res => res.text())
-      .then(headerText => {
-        const headerEl = document.getElementById("header-placeholder");
-        if (!headerEl) return;
-        headerEl.innerHTML = headerText;
+      .then(html => {
+        const mount = document.getElementById('header-placeholder');
+        mount.innerHTML = html;
 
-        // Inject small page title (not a hero)
-        window.requestAnimationFrame(() => {
-          const titleContainer = headerEl.querySelector('#page-title');
-          if (titleContainer) {
-            titleContainer.textContent = 'AIL Portal';
-            titleContainer.classList.remove('hidden');
+        requestAnimationFrame(() => {
+          const t = mount.querySelector('#page-title');
+          if (t && typeof injectPageTitle !== 'undefined') {
+            t.textContent = injectPageTitle;
+            t.classList.remove('hidden');
           }
         });
 
-        // Load account-indicator AFTER header is in DOM
+        // Account icon script
         const s = document.createElement("script");
         s.src = "/js/account-indicator.js";
         document.body.appendChild(s);
