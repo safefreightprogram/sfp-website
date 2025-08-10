@@ -1,17 +1,87 @@
 <!DOCTYPE html>
 <html lang="en-AU">
 <head>
-  <meta charset="UTF-8">
-  <title>Logging out...</title>
-  <script type="module">
-    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    const auth = getAuth();
-    await signOut(auth);
-    localStorage.removeItem("sfp_user");
-    location.replace("/login.html");
-  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign in – Safe Freight Program</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- Auth Core -->
+  <script type="module" src="/js/auth.js"></script>
+  <script src="/js/role-guard.js"></script>
+  <script src="/js/account-indicator.js"></script>
 </head>
-<body>
-  Logging out...
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+  <!-- Header -->
+  <div id="header-placeholder"></div>
+
+  <main class="flex-grow">
+    <section class="max-w-md mx-auto mt-12 bg-white rounded-2xl shadow p-6">
+      <h1 class="text-2xl font-semibold mb-1">Sign in</h1>
+      <p class="text-sm text-gray-600 mb-6">Access your SFP tools and dashboards.</p>
+
+      <div id="login-alert" class="hidden mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"></div>
+
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1" for="email">Email</label>
+          <input id="email" type="email" required autocomplete="email"
+                 class="w-full rounded-lg border-gray-300 focus:border-blue-600 focus:ring-blue-600"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1" for="password">Password</label>
+          <input id="password" type="password" required autocomplete="current-password"
+                 class="w-full rounded-lg border-gray-300 focus:border-blue-600 focus:ring-blue-600"/>
+        </div>
+
+        <button type="submit"
+                class="w-full rounded-lg bg-blue-700 hover:bg-blue-800 text-white py-2 font-medium">
+          Sign in
+        </button>
+      </form>
+
+      <div class="mt-4 flex items-center justify-between text-sm">
+        <a href="/forgot.html" class="text-blue-700 hover:underline">Forgot password?</a>
+        <a href="/signup.html" class="text-blue-700 hover:underline">Create an account</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-placeholder" class="mt-12"></div>
+
+  <script>
+    // Minimal header/footer loader (safe no-op if you already load globally)
+    (async function(){
+      try {
+        const h = await fetch('/components/header.html').then(r=>r.text());
+        const hp = document.getElementById('header-placeholder'); if (hp) hp.innerHTML = h;
+        const f = await fetch('/components/footer.html').then(r=>r.text());
+        const fp = document.getElementById('footer-placeholder'); if (fp) fp.innerHTML = f;
+      } catch(_) {}
+    })();
+
+    // Login handler
+    document.getElementById('login-form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const alertBox = document.getElementById('login-alert');
+      alertBox.classList.add('hidden');
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        await SFPAuth.login(email, password);
+        // Redirect logic: if a redirect param exists, use it; else home
+        const params = new URLSearchParams(location.search);
+        const next = params.get('next') || '/';
+        location.href = next;
+      } catch (err) {
+        alertBox.textContent = err?.message || 'Unable to sign in. Please check your details and try again.';
+        alertBox.classList.remove('hidden');
+      }
+    });
+  </script>
 </body>
 </html>
