@@ -1425,6 +1425,22 @@ function testAILData() {
 }
   
 </script>
+<!-- Mount points for shared fragments -->
+<div id="header-placeholder"></div>
+
+<!-- … your page content … -->
+
+<div id="footer-placeholder"></div>
+
+<!-- Global scripts (keep these in the page, NOT inside header.html) -->
+<script type="module" src="/js/sfp-auth.js"></script>
+<script type="module" src="/js/sfp-api.js"></script>
+<script src="/js/sfp-gas-fetch-patch.js"></script>
+<script src="/js/sfp-config.js"></script>          <!-- sets SFP_GAS_BASE + SFP_ROLES_URL -->
+<script src="/js/load-header-footer.js" defer></script>
+<script src="/js/account-indicator.js" defer></script>  <!-- your existing file -->
+<script src="/js/role-guards.js" defer></script>
+<script src="/js/menu-enhance.js" defer></script>
 
 </body>
 </html>
