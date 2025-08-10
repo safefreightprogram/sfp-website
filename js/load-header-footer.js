@@ -1,47 +1,86 @@
-// js/load-header-footer.js
+// /js/load-header-footer.js  — robust header/footer loader with Alpine init
+(function () {
+  async function loadFragment(targetId, url) {
+    const mount = document.getElementById(targetId);
+    if (!mount) return null;
+    const res = await fetch(url, { cache: "no-cache" });
+    const html = await res.text();
+    mount.innerHTML = html;
+    return mount;
+  }
 
-// Load header
-fetch('/components/header.html')
-  .then(res => res.text())
-  .then(headerText => {
-    const headerEl = document.getElementById('header-placeholder');
-    if (!headerEl) return;
-
-    headerEl.innerHTML = headerText;
-
-    // Wait until DOM is updated before injecting title & loading account script
-    requestAnimationFrame(() => {
-      // Optional: page title injection
-      if (typeof window.injectPageTitle !== 'undefined') {
-        const titleContainer = headerEl.querySelector('#page-title');
-        if (titleContainer) {
-          titleContainer.innerHTML = `<h1>${window.injectPageTitle}</h1>`;
-          titleContainer.classList.remove('hidden');
+  function ensureAlpineAndInit(rootEl) {
+    function initNow() {
+      try {
+        if (window.Alpine && typeof window.Alpine.initTree === "function") {
+          window.Alpine.initTree(rootEl);
         }
-      }
+      } catch (_) {}
+    }
 
-      // Load account indicator AFTER header exists (scripts in fetched HTML don't auto-execute)
-      if (!window.__sfpAccountLoaded) {
-        const s = document.createElement('script');
-        s.src = '/js/account-indicator.js'; // non-module version
-        s.defer = true;
-        document.head.appendChild(s);
-        window.__sfpAccountLoaded = true;
-      }
-    });
-  })
-  .catch(err => {
-    console.error('Failed to load header:', err);
-  });
+    if (window.Alpine) {
+      initNow();
+      return;
+    }
 
-// Load footer
-fetch('/components/footer.html')
-  .then(res => res.text())
-  .then(footerText => {
-    const footerEl = document.getElementById('footer-placeholder');
-    if (!footerEl) return;
-    footerEl.innerHTML = footerText;
-  })
-  .catch(err => {
-    console.error('Failed to load footer:', err);
-  });
+    // Load Alpine once
+    if (!window.__sfpAlpineLoading) {
+      window.__sfpAlpineLoading = true;
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js";
+      s.defer = true;
+      s.onload = initNow;
+      document.head.appendChild(s);
+    } else {
+      // If another page load is already fetching Alpine, poll briefly
+      const iv = setInterval(() => {
+        if (window.Alpine) {
+          clearInterval(iv);
+          initNow();
+        }
+      }, 50);
+      setTimeout(() => clearInterval(iv), 3000);
+    }
+  }
+
+  function maybeInjectTitle(rootEl) {
+    if (typeof window.injectPageTitle !== "undefined") {
+      const titleContainer = rootEl.querySelector("#page-title");
+      if (titleContainer) {
+        titleContainer.innerHTML = `<h1>${window.injectPageTitle}</h1>`;
+        titleContainer.classList.remove("hidden");
+      }
+    }
+  }
+
+  function ensureAccountIndicator() {
+    // If header.html already included it, this is a no-op due to flag.
+    if (!window.__sfpAccountLoaded) {
+      const s = document.createElement("script");
+      s.src = "/js/account-indicator.js";
+      s.defer = true;
+      s.onload = () => { window.__sfpAccountLoaded = true; };
+      document.head.appendChild(s);
+    }
+  }
+
+  // Kick off
+  (async function init() {
+    try {
+      const headerEl = await loadFragment("header-placeholder", "/components/header.html");
+      if (headerEl) {
+        ensureAlpineAndInit(headerEl);
+        maybeInjectTitle(headerEl);
+        ensureAccountIndicator();
+      }
+    } catch (err) {
+      console.error("Failed to load header:", err);
+    }
+
+    try {
+      await loadFragment("footer-placeholder", "/components/footer.html");
+    } catch (err) {
+      console.error("Failed to load footer:", err);
+    }
+  })();
+})();
