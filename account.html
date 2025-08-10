@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Account settings – Safe Freight Program</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- Auth Core -->
+  <script type="module" src="/js/auth.js"></script>
+  <script src="/js/role-guard.js"></script>
+  <script src="/js/account-indicator.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+  <!-- Header -->
+  <div id="header-placeholder"></div>
+
+  <main class="flex-grow">
+    <section class="max-w-3xl mx-auto mt-10 space-y-6">
+      <div class="bg-white rounded-2xl shadow p-6">
+        <h1 class="text-2xl font-semibold">Account settings</h1>
+        <p class="text-sm text-gray-600">Manage your profile and access.</p>
+      </div>
+
+      <div id="acct-alert" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"></div>
+      <div id="acct-success" class="hidden rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700"></div>
+
+      <div class="bg-white rounded-2xl shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Profile</h2>
+        <form id="profile-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="md:col-span-1">
+            <label class="block text-sm font-medium mb-1" for="displayName">Full name</label>
+            <input id="displayName" type="text"
+                   class="w-full rounded-lg border-gray-300 focus:border-blue-600 focus:ring-blue-600"/>
+          </div>
+          <div class="md:col-span-1">
+            <label class="block text-sm font-medium mb-1" for="phone">Phone (optional)</label>
+            <input id="phone" type="tel"
+                   class="w-full rounded-lg border-gray-300 focus:border-blue-600 focus:ring-blue-600"/>
+          </div>
+          <div class="md:col-span-1">
+            <label class="block text-sm font-medium mb-1" for="email">Email</label>
+            <input id="email" type="email" disabled
+                   class="w-full rounded-lg border-gray-200 bg-gray-50 text-gray-600"/>
+          </div>
+          <div class="md:col-span-1">
+            <label class="block text-sm font-medium mb-1">Role</label>
+            <div id="roleBadge" class="inline-flex items-center rounded-full border px-3 py-1 text-sm"></div>
+          </div>
+          <div class="md:col-span-1">
+            <label class="block text-sm font-medium mb-1">Organisation</label>
+            <div id="orgField" class="text-sm text-gray-800"></div>
+          </div>
+          <div class="md:col-span-2 flex gap-3 pt-2">
+            <button type="submit"
+                    class="rounded-lg bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 font-medium">
+              Save changes
+            </button>
+            <a href="/forgot.html" class="text-sm text-blue-700 hover:underline self-center">Reset password</a>
+          </div>
+        </form>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow p-6">
+        <h2 class="text-lg font-semibold mb-3">Access & visibility</h2>
+        <p class="text-sm text-gray-600">Your access is based on your assigned role. If you need different access (e.g., AIL Manager), contact SFP Admin.</p>
+        <div class="mt-3">
+          <a href="/ail-portal.html" class="text-blue-700 hover:underline" data-requires-role="ail inspector,ail manager,admin">Go to AIL Portal</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-placeholder" class="mt-12"></div>
+
+  <script>
+    (async function(){
+      try {
+        const h = await fetch('/components/header.html').then(r=>r.text());
+        const hp = document.getElementById('header-placeholder'); if (hp) hp.innerHTML = h;
+        const f = await fetch('/components/footer.html').then(r=>r.text());
+        const fp = document.getElementById('footer-placeholder'); if (fp) fp.innerHTML = f;
+      } catch(_) {}
+    })();
+
+    // Guard: redirect to login if not signed in
+    window.addEventListener('sfp-auth-changed', (e)=>{
+      if (!e.detail.user) {
+        const next = encodeURIComponent(location.pathname);
+        location.href = `/login.html?next=${next}`;
+      }
+    });
+
+    async function loadProfile() {
+      const user = SFPAuth.user?.();
+      if (!user) return;
+      const role = SFPAuth.role?.() || 'Guest';
+      const orgId = SFPAuth.orgId?.() || '';
+
+      document.getElementById('email').value = user.email || '';
+      document.getElementById('displayName').value = user.displayName || '';
+      document.getElementById('roleBadge').textContent = role;
+      document.getElementById('orgField').textContent = orgId ? orgId : '—';
+
+      // Optional: fetch phone/displayName override from Profiles sheet
+      try {
+        const res = await fetch('/api/getProfile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: user.email })
+        });
+        if (res.ok) {
+          const data = await res.json(); // { phone, displayName }
+          if (data.displayName && !user.displayName) document.getElementById('displayName').value = data.displayName;
+          if (data.phone) document.getElementById('phone').value = data.phone;
+        }
+      } catch(_) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProfile);
+    window.addEventListener('sfp-auth-changed', loadProfile);
+
+    document.getElementById('profile-form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const alertBox = document.getElementById('acct-alert');
+      const successBox = document.getElementById('acct-success');
+      alertBox.classList.add('hidden');
+      successBox.classList.add('hidden');
+
+      try {
+        const user = SFPAuth.user?.();
+        if (!user) throw new Error('Not signed in');
+
+        const displayName = document.getElementById('displayName').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+
+        // Update Firebase profile name (best effort)
+        await fetch('/api/updateDisplayName', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ displayName })
+        }).catch(()=>{});
+
+        // Persist to Profiles sheet (source of truth for phone, etc.)
+        await fetch('/api/updateProfile', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ email: user.email, displayName, phone })
+        });
+
+        successBox.textContent = 'Profile updated.';
+        successBox.classList.remove('hidden');
+      } catch (err) {
+        alertBox.textContent = err?.message || 'Could not save your changes.';
+        alertBox.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>
