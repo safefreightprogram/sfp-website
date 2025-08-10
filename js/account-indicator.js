@@ -1,14 +1,9 @@
-<script>
+// /js/account-indicator.js
 (function () {
   function getAuthState() {
     const user = (window.SFPAuth && typeof SFPAuth.user === "function") ? SFPAuth.user() : null;
     const role = (window.SFPAuth && typeof SFPAuth.role === "function") ? (SFPAuth.role() || "Guest") : "Guest";
-    return {
-      signedIn: !!user,
-      email: user?.email || "",
-      displayName: user?.displayName || "",
-      role
-    };
+    return { signedIn: !!user, email: user?.email || "", displayName: user?.displayName || "", role };
   }
 
   function tplSignedOut() {
@@ -24,7 +19,6 @@
     const name = state.displayName || state.email || "Account";
     const role = (state.role || "Guest");
     const isAdmin = role.toLowerCase() === "admin";
-
     return `
       <button id="acctBtn" class="inline-flex items-center gap-2 p-1" aria-haspopup="menu" aria-expanded="false">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6"><path fill="currentColor" d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.42 0-8 1.79-8 4v1h16v-1c0-2.21-3.58-4-8-4Z"/></svg>
@@ -45,11 +39,9 @@
   function render() {
     const mount = document.getElementById("account-indicator");
     if (!mount) return;
-
     const state = getAuthState();
     mount.innerHTML = state.signedIn ? tplSignedIn(state) : tplSignedOut();
 
-    // Wire up dropdown toggling for signed-in state
     const btn = mount.querySelector("#acctBtn");
     const menu = mount.querySelector("#acctMenu");
     if (btn && menu) {
@@ -67,7 +59,6 @@
       });
     }
 
-    // Wire up sign out
     const signOut = mount.querySelector("#signOutBtn");
     if (signOut) {
       signOut.addEventListener("click", async () => {
@@ -78,8 +69,6 @@
     }
   }
 
-  // Initial + reactive renders
   document.addEventListener("DOMContentLoaded", render);
   window.addEventListener("sfp-auth-changed", render);
 })();
-</script>
