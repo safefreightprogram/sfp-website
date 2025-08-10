@@ -1,34 +1,47 @@
 // /js/sfp-api.js
-window.SFP_API_BASE = "https://script.google.com/macros/s/AKfycbwEfKashz3fp3wzRG5D6Go2G2PxXCyrg_0gFYMERRAzSzYuonIQNhmzZI5sy2lVFENNXg/exec";
+// A tiny wrapper around fetch that adds the Firebase ID token.
+// Retries once on 401 with a forced token refresh.
 
-// Helper to get current Firebase ID token (if signed in)
-async function sfpGetIdToken() {
-  try {
-    if (!window.SFPAuth || typeof SFPAuth.user !== "function") return null;
-    const user = SFPAuth.user();
-    if (!user || !user.getIdToken) return null;
-    return await user.getIdToken(/* forceRefresh */ false);
-  } catch (_) {
-    return null;
-  }
+async function withAuthHeaders(headers = {}) {
+  const t = await window.SFPAuth.getIdToken().catch(() => null);
+  return {
+    "Content-Type": "application/json",
+    ...(t ? { "Authorization": `Bearer ${t}` } : {}),
+    ...headers
+  };
 }
 
-async function sfpApi(route, payload, { requireAuth = false } = {}) {
-  const headers = { "Content-Type": "application/json" };
-  const idToken = await sfpGetIdToken();
-  if (idToken) headers["X-Firebase-ID-Token"] = idToken;
-  else if (requireAuth) {
-    throw new Error("Not signed in");
-  }
-
-  const res = await fetch(window.SFP_API_BASE, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(Object.assign({ route }, payload || {}))
+async function request(url, { method = "GET", body = undefined, headers = {} } = {}, _retry = false) {
+  const res = await fetch(url, {
+    method,
+    headers: await withAuthHeaders(headers),
+    body: body ? JSON.stringify(body) : undefined,
+    credentials: "omit"
   });
-  const data = await res.json().catch(() => ({}));
-  if (!data.ok) throw new Error(data.error || "API error");
-  return data;
+
+  if (res.status === 401 && !_retry) {
+    // Force refresh token and retry once
+    await window.SFPAuth.getIdToken(true).catch(() => null);
+    return request(url, { method, body, headers }, true);
+  }
+
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`API ${res.status}: ${txt}`);
+  }
+
+  const ct = res.headers.get("content-type") || "";
+  return ct.includes("application/json") ? res.json() : res.text();
 }
 
-window.sfpApi = sfpApi;
+// Convenience helpers
+async function getJson(url) { return request(url, { method: "GET" }); }
+async function postJson(url, body) { return request(url, { method: "POST", body }); }
+
+// Expose
+window.SFPApi = { request, getJson, postJson };
+
+// === Configure your GAS endpoints here (so pages can import nothing else) ===
+// Example:
+// window.SFP_GAS_BASE = "https://script.google.com/macros/s/AKfycbx.../exec";
+// window.SFP_ROLES_URL = `${window.SFP_GAS_BASE}?action=getRole`;
