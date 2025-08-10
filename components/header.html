@@ -1,6 +1,8 @@
 <!-- Firebase auth + API wrapper -->
 <script type="module" src="/js/sfp-auth.js"></script>
 <script type="module" src="/js/sfp-api.js"></script>
+<!-- (Optional but recommended so you don't have to change existing fetch calls) -->
+<script src="/js/sfp-gas-fetch-patch.js"></script>
 
 <!-- Set your GAS endpoints -->
 <script>
@@ -8,6 +10,7 @@
   window.SFP_GAS_BASE = "https://script.google.com/macros/s/AKfycbx12OZCmxXdHJEzqyANM__C74534vzAHg8yEPsJ_nlt1COExwrbEzat_c4-C2gmUVQnkw/exec";
   window.SFP_ROLES_URL = `${window.SFP_GAS_BASE}?action=getRole`;
 </script>
+
 <!-- components/header.html -->
 <header class="bg-blue-900 text-white sticky top-0 z-50 shadow"
         x-data="{ open:false, showSearch:false }">
@@ -77,25 +80,22 @@
       <a href="/trainer-login.html" class="block px-3 py-2 rounded hover:bg-white/10">Trainer Login</a>
       <a href="/contact.html" class="block px-3 py-2 rounded hover:bg-white/10">Contact</a>
       <a href="/subscribe.html" class="block px-3 py-2 rounded hover:bg-white/10">Subscribe</a>
+      <!-- This will unhide when role includes 'admin' -->
       <a href="/admin.html" data-requires-role="admin" class="hidden block px-3 py-2 rounded hover:bg-white/10">Admin</a>
     </div>
   </nav>
 </header>
 
 <!-- Scripts -->
-<script src="/js/sfp-api.js"></script>
 <script src="/js/account-indicator.js"></script>
 <script>
-/* Inject Admin link into account dropdown if role=admin */
-window.addEventListener("sfp-auth-changed", function(e) {
-  const role = (e.detail.role || "").toLowerCase();
-  const acctMenu = document.querySelector("#account-indicator #acctMenu");
-  if (acctMenu && role === "admin" && !acctMenu.querySelector(".admin-link")) {
-    const adminLink = document.createElement("a");
-    adminLink.href = "/admin.html";
-    adminLink.textContent = "Admin";
-    adminLink.className = "admin-link block px-4 py-2 hover:bg-gray-50";
-    acctMenu.insertBefore(adminLink, acctMenu.lastElementChild); // before Sign out
-  }
-});
+/* Show/hide any element with data-requires-role="admin" */
+function applyRoleGuards(roleText) {
+  const isAdmin = (roleText || '').toLowerCase().includes('admin');
+  document.querySelectorAll('[data-requires-role="admin"]').forEach(el => {
+    el.classList.toggle('hidden', !isAdmin);
+  });
+}
+window.addEventListener("sfp-auth-changed", (e) => applyRoleGuards(e.detail.role));
+applyRoleGuards(localStorage.getItem('sfpRole'));
 </script>
