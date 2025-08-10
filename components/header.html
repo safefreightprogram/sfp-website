@@ -2,21 +2,20 @@
 <header class="bg-blue-900 text-white sticky top-0 z-50 shadow"
         x-data="{ open:false, showSearch:false }">
   <div class="relative max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+    
     <!-- Left: Logo -->
     <div class="flex items-center gap-3">
       <a href="/index.html" class="transition-transform hover:scale-[1.05] flex items-center">
         <img src="/SFP-Logo.png" alt="Safe Freight Program" class="h-9 w-auto">
       </a>
     </div>
-<script src="/js/sfp-api.js"></script>
-<a href="/admin.html" data-requires-role="admin" class="hidden md:inline-block hover:underline">Admin</a>
 
-    <!-- Center: Page title (overlay, keeps sides clickable) -->
+    <!-- Center: Page title -->
     <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
       <div id="page-title" class="hidden text-base sm:text-lg font-semibold opacity-95"></div>
     </div>
 
-    <!-- Right: Search, Account, Hamburger -->
+    <!-- Right: Controls -->
     <div class="flex items-center gap-1">
       <!-- Search toggle -->
       <button @click="showSearch=!showSearch"
@@ -29,26 +28,8 @@
         </svg>
       </button>
 
-<!-- Inside the right-side controls group -->
-<div id="account-indicator" class="relative">
-  <!-- Filled by /js/account-indicator.js -->
-</div>
-
-<!-- Include these on pages that use the header -->
-<script src="/js/account-indicator.js"></script>
-
-
-      <!-- Account indicator (swapped by /js/account-indicator.js if logged in) -->
-      <a id="account-indicator"
-         href="/login.html"
-         class="inline-flex items-center justify-center h-9 w-9 rounded-full hover:bg-white/10 focus:outline-none"
-         title="Sign in">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-             viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M5.121 17.804A9 9 0 1118.88 6.196M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-      </a>
+      <!-- Account indicator placeholder (filled by /js/account-indicator.js) -->
+      <div id="account-indicator" class="relative"></div>
 
       <!-- Hamburger -->
       <button @click="open=!open"
@@ -86,6 +67,25 @@
       <a href="/trainer-login.html" class="block px-3 py-2 rounded hover:bg-white/10">Trainer Login</a>
       <a href="/contact.html" class="block px-3 py-2 rounded hover:bg-white/10">Contact</a>
       <a href="/subscribe.html" class="block px-3 py-2 rounded hover:bg-white/10">Subscribe</a>
+      <a href="/admin.html" data-requires-role="admin" class="hidden block px-3 py-2 rounded hover:bg-white/10">Admin</a>
     </div>
   </nav>
 </header>
+
+<!-- Scripts -->
+<script src="/js/sfp-api.js"></script>
+<script src="/js/account-indicator.js"></script>
+<script>
+/* Inject Admin link into account dropdown if role=admin */
+window.addEventListener("sfp-auth-changed", function(e) {
+  const role = (e.detail.role || "").toLowerCase();
+  const acctMenu = document.querySelector("#account-indicator #acctMenu");
+  if (acctMenu && role === "admin" && !acctMenu.querySelector(".admin-link")) {
+    const adminLink = document.createElement("a");
+    adminLink.href = "/admin.html";
+    adminLink.textContent = "Admin";
+    adminLink.className = "admin-link block px-4 py-2 hover:bg-gray-50";
+    acctMenu.insertBefore(adminLink, acctMenu.lastElementChild); // before Sign out
+  }
+});
+</script>
