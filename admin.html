@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SFP Admin – Approvals</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- Core scripts -->
+  <script type="module" src="/js/auth.js"></script>
+  <script src="/js/sfp-api.js"></script>
+  <script src="/js/role-guard.js"></script>
+  <script src="/js/page-guard.js"></script>
+  <script src="/js/account-indicator.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+  <div id="header-placeholder"></div>
+
+  <main class="flex-grow max-w-5xl mx-auto p-4">
+    <div class="bg-white rounded-2xl shadow p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h1 class="text-2xl font-semibold">Applicant approvals</h1>
+          <p class="text-sm text-gray-600">Approve roles and organisations for new users.</p>
+        </div>
+        <a href="/account.html" class="text-blue-700 hover:underline">Account</a>
+      </div>
+
+      <div id="admin-alert" class="hidden mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"></div>
+      <div id="admin-success" class="hidden mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700"></div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-3 py-2 text-left">Timestamp</th>
+              <th class="px-3 py-2 text-left">Name</th>
+              <th class="px-3 py-2 text-left">Email</th>
+              <th class="px-3 py-2 text-left">Status</th>
+              <th class="px-3 py-2 text-left">Role</th>
+              <th class="px-3 py-2 text-left">Org ID</th>
+              <th class="px-3 py-2"></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder" class="mt-12"></div>
+
+  <script>
+    // Load header/footer
+    (async function(){
+      try {
+        const h = await fetch('/components/header.html').then(r=>r.text());
+        const hp = document.getElementById('header-placeholder'); if (hp) hp.innerHTML = h;
+        const f = await fetch('/components/footer.html').then(r=>r.text());
+        const fp = document.getElementById('footer-placeholder'); if (fp) fp.innerHTML = f;
+      } catch(_) {}
+    })();
+
+    // Require admin
+    window.addEventListener('sfp-auth-changed', ()=> {
+      SFPGUARD.requireAuth(['admin']);
+    });
+    document.addEventListener('DOMContentLoaded', ()=> {
+      SFPGUARD.requireAuth(['admin']);
+      load();
+    });
+
+    async function load() {
+      const alertBox = document.getElementById('admin-alert');
+      alertBox.classList.add('hidden');
+      try {
+        const { applicants } = await sfpApi('listApplicants', {});
+        render(applicants || []);
+      } catch (err) {
+        alertBox.textContent = err?.message || 'Failed to load applicants.';
+        alertBox.classList.remove('hidden');
+      }
+    }
+
+    function render(list) {
+      const tbody = document.getElementById('rows');
+      tbody.innerHTML = '';
+      list.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b';
+        tr.innerHTML = `
+          <td class="px-3 py-2">${a.timestamp || ''}</td>
+          <td class="px-3 py-2">${esc(a.displayName)}</td>
+          <td class="px-3 py-2">${esc(a.email)}</td>
+          <td class="px-3 py-2">${a.status}</td>
+          <td class="px-3 py-2">
+            <select class="role w-36 rounded border-gray-300">
+              <option>Driver</option>
+              <option>AIL Inspector</option>
+              <option>AIL Manager</option>
+              <option>Carrier Manager</option>
+              <option>Receiver</option>
+              <option>Admin</option>
+            </select>
+          </td>
+          <td class="px-3 py-2"><input class="org w-40 rounded border-gray-300" placeholder="e.g. AIL-00222" /></td>
+          <td class="px-3 py-2">
+            <div class="flex gap-2">
+              <button class="approve rounded bg-blue-700 text-white px-3 py-1 hover:bg-blue-800">Approve</button>
+              <button class="reject rounded bg-gray-200 px-3 py-1 hover:bg-gray-300">Reject</button>
+            </div>
+          </td>
+        `;
+        // Set defaults
+        tr.querySelector('.role').value = suggestDefaultRole(a);
+        tr.querySelector('.org').value = '';
+
+        tr.querySelector('.approve').addEventListener('click', ()=> approve(a, tr));
+        tr.querySelector('.reject').addEventListener('click', ()=> reject(a));
+        tbody.appendChild(tr);
+      });
+    }
+
+    function esc(s){ return (s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+    function suggestDefaultRole(a){
+      // crude heuristic: AIL emails get AIL Inspector by default
+      return /@.*(inspect|workshop|service|mechan|ail)/i.test(a.email) ? 'AIL Inspector' : 'Driver';
+    }
+
+    async function approve(a, row) {
+      const role = row.querySelector('.role').value;
+      const orgId = row.querySelector('.org').value.trim();
+      const successBox = document.getElementById('admin-success');
+      const alertBox = document.getElementById('admin-alert');
+      successBox.classList.add('hidden'); alertBox.classList.add('hidden');
+
+      try {
+        await sfpApi('approveApplicant', { email: a.email, role, orgId, displayName: a.displayName });
+        successBox.textContent = `Approved ${a.email} as ${role}.`;
+        successBox.classList.remove('hidden');
+        load();
+      } catch (err) {
+        alertBox.textContent = err?.message || 'Approval failed.';
+        alertBox.classList.remove('hidden');
+      }
+    }
+
+    async function reject(a) {
+      const successBox = document.getElementById('admin-success');
+      const alertBox = document.getElementById('admin-alert');
+      successBox.classList.add('hidden'); alertBox.classList.add('hidden');
+
+      try {
+        await sfpApi('rejectApplicant', { email: a.email });
+        successBox.textContent = `Rejected ${a.email}.`;
+        successBox.classList.remove('hidden');
+        load();
+      } catch (err) {
+        alertBox.textContent = err?.message || 'Rejection failed.';
+        alertBox.classList.remove('hidden');
+      }
+    }
+  </script>
+</body>
+</html>
