@@ -1,18 +1,20 @@
-<script>
-(function(){
-  function applyGuards() {
-    const role = (localStorage.getItem("sfpRole") || "Guest").toLowerCase();
-    document.querySelectorAll("[data-requires-role]").forEach(el => {
-      const allowed = el.getAttribute("data-requires-role")
-        .split(",")
-        .map(r => r.trim().toLowerCase());
-      const ok = allowed.includes(role);
-      el.classList.toggle("hidden", !ok);
-      el.setAttribute("aria-hidden", String(!ok));
+// /js/role-guards.js — toggles [data-requires-role="admin"] based on role text
+(function () {
+  function applyRoleGuards(roleText) {
+    const isAdmin = (roleText || '').toLowerCase().includes('admin');
+    document.querySelectorAll('[data-requires-role="admin"]').forEach(el => {
+      el.classList.toggle('hidden', !isAdmin);
     });
   }
 
-  window.addEventListener("sfp-auth-changed", applyGuards);
-  document.addEventListener("DOMContentLoaded", applyGuards);
+  // From cached role (if present)
+  applyRoleGuards(localStorage.getItem('sfpRole'));
+
+  // Live updates from your auth layer
+  window.addEventListener("sfp-auth-changed", (e) => {
+    const nextRole = (e && e.detail && e.detail.role) || '';
+    // Cache it for page reloads
+    try { localStorage.setItem('sfpRole', nextRole); } catch (_) {}
+    applyRoleGuards(nextRole);
+  });
 })();
-</script>
