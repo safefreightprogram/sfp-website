@@ -9,10 +9,10 @@ import {
 
 // TODO: replace with your Firebase project config
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBURlJUicOTobRLghN2RyEZfXEZvU_uiYU",
+  authDomain: "www.safefreightportal.firebaseapp.com",
+  projectId: "safefreightportal",
+  appId: "1:289281705793:web:94520fbf0138a6802103c0"
 };
 
 const app = initializeApp(firebaseConfig);
