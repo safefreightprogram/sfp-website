@@ -84,7 +84,7 @@
 
         // OPTIONAL: let backend know there's a new applicant awaiting role review
         // (non-blocking; ignore errors)
-        fetch('/api/registerApplicant', {
+sfpApi('registerApplicant', { email, displayName: name }).catch(()=>{});
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({ email, displayName: name })
