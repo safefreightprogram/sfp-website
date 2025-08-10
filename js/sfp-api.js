@@ -1,5 +1,5 @@
-<script>
-window.SFP_API_BASE = "PASTE_YOUR_GAS_WEB_APP_URL_HERE"; // .../exec
+// /js/sfp-api.js
+window.SFP_API_BASE = "https://script.google.com/macros/s/AKfycbwEfKashz3fp3wzRG5D6Go2G2PxXCyrg_0gFYMERRAzSzYuonIQNhmzZI5sy2lVFENNXg/exec";
 
 async function sfpApi(route, payload) {
   const res = await fetch(window.SFP_API_BASE, {
@@ -11,5 +11,5 @@ async function sfpApi(route, payload) {
   if (!data.ok) throw new Error(data.error || "API error");
   return data;
 }
+
 window.sfpApi = sfpApi;
-</script>
