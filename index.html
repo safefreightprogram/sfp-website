@@ -14,19 +14,14 @@
   <meta property="og:description" content="Professional. Compliant. Safe. Get your Safe Freight Passport today." />
 
   <style>
-    @keyframes fadeInUp {
-      0% { opacity: 0; transform: translateY(20px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fadeInUp {
-      animation: fadeInUp 0.6s ease-out both;
-    }
+    @keyframes fadeInUp { 0% { opacity: 0; transform: translateY(20px);} 100% { opacity: 1; transform: translateY(0);} }
+    .animate-fadeInUp { animation: fadeInUp 0.6s ease-out both; }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
 
   <!-- Injected Header -->
-  <div id="header"></div>
+  <div id="header-placeholder"></div>
 
   <!-- SVG Symbols -->
   <svg style="display: none;">
@@ -68,25 +63,19 @@
 
     <section class="animate-fadeInUp">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Repeat this block for each tile -->
         <a href="lookup-driver.html" class="block bg-white rounded-lg border p-6 hover:shadow-lg hover:border-blue-300 transition-all">
           <div class="flex flex-col items-center space-y-4 text-center">
             <div class="bg-blue-100 p-4 rounded-full"><svg class="w-8 h-8 text-blue-700"><use href="#icon-driver"/></svg></div>
             <div><h3 class="text-lg font-semibold">Driver Lookup</h3><p class="text-sm text-gray-600">Check driver credentials and Safe Freight Passport status</p></div>
           </div>
         </a>
-        
+
         <a href="find-ail.html" class="block bg-white rounded-lg border p-6 hover:shadow-lg hover:border-blue-300 transition-all">
           <div class="flex flex-col items-center space-y-4 text-center">
-            <div class="bg-blue-100 p-4 rounded-full">
-            <svg class="w-8 h-8 text-blue-700"><use href="#icon-info"/></svg>
+            <div class="bg-blue-100 p-4 rounded-full"><svg class="w-8 h-8 text-blue-700"><use href="#icon-info"/></svg></div>
+            <div><h3 class="text-lg font-semibold">Find an AIL</h3><p class="text-sm text-gray-600">Locate an authorised inspection site</p></div>
           </div>
-        <div>
-          <h3 class="text-lg font-semibold">Find an AIL</h3>
-         <p class="text-sm text-gray-600">Locate an authorised inspection site</p>
-          </div>
-          </div>
-          </a>
+        </a>
 
         <a href="lookup-vehicle.html" class="block bg-white rounded-lg border p-6 hover:shadow-lg hover:border-blue-300 transition-all">
           <div class="flex flex-col items-center space-y-4 text-center">
@@ -148,44 +137,16 @@
   </main>
 
   <!-- Injected Footer -->
-  <div id="footer"></div>
+  <div id="footer-placeholder"></div>
 
-  <!-- Inject and then load Alpine -->
-  <script>
-    async function include(id, file) {
-      const res = await fetch(file);
-      if (!res.ok) throw new Error(`${file} not found`);
-      document.getElementById(id).innerHTML = await res.text();
-    }
-
-    async function initPage() {
-      await include("header", "components/header.html");
-      await include("footer", "components/footer.html");
-
-      const alpine = document.createElement('script');
-      alpine.src = 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js';
-      alpine.defer = true;
-      document.body.appendChild(alpine);
-    }
-
-    initPage();
-  </script>
-<!-- Mount points for shared fragments -->
-<div id="header-placeholder"></div>
-
-<!-- … your page content … -->
-
-<div id="footer-placeholder"></div>
-
-<!-- Global scripts (keep these in the page, NOT inside header.html) -->
-<script type="module" src="/js/sfp-auth.js"></script>
-<script type="module" src="/js/sfp-api.js"></script>
-<script src="/js/sfp-gas-fetch-patch.js"></script>
-<script src="/js/sfp-config.js"></script>          <!-- sets SFP_GAS_BASE + SFP_ROLES_URL -->
-<script src="/js/load-header-footer.js" defer></script>
-<script src="/js/account-indicator.js" defer></script>  <!-- your existing file -->
-<script src="/js/role-guards.js" defer></script>
-<script src="/js/menu-enhance.js" defer></script>
-
+  <!-- Global scripts (NOT inside header.html) -->
+  <script type="module" src="/js/sfp-auth.js"></script>
+  <script type="module" src="/js/sfp-api.js"></script>
+  <script src="/js/sfp-gas-fetch-patch.js"></script>
+  <script src="/js/sfp-config.js"></script>
+  <script src="/js/load-header-footer.js" defer></script>
+  <script src="/js/account-indicator.js" defer></script>
+  <script src="/js/role-guards.js" defer></script>
+  <script src="/js/menu-enhance.js" defer></script>
 </body>
 </html>
