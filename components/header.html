@@ -9,7 +9,7 @@
       </a>
     </div>
 
-    <!-- Center: Page title (overlays, keeps left/right clickable) -->
+    <!-- Center: Page title (overlay, keeps sides clickable) -->
     <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
       <div id="page-title" class="hidden text-base sm:text-lg font-semibold opacity-95"></div>
     </div>
@@ -52,7 +52,7 @@
     </div>
   </div>
 
-  <!-- Search bar (slides under header) -->
+  <!-- Search bar -->
   <div x-show="showSearch" x-transition
        class="bg-blue-900/95 border-t border-white/10">
     <div class="max-w-7xl mx-auto px-4 py-2">
@@ -62,7 +62,7 @@
     </div>
   </div>
 
-  <!-- Mobile menu (no x-collapse plugin needed) -->
+  <!-- Mobile menu -->
   <nav x-show="open" x-transition.opacity
        class="lg:hidden bg-blue-900/95 backdrop-blur border-t border-white/10">
     <div class="max-w-7xl mx-auto px-4 py-3 space-y-1">
