@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PROTECTED PAGE TITLE – Safe Freight Program</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Alpine optional; include only if you use it on the page -->
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+  <!-- Auth + guards + header/footer loader (order matters) -->
+  <script type="module" src="/js/sfp-auth.js"></script>
+  <script src="/js/account-indicator.js" defer></script>
+  <script src="/js/page-guard.js" defer></script>
+  <script src="/js/role-guard.js" defer></script>
+  <script src="/js/load-header-footer.js" defer></script>
+</head>
+
+<!-- IMPORTANT:
+     data-requires-auth="true" enforces login
+     OPTIONAL: data-requires-role="admin" (or "ail" / "inspector") for role gating -->
+<body class="bg-gray-100 min-h-screen flex flex-col"
+      data-requires-auth="true">
+      <!-- To restrict further, change to:
+           data-requires-auth="true" data-requires-role="admin"
+           or "ail" / "inspector" as needed. -->
+
+  <!-- Injected shared header -->
+  <div id="header-placeholder" data-src="/components/header.html"></div>
+
+  <main class="flex-1">
+    <section class="max-w-7xl mx-auto p-6">
+      <h1 class="text-2xl font-semibold mb-2">Protected Page</h1>
+      <p class="text-gray-700">You must be logged in to view this page.
+        If you arrived here logged out, you should have been redirected to login.</p>
+
+      <div class="mt-4 p-4 bg-white rounded shadow">
+        <p class="text-sm text-gray-600"><strong>Current role:</strong> <span id="sfp-role">Loading…</span></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Injected shared footer -->
+  <div id="footer-placeholder" data-src="/components/footer.html"></div>
+
+  <script>
+    // Optional: show current role on protected pages for quick sanity checks
+    document.addEventListener("DOMContentLoaded", function () {
+      const el = document.getElementById("sfp-role");
+      function update() {
+        try {
+          const role = (window.SFPAuth && SFPAuth.role && SFPAuth.role()) || "Guest";
+          el && (el.textContent = role);
+        } catch (e) {
+          el && (el.textContent = "Unknown");
+        }
+      }
+      update();
+      window.addEventListener("sfp-auth-changed", update);
+    });
+  </script>
+</body>
+</html>
