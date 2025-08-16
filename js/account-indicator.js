@@ -1,15 +1,14 @@
 // /js/account-indicator.js
-// Renders Log in / Sign up when logged out,
-// and a role-aware account menu (with Log out) when logged in.
+// Renders Log in / Sign up when logged out, and a role-aware account menu when logged in.
+// Important: Header is injected asynchronously, so we WAIT until #account-indicator exists.
+//
 // Depends on window.SFPAuth from /js/sfp-auth.js.
+// Safe to include on every page.
 
 (function () {
-  const mount = document.getElementById("account-indicator");
-  if (!mount) return; // nothing to do if no mount is present
-  if (!window.SFPAuth) {
-    console.warn("[account-indicator] SFPAuth not found. Ensure /js/sfp-auth.js loads before this file.");
-  }
+  if (!window) return;
 
+  // ----- utils -----
   function initialsFrom(name, email) {
     const s = (name || email || "?").trim();
     const parts = s.split(/\s+/);
@@ -17,7 +16,18 @@
     return s.slice(0, 2).toUpperCase();
   }
 
-  function renderLoggedOut() {
+  function getUser() {
+    try { return (window.SFPAuth && SFPAuth.user && SFPAuth.user()) || null; }
+    catch { return null; }
+  }
+
+  function getRole() {
+    try { return (window.SFPAuth && SFPAuth.role && SFPAuth.role()) || "Guest"; }
+    catch { return "Guest"; }
+  }
+
+  // ----- rendering -----
+  function renderLoggedOut(mount) {
     mount.innerHTML = `
       <div class="flex items-center gap-2">
         <a href="/login.html" class="px-3 py-1 rounded bg-white/10 hover:bg-white/20 transition">Log in</a>
@@ -26,36 +36,24 @@
     `;
   }
 
-  // Simple dropdown controller (no Alpine dependency)
   function attachDropdownHandlers(root) {
     const btn = root.querySelector('[data-acc="btn"]');
     const menu = root.querySelector('[data-acc="menu"]');
     if (!btn || !menu) return;
 
-    function open() { menu.classList.remove("hidden"); }
     function close() { menu.classList.add("hidden"); }
     function toggle() { menu.classList.toggle("hidden"); }
 
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      toggle();
-    });
-
-    document.addEventListener("click", close, { once: false });
-
-    // Escape key closes the menu
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") close();
-    });
+    btn.addEventListener("click", (e) => { e.stopPropagation(); toggle(); });
+    document.addEventListener("click", close);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
   }
 
-  function renderLoggedIn(user, role) {
+  function renderLoggedIn(mount, user, role) {
     const name = user.displayName || "";
     const email = user.email || "";
     const initials = initialsFrom(name, email);
     const safeRole = (role || "Guest").toString();
-
-    // Build role-aware links
     const isAdmin = safeRole.toLowerCase() === "admin";
     const isAil = ["ail", "inspector"].includes(safeRole.toLowerCase());
 
@@ -86,7 +84,6 @@
       btn.addEventListener("click", async () => {
         try {
           await SFPAuth.logout();
-          // Optional redirect: honour ?next= or go home
           const params = new URLSearchParams(window.location.search);
           const next = params.get("next") || "/index.html";
           window.location.href = next;
@@ -98,23 +95,32 @@
     }
   }
 
-  function sync() {
-    const user = (window.SFPAuth && SFPAuth.user && SFPAuth.user()) || null;
-    const role = (window.SFPAuth && SFPAuth.role && SFPAuth.role()) || "Guest";
-    if (!user) {
-      renderLoggedOut();
-      return;
-    }
-    renderLoggedIn(user, role);
+  function sync(mount) {
+    const user = getUser();
+    const role = getRole();
+    if (!user) return renderLoggedOut(mount);
+    return renderLoggedIn(mount, user, role);
   }
 
-  // Initial render
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", sync);
-  } else {
-    sync();
+  // ----- mount detection (handles async header injection) -----
+  function startIfReady() {
+    const mount = document.getElementById("account-indicator");
+    if (!mount) return false;
+
+    // initial render
+    sync(mount);
+
+    // update on auth changes
+    window.addEventListener("sfp-auth-changed", () => sync(mount));
+
+    return true;
   }
 
-  // Keep in sync on auth changes
-  window.addEventListener("sfp-auth-changed", sync);
+  // Try now; if header not present yet, observe DOM until it appears
+  if (!startIfReady()) {
+    const observer = new MutationObserver(() => {
+      if (startIfReady()) observer.disconnect();
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+  }
 })();
