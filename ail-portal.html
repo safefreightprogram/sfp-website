@@ -2,124 +2,116 @@
 <html lang="en-AU">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AIL Portal – Safe Freight Program</title>
-  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Alpine optional; include only if you use it on this page -->
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-
-  <!-- ORDER MATTERS: auth/config first, then indicator/guards, then header/footer loader -->
-  <script type="module" src="/js/sfp-auth.js"></script>
-  <script src="/js/sfp-config.js"></script>      <!-- defines SFP_GAS_BASE + SFP_ROLES_URL -->
-  <script src="/js/sfp-api.js"></script>
-  <script src="/js/account-indicator.js" defer></script>
-  <script src="/js/page-guard.js" defer></script>
-  <script src="/js/role-guard.js" defer></script>
-  <script src="/js/load-header-footer.js" defer></script>
-
   <style>
-    .tile { @apply bg-white rounded-xl shadow hover:shadow-lg transition p-5 flex gap-4 items-start; }
-    .tile h3 { @apply font-semibold text-blue-900; }
-    .tile p { @apply text-sm text-gray-600; }
-    .kv { @apply text-sm text-gray-600; }
+    .tile-card { transition: box-shadow .15s ease, transform .15s ease; }
+    .tile-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,.12); transform: translateY(-1px); }
   </style>
+  <script>
+    // Set title for centered header text
+    const injectPageTitle = 'AIL Portal';
+  </script>
 </head>
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col" data-requires-auth="true" data-requires-role="ail">
 
-<!-- Require login + AIL role on this page -->
-<body class="bg-gray-100 min-h-screen flex flex-col"
-      data-requires-auth="true" data-requires-role="ail">
+  <!-- Injected shared header -->
+  <div id="header-placeholder"></div>
 
-  <!-- Injected shared header (shows account icon) -->
-  <div id="header-placeholder" data-src="/components/header.html"></div>
-
-  <main class="flex-1">
-    <!-- Hero -->
-    <section class="bg-blue-900 text-white">
-      <div class="max-w-7xl mx-auto px-4 py-8">
-        <h1 class="text-2xl sm:text-3xl font-semibold">Authorised Inspection Location (AIL) Portal</h1>
-        <p class="opacity-90 mt-1 text-sm sm:text-base">
-          Submit inspections, review recent activity, and access resources.
-        </p>
-      </div>
-    </section>
-
-    <!-- Quick info -->
-    <section class="max-w-7xl mx-auto px-4 py-6">
-      <div class="bg-white rounded-xl shadow p-4 flex flex-wrap gap-6 items-center">
-        <div class="kv"><strong>Signed in as:</strong> <span id="sfp-user-email">—</span></div>
-        <div class="kv"><strong>Role:</strong> <span id="sfp-user-role">—</span></div>
-        <div class="kv"><strong>Org:</strong> <span id="sfp-org-id">—</span></div>
-      </div>
-    </section>
-
-    <!-- Tiles -->
-    <section class="max-w-7xl mx-auto px-4 pb-10">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-
-        <!-- Submit vehicle inspection -->
-        <a href="/inspect.html" class="tile">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 flex-none" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M17 8h3a2 2 0 0 1 2 2v6h-2v2h-2v-2H6v2H4v-2H2v-6a2 2 0 0 1 2-2h3l2.4-3.2A2 2 0 0 1 11.9 4h.2a2 2 0 0 1 1.6.8L17 8Zm4 4h-2v-2h2v2ZM7 11h6l-2-3h-.2L7 11Z"/>
-          </svg>
-          <div>
-            <h3>Submit Vehicle Inspection</h3>
-            <p>Record a new inspection result for a tanker, prime mover, or trailer.</p>
+  <main class="flex-grow w-full mt-2 px-4 sm:px-6 lg:px-8">
+    <!-- Tiles immediately under header -->
+    <section class="max-w-7xl mx-auto py-4">
+      <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <!-- Submit Vehicle Inspection -->
+        <a href="/inspect.html" class="tile-card block rounded-2xl bg-white p-6 shadow">
+          <div class="flex items-start gap-4">
+            <div class="h-10 w-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M17 8h3a2 2 0 0 1 2 2v6h-2v2h-2v-2H6v2H4v-2H2v-6a2 2 0 0 1 2-2h3l2.4-3.2A2 2 0 0 1 11.9 4h.2a2 2 0 0 1 1.6.8L17 8Zm4 4h-2v-2h2v2ZM7 11h6l-2-3h-.2L7 11Z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-blue-900 font-semibold">Submit Vehicle Inspection</h2>
+              <p class="text-gray-600 text-sm">Record a new inspection result for a tanker, prime mover, or trailer.</p>
+            </div>
           </div>
         </a>
 
-        <!-- Recent submissions (placeholder for now) -->
-        <a href="/inspections.html" class="tile">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 flex-none" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 7h4l-4-4v4Z"/>
-          </svg>
-          <div>
-            <h3>Recent Submissions</h3>
-            <p>View inspections you’ve submitted (coming soon).</p>
+        <!-- Recent submissions -->
+        <a href="/inspections.html" class="tile-card block rounded-2xl bg-white p-6 shadow">
+          <div class="flex items-start gap-4">
+            <div class="h-10 w-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 7h4l-4-4v4Z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-blue-900 font-semibold">Recent Submissions</h2>
+              <p class="text-gray-600 text-sm">View inspections you’ve submitted (coming soon).</p>
+            </div>
           </div>
         </a>
 
-        <!-- AIL location details (placeholder) -->
-        <a href="/ail-profile.html" class="tile">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 flex-none" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7Zm0 9.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
-          </svg>
-          <div>
-            <h3>Update AIL Details</h3>
-            <p>Confirm phone, address, and inspector contact details (coming soon).</p>
+        <!-- AIL details -->
+        <a href="/ail-profile.html" class="tile-card block rounded-2xl bg-white p-6 shadow">
+          <div class="flex items-start gap-4">
+            <div class="h-10 w-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7Zm0 9.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-blue-900 font-semibold">Update AIL Details</h2>
+              <p class="text-gray-600 text-sm">Confirm phone, address, and inspector contact details (coming soon).</p>
+            </div>
           </div>
         </a>
 
         <!-- Resources -->
-        <a href="/resources.html" class="tile">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 flex-none" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M4 4h12a2 2 0 0 1 2 2v12H6a2 2 0 0 1-2-2V4Zm2 2v10h10V6H6Zm2 14h12V8h2v12a2 2 0 0 1-2 2H8v-2Z"/>
-          </svg>
-          <div>
-            <h3>Resources</h3>
-            <p>Guides, checklists, and reference material for inspections.</p>
+        <a href="/resources.html" class="tile-card block rounded-2xl bg-white p-6 shadow">
+          <div class="flex items-start gap-4">
+            <div class="h-10 w-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M4 4h12a2 2 0 0 1 2 2v12H6a2 2 0 0 1-2-2V4Zm2 2v10h10V6H6Zm2 14h12V8h2v12a2 2 0 0 1-2 2H8v-2Z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-blue-900 font-semibold">Resources</h2>
+              <p class="text-gray-600 text-sm">Guides, checklists, and reference material for inspections.</p>
+            </div>
           </div>
         </a>
 
-        <!-- Find an AIL (handy link) -->
-        <a href="/find-ail.html" class="tile">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 flex-none" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M21 10a9 9 0 1 1-9-9 9 9 0 0 1 9 9Zm-9 3.5a3.5 3.5 0 1 0-3.5-3.5A3.5 3.5 0 0 0 12 13.5Z"/>
-          </svg>
-          <div>
-            <h3>Find an AIL</h3>
-            <p>Search the national AIL directory and map.</p>
+        <!-- Find an AIL -->
+        <a href="/find-ail.html" class="tile-card block rounded-2xl bg-white p-6 shadow">
+          <div class="flex items-start gap-4">
+            <div class="h-10 w-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M21 10a9 9 0 1 1-9-9 9 9 0 0 1 9 9Zm-9 3.5a3.5 3.5 0 1 0-3.5-3.5A3.5 3.5 0 0 0 12 13.5Z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-blue-900 font-semibold">Find an AIL</h2>
+              <p class="text-gray-600 text-sm">Search the national AIL directory and map.</p>
+            </div>
           </div>
         </a>
 
         <!-- Contact support -->
-        <a href="/contact.html" class="tile">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 flex-none" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 2a9 9 0 0 1 9 9v2a3 3 0 0 1-3 3h-1a3 3 0 0 1-3-3V9a2 2 0 1 0-4 0v4a6 6 0 0 1-6 6H3a1 1 0 0 1-1-1v-2h2a4 4 0 0 0 4-4V9a6 6 0 0 1 12 0v2h-2V9a4 4 0 1 0-8 0v4a8 8 0 0 1-8 8H2"/>
-          </svg>
-          <div>
-            <h3>Contact Support</h3>
-            <p>Need help? Get in touch with the SFP team.</p>
+        <a href="/contact.html" class="tile-card block rounded-2xl bg-white p-6 shadow">
+          <div class="flex items-start gap-4">
+            <div class="h-10 w-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2a9 9 0 0 1 9 9v2a3 3 0 0 1-3 3h-1a3 3 0 0 1-3-3V9a2 2 0 1 0-4 0v4a6 6 0 0 1-6 6H3a1 1 0 0 1-1-1v-2h2a4 4 0 0 0 4-4V9a6 6 0 0 1 12 0v2h-2V9a4 4 0 1 0-8 0v4a8 8 0 0 1-8 8H2"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-blue-900 font-semibold">Contact Support</h2>
+              <p class="text-gray-600 text-sm">Need help? Get in touch with the SFP team.</p>
+            </div>
           </div>
         </a>
 
@@ -128,27 +120,18 @@
   </main>
 
   <!-- Injected shared footer -->
-  <div id="footer-placeholder" data-src="/components/footer.html"></div>
+  <div id="footer-placeholder"></div>
 
-  <script>
-    // Show signed-in email/role/org for quick sanity checks during POC demos
-    document.addEventListener("DOMContentLoaded", function () {
-      try {
-        const emailEl = document.getElementById("sfp-user-email");
-        const roleEl  = document.getElementById("sfp-user-role");
-        const orgEl   = document.getElementById("sfp-org-id");
+  <!-- Global scripts (keep these in the page, NOT inside header.html) -->
+  <script type="module" src="/js/sfp-auth.js"></script>
+  <script type="module" src="/js/sfp-api.js"></script>
+  <script src="/js/sfp-gas-fetch-patch.js"></script>
+  <script src="/js/sfp-config.js"></script>          <!-- sets SFP_GAS_BASE + SFP_ROLES_URL -->
+  <script src="/js/load-header-footer.js" defer></script>
+  <script src="/js/account-indicator.js" defer></script>  <!-- your existing file -->
+  <script src="/js/page-guard.js" defer></script>
+  <script src="/js/role-guard.js" defer></script>
+  <script src="/js/menu-enhance.js" defer></script>
 
-        const user = (window.SFPAuth && SFPAuth.user && SFPAuth.user()) || null;
-        const role = (window.SFPAuth && SFPAuth.role && SFPAuth.role()) || "Guest";
-        const org  = (window.SFPAuth && SFPAuth.orgId && SFPAuth.orgId()) || localStorage.getItem("sfpOrgId") || "—";
-
-        emailEl.textContent = user?.email || "—";
-        roleEl.textContent  = role || "—";
-        orgEl.textContent   = org || "—";
-      } catch (e) {
-        console.warn("AIL portal info banner skipped:", e);
-      }
-    });
-  </script>
 </body>
 </html>
