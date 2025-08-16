@@ -1,34 +1,68 @@
-<script>
-/**
- * Usage:
- *   requireAuth();                        // any signed-in user
- *   requireAuth(['admin','ail manager']); // restrict to roles
- */
-function normaliseRoles_(roles) {
-  return (roles || []).map(r => r.trim().toLowerCase());
-}
-function getRole_() {
-  try { return (SFPAuth.role?.() || 'Guest').toLowerCase(); } catch(_) { return 'guest'; }
-}
-function getUser_() {
-  try { return SFPAuth.user?.(); } catch(_) { return null; }
-}
-function requireAuth(allowedRoles) {
-  const user = getUser_();
-  if (!user) {
-    const next = encodeURIComponent(location.pathname + location.search);
-    location.href = `/login.html?next=${next}`;
-    return false;
-  }
-  if (Array.isArray(allowedRoles) && allowedRoles.length) {
-    const allowed = normaliseRoles_(allowedRoles);
-    if (!allowed.includes(getRole_())) {
-      // Soft deny → home
-      location.href = `/`;
-      return false;
-    }
-  }
-  return true;
-}
-window.SFPGUARD = { requireAuth };
-</script>
+<!-- /components/header.html — minimal: logo + search + account + hamburger (no Alpine) -->
+<header class="bg-blue-900 text-white sticky top-0 z-50 shadow">
+  <style>
+    /* Hide default disclosure markers for <summary> in some browsers */
+    header summary::-webkit-details-marker { display: none; }
+  </style>
+
+  <div class="relative max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+    <!-- Left: Logo -->
+    <a href="/index.html" class="flex items-center gap-3 transition-transform hover:scale-[1.05]">
+      <img src="/SFP-Logo.png" alt="Safe Freight Program" class="h-9 w-auto">
+    </a>
+
+    <!-- Center: (optional) page title placeholder -->
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div id="page-title" class="hidden text-base sm:text-lg font-semibold opacity-95"></div>
+    </div>
+
+    <!-- Right: Search • Account • Hamburger -->
+    <div class="flex items-center gap-2">
+      <!-- Search -->
+      <details class="relative">
+        <summary class="list-none inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 cursor-pointer" aria-label="Search">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-4.35-4.35M10 18a8 8 0 110-16 8 8 0 010 16z"/>
+          </svg>
+        </summary>
+        <div class="absolute right-0 mt-2 w-80 max-w-[90vw] rounded-lg border border-white/10 bg-blue-900/95 backdrop-blur p-2 shadow-lg">
+          <input id="sfp-header-search" type="search" placeholder="Type a word and press Enter"
+                 class="w-full rounded-md px-3 py-2 text-sm text-gray-900"
+                 onkeydown="if(event.key==='Enter'){window.location.href='/search.html?q='+encodeURIComponent(this.value)}">
+        </div>
+      </details>
+
+      <!-- Account indicator (now visible mount point) -->
+      <div id="account-indicator" class="inline-flex items-center justify-center min-h-9 min-w-9"></div>
+
+      <!-- Hamburger (always visible) -->
+      <details class="relative inline-block">
+        <summary class="list-none inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 cursor-pointer" aria-label="Menu">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </summary>
+
+        <!-- Menu panel -->
+        <nav class="absolute right-0 mt-2 w-72 rounded-lg border border-white/10 bg-blue-900/95 shadow-lg overflow-hidden">
+          <ul class="py-2">
+            <li><a href="/about.html" class="block px-4 py-2 hover:bg-white/10">About</a></li>
+            <li><a href="/lookup-driver.html" class="block px-4 py-2 hover:bg-white/10">Driver Lookup</a></li>
+            <li><a href="/lookup-vehicle.html" class="block px-4 py-2 hover:bg-white/10">Vehicle Lookup</a></li>
+            <li><a href="/find-ail.html" class="block px-4 py-2 hover:bg-white/10">Find AIL</a></li>
+            <li><a href="/training.html" class="block px-4 py-2 hover:bg-white/10">SFP Training</a></li>
+            <li><a href="/ail-portal.html" class="block px-4 py-2 hover:bg-white/10">AIL Portal</a></li>
+            <li><a href="/trainer-login.html" class="block px-4 py-2 hover:bg-white/10">Trainer Login</a></li>
+            <li><a href="/contact.html" class="block px-4 py-2 hover:bg-white/10">Contact</a></li>
+            <li><a href="/subscribe.html" class="block px-4 py-2 hover:bg-white/10">Subscribe</a></li>
+            <li><a href="/admin.html" data-requires-role="admin" class="hidden block px-4 py-2 hover:bg-white/10">Admin</a></li>
+            <li class="border-t border-white/10 mt-2"></li>
+            <li><span id="account-indicator-mobile" class="block px-4 py-2 opacity-90"></span></li>
+          </ul>
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>
