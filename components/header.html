@@ -33,14 +33,8 @@
         </div>
       </details>
 
-      <!-- Account icon (defaults to Login; your account-indicator.js can upgrade this) -->
-      <a id="account-link" href="/login.html" class="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10" aria-label="Account">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z"/>
-        </svg>
-        <!-- Optional: tiny text slot your script can fill -->
-        <span id="account-indicator" class="sr-only"></span>
-      </a>
+      <!-- Account indicator (now visible mount point) -->
+      <div id="account-indicator" class="inline-flex items-center justify-center min-h-9 min-w-9"></div>
 
       <!-- Hamburger (always visible) -->
       <details class="relative inline-block">
