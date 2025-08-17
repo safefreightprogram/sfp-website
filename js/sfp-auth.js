@@ -7,7 +7,8 @@ import {
   signOut, sendPasswordResetEmail, updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc,
+  // ⬇️ use initializeFirestore instead of getFirestore
+  initializeFirestore, doc, getDoc,
   disableNetwork, enableNetwork
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -21,7 +22,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+
+// ✅ Fix WebChannel 400s behind proxies/AV by using fetch streams & auto long-polling
+const db = initializeFirestore(app, {
+  useFetchStreams: true,
+  experimentalAutoDetectLongPolling: true
+});
 
 // ---- ID token helper (exported) ----
 async function getIdToken(forceRefresh = false) {
@@ -125,11 +131,9 @@ async function sfpLookupVehicle(vehicleId) {
   return callGASEndpoint("getVehicleData", { id: vehicleId });
 }
 
-// Submit inspection via GET for now (avoids preflight).
-// If payloads grow, we can switch to a proxy or GAS doPost with CORS allowed.
+// Submit inspection via GET for now (avoids preflight). If payloads grow, switch later.
 async function sfpSubmitInspection(inspectionData) {
   if (!inspectionData) throw new Error("inspectionData required");
-  // Flatten simple primitives. For nested objects, stringify.
   const payload = {};
   Object.entries(inspectionData).forEach(([k, v]) => {
     payload[k] = (v && typeof v === "object") ? JSON.stringify(v) : v;
@@ -259,3 +263,11 @@ window.testSFPAuth = async function () {
     return false;
   }
 };
+
+/*
+ // If a corporate network still blocks fetch streams, swap the init to:
+ const db = initializeFirestore(app, {
+   experimentalForceLongPolling: true,
+   useFetchStreams: false
+ });
+*/
