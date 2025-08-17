@@ -7,8 +7,7 @@ import {
   signOut, sendPasswordResetEmail, updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  // ⬇️ use initializeFirestore instead of getFirestore
-  initializeFirestore, doc, getDoc,
+  initializeFirestore, doc, getDocFromServer,
   disableNetwork, enableNetwork
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -23,10 +22,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// ✅ Fix WebChannel 400s behind proxies/AV by using fetch streams & auto long-polling
+// ✅ Force long-polling transport (no WebChannel / Listen 400 spam)
 const db = initializeFirestore(app, {
-  useFetchStreams: true,
-  experimentalAutoDetectLongPolling: true
+  experimentalForceLongPolling: true,
+  useFetchStreams: false
 });
 
 // ---- ID token helper (exported) ----
@@ -213,10 +212,10 @@ onAuthStateChanged(auth, async (user) => {
     }
   }
 
-  // One-shot scope read (no realtime listeners)
+  // One-shot scope read (no realtime listeners, no WebChannel)
   let scopes = { ailIds: [], siteIds: [] };
   try {
-    const snap = await getDoc(doc(db, "users", user.uid));
+    const snap = await getDocFromServer(doc(db, "users", user.uid));
     if (snap.exists()) {
       const d = snap.data();
       scopes = d.scopes || scopes;
@@ -263,11 +262,3 @@ window.testSFPAuth = async function () {
     return false;
   }
 };
-
-/*
- // If a corporate network still blocks fetch streams, swap the init to:
- const db = initializeFirestore(app, {
-   experimentalForceLongPolling: true,
-   useFetchStreams: false
- });
-*/
