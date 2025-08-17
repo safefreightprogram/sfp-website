@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function hasAnyRole(allowed) {
+      return request.auth != null
+        && request.auth.token.roles is list
+        && allowed.hasAny(request.auth.token.roles);
+    }
+
+    function uid() { return request.auth.uid; }
+
+    // Helper: does the current user's scopes include a specific id (e.g., ailIds contains ailId)?
+    function userHasScope(scopeType, id) {
+      return exists(/databases/$(database)/documents/users/$(uid())) &&
+        (get(/databases/$(database)/documents/users/$(uid())).data.scopes[scopeType]).hasAny([id]);
+    }
+
+    // Users can read their own user doc; update their own profile
+    match /users/{userId} {
+      allow read: if request.auth != null && uid() == userId;
+      allow update: if uid() == userId;
+      allow create, delete: if false;
+    }
+
+    // AIL docs
+    match /ails/{ailId} {
+      allow read: if hasAnyRole(["admin","ail_manager","inspector","auditor","support"]);
+      allow write: if hasAnyRole(["admin","ail_manager"]) && userHasScope("ailIds", ailId);
+    }
+
+    // Site docs
+    match /sites/{siteId} {
+      allow read: if hasAnyRole(["admin","site_manager","auditor","support","receiver_view"]);
+      allow write: if hasAnyRole(["admin","site_manager"]) && userHasScope("siteIds", siteId);
+    }
+
+    // Inspections nested under an AIL
+    match /ails/{ailId}/inspections/{docId} {
+      allow read: if hasAnyRole(["admin","ail_manager","inspector","auditor","support"]) && userHasScope("ailIds", ailId);
+      allow create: if hasAnyRole(["admin","inspector","ail_manager"]) && userHasScope("ailIds", ailId);
+      allow update, delete: if hasAnyRole(["admin","ail_manager"]) && userHasScope("ailIds", ailId);
+    }
+  }
+}

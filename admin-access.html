@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – Assign User Access</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
+
+    // TODO: paste your Firebase config here
+    const firebaseConfig = window.FIREBASE_CONFIG || {};
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const functions = getFunctions(app);
+
+    const $ = (s) => document.querySelector(s);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        $("#status").textContent = "Please log in as an admin.";
+        return;
+      }
+      const token = await user.getIdTokenResult(true);
+      const roles = token.claims?.roles || [];
+      if (!roles.includes("admin")) {
+        $("#status").textContent = "You are logged in, but you are not an admin.";
+      } else {
+        $("#status").textContent = "Admin verified.";
+        document.getElementById("form").classList.remove("hidden");
+      }
+    });
+
+    async function assignAccess(e) {
+      e.preventDefault();
+      const email = $("#email").value.trim();
+      const addRoles = $("#roles").value.split(",").map(s=>s.trim()).filter(Boolean);
+      const ailIds = $("#ailIds").value.split(",").map(s=>s.trim()).filter(Boolean);
+      const siteIds = $("#siteIds").value.split(",").map(s=>s.trim()).filter(Boolean);
+
+      const call = httpsCallable(functions, "assignUserAccess");
+      $("#out").textContent = "Working...";
+      try {
+        const res = await call({ email, addRoles, scopes: { ailIds, siteIds } });
+        $("#out").textContent = JSON.stringify(res.data, null, 2);
+      } catch (err) {
+        $("#out").textContent = err.message;
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("form").addEventListener("submit", assignAccess);
+    });
+  </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-2xl mx-auto p-6">
+    <h1 class="text-2xl font-semibold mb-2">Assign User Access</h1>
+    <p id="status" class="text-sm text-gray-600 mb-4">Checking admin status…</p>
+
+    <form id="form" class="hidden grid gap-4 bg-white p-4 rounded-xl shadow">
+      <label class="grid gap-1">
+        <span class="text-sm font-medium">User email</span>
+        <input id="email" type="email" class="border rounded p-2" placeholder="user@example.com" required />
+      </label>
+
+      <label class="grid gap-1">
+        <span class="text-sm font-medium">Add roles (comma separated)</span>
+        <input id="roles" type="text" class="border rounded p-2" placeholder="inspector,ail_manager" />
+      </label>
+
+      <div class="grid gap-1">
+        <span class="text-sm font-medium">Scope</span>
+        <div class="grid grid-cols-2 gap-3">
+          <input id="ailIds" type="text" class="border rounded p-2" placeholder="AIL-0001, AIL-0023" />
+          <input id="siteIds" type="text" class="border rounded p-2" placeholder="SITE-1001, SITE-2040" />
+        </div>
+      </div>
+
+      <button class="bg-blue-700 hover:bg-blue-800 text-white rounded px-4 py-2 w-fit">Assign</button>
+    </form>
+
+    <pre id="out" class="mt-4 text-xs bg-gray-900 text-white p-3 rounded-lg overflow-auto"></pre>
+  </div>
+</body>
+</html>
