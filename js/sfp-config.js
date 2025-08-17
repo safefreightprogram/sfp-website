@@ -12,7 +12,6 @@ window.SFP_INSPECTION_SUBMIT_URL   = `${window.SFP_GAS_BASE}?action=submitInspec
 window.SFP_UPDATE_PROFILE_URL      = `${window.SFP_GAS_BASE}?action=updateProfile`;
 window.SFP_GET_PROFILE_URL         = `${window.SFP_GAS_BASE}?action=getProfile`;
 
-// Optional: frozen map (handy for debugging/iteration)
 window.SFP_ENDPOINTS = Object.freeze({
   base: window.SFP_GAS_BASE,
   getRole: window.SFP_ROLES_URL,
@@ -24,49 +23,20 @@ window.SFP_ENDPOINTS = Object.freeze({
 });
 
 /**
- * sfpApiCall(action, params)
- * - Uses GET with query params (aligned to typical GAS WebApp patterns).
- * - Adds a cache-buster to avoid aggressive intermediate caching.
- * - If available, includes an Authorization: Bearer <idToken> header (safe no-op for GAS if not used).
+ * Simple GET to GAS without custom headers to avoid CORS preflight.
+ * NOTE: Do NOT add custom headers here (like X-Requested-With or Authorization),
+ * or the browser will send an OPTIONS preflight that GAS won’t answer.
  */
 window.sfpApiCall = async function sfpApiCall(action, params = {}) {
   const url = new URL(window.SFP_GAS_BASE);
   url.searchParams.set("action", action);
-
-  // Add parameters (ignore null/undefined)
   Object.keys(params).forEach((k) => {
     const v = params[k];
     if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
   });
+  url.searchParams.set("_ts", Date.now().toString(36)); // cache-bust
 
-  // Cache bust
-  url.searchParams.set("_ts", Date.now().toString(36));
-
-  // Build headers
-  const headers = {
-    "X-Requested-With": "XMLHttpRequest",
-  };
-
-  // Optional Firebase ID token (if your GAS uses it; harmless if it doesn’t)
-  try {
-    const maybeToken =
-      (window.SFP && window.SFP.idToken) ||
-      (window.SFPAuth && window.SFPAuth.idToken && (await window.SFPAuth.idToken()));
-    if (maybeToken) headers["Authorization"] = `Bearer ${maybeToken}`;
-  } catch (_) {
-    // Non-fatal if token fetch fails
-  }
-
-  // Optional user email (for logging/routing on GAS)
-  if (window.SFP && window.SFP.user && window.SFP.user.email) {
-    headers["X-SFP-User"] = window.SFP.user.email;
-  }
-
-  // Fetch + tolerant parse
-  const res = await fetch(url.toString(), {
-    method: "GET",
-    headers,
-  });
+  const res = await fetch(url.toString(), { method: "GET" }); // no headers!
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -74,25 +44,17 @@ window.sfpApiCall = async function sfpApiCall(action, params = {}) {
   }
 
   const ct = res.headers.get("content-type") || "";
-  if (ct.includes("application/json")) {
-    return res.json();
-  }
-  // Fallback: try to parse JSON from text; else return raw text
+  if (ct.includes("application/json")) return res.json();
+
   const raw = await res.text();
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return raw;
-  }
+  try { return JSON.parse(raw); } catch { return raw; }
 };
 
-// Quick manual test (optional; run in DevTools: await testSFPConnection())
+// Quick manual test (run in DevTools: await testSFPConnection())
 window.testSFPConnection = async function testSFPConnection() {
   console.log("🧪 Testing SFP connection…");
   try {
-    const roleResult = await sfpApiCall("getRole", {
-      email: "safefreightprogram@gmail.com",
-    });
+    const roleResult = await sfpApiCall("getRole", { email: "safefreightprogram@gmail.com" });
     console.log("✅ Role check:", roleResult);
 
     const driverResult = await sfpApiCall("getDriverData", {
