@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword, createUserWithEmailAndPassword,
   signOut, sendPasswordResetEmail, updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // TODO: replace with your Firebase project config
 const firebaseConfig = {
@@ -17,6 +18,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 // --- ID token helper (exported) ---
 async function getIdToken(forceRefresh = false) {
@@ -49,7 +51,7 @@ async function sfpReset(email) {
   await sendPasswordResetEmail(auth, email);
 }
 
-// Called after login/signup to pull role once per session
+// Called after login/signup to pull legacy role/org once per session (kept for backward compatibility)
 async function sfpAfterAuth(user) {
   try {
     if (window.SFPApi?.postJson) {
@@ -76,10 +78,7 @@ function sfpGetCurrentUser() { return auth.currentUser; }
 function sfpGetCurrentRole() { return localStorage.getItem("sfpRole") || "Guest"; }
 function sfpGetOrgId() { return localStorage.getItem("sfpOrgId") || ""; }
 
-onAuthStateChanged(auth, (user) => {
-  window.dispatchEvent(new CustomEvent("sfp-auth-changed", { detail: { user, role: sfpGetCurrentRole() } }));
-});
-
+// Expose legacy helper API (unchanged)
 window.SFPAuth = {
   login: sfpLogin,
   signup: sfpSignup,
@@ -91,3 +90,33 @@ window.SFPAuth = {
   getIdToken,
   _auth: auth
 };
+
+// ---- New: roles (claims) + scopes (Firestore) loader ----
+export let SFP = { user: null, roles: [], scopes: { ailIds: [], siteIds: [] } };
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    SFP = { user: null, roles: [], scopes: { ailIds: [], siteIds: [] } };
+    document.dispatchEvent(new CustomEvent("sfp-auth-changed", { detail: SFP }));
+    return;
+  }
+
+  // Pull roles from custom claims
+  const token = await user.getIdTokenResult(true);
+  const roles = Array.isArray(token.claims?.roles) ? token.claims.roles : [];
+
+  // Pull scopes from Firestore (users/{uid})
+  let scopes = { ailIds: [], siteIds: [] };
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (snap.exists()) {
+      const d = snap.data();
+      scopes = d.scopes || scopes;
+    }
+  } catch (e) {
+    console.warn("Failed to load scopes", e);
+  }
+
+  SFP = { user, roles, scopes };
+  document.dispatchEvent(new CustomEvent("sfp-auth-changed", { detail: SFP }));
+});
