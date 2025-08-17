@@ -165,11 +165,17 @@ export let SFP = {
   gasConnected: false
 };
 
-// ---- Auth state wiring ----
+// ---- SINGLE Enhanced auth state handler with better error handling ----
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    // Hard stop Firestore networking while logged out → no Listen 400 spam
-    try { await disableNetwork(db); } catch {}
+    // Hard stop Firestore networking while logged out
+    try { 
+      await disableNetwork(db);
+      console.log("🔌 Firestore network disabled (logged out)");
+    } catch (e) {
+      console.warn("Could not disable Firestore network:", e);
+    }
+    
     SFP = {
       user: null,
       roles: [],
@@ -182,10 +188,15 @@ onAuthStateChanged(auth, async (user) => {
 
   console.log("🔄 Auth state changed, updating SFP object…");
 
-  // Enable networking now that we actually need it
-  try { await enableNetwork(db); } catch {}
+  // Enable networking with error handling
+  try { 
+    await enableNetwork(db);
+    console.log("✅ Firestore network enabled");
+  } catch (e) {
+    console.warn("⚠️ Could not enable Firestore network:", e);
+  }
 
-  // Prefer Firebase custom claims if present
+  // Get roles from Firebase custom claims
   let roles = [];
   try {
     const token = await user.getIdTokenResult(true);
@@ -195,7 +206,7 @@ onAuthStateChanged(auth, async (user) => {
     console.warn("⚠️ Could not fetch Firebase custom claims:", e);
   }
 
-  // Fall back to GAS role (from localStorage set in sfpAfterAuth)
+  // Fall back to GAS role
   if (roles.length === 0) {
     const gasRole = sfpGetCurrentRole();
     console.log("🎭 GAS role:", gasRole);
@@ -212,39 +223,127 @@ onAuthStateChanged(auth, async (user) => {
     }
   }
 
-  // One-shot scope read (no realtime listeners, no WebChannel)
+  // Enhanced Firestore scope reading with timeout
   let scopes = { ailIds: [], siteIds: [] };
-  try {
-    const snap = await getDocFromServer(doc(db, "users", user.uid));
-    if (snap.exists()) {
-      const d = snap.data();
-      scopes = d.scopes || scopes;
-      console.log("📊 Firestore scopes:", scopes);
+  if (user.uid) {
+    try {
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Firestore timeout")), 5000)
+      );
+      
+      const firestorePromise = getDocFromServer(doc(db, "users", user.uid));
+      
+      const snap = await Promise.race([firestorePromise, timeoutPromise]);
+      
+      if (snap && snap.exists()) {
+        const d = snap.data();
+        scopes = d.scopes || scopes;
+        console.log("📊 Firestore scopes loaded:", scopes);
+      } else {
+        console.log("📊 No Firestore document for user");
+      }
+    } catch (e) {
+      if (e.message === "Firestore timeout") {
+        console.warn("⏱️ Firestore read timed out - using default scopes");
+      } else if (e.code === 'permission-denied') {
+        console.warn("🔒 Firestore permission denied - check security rules");
+      } else if (e.code === 'unavailable') {
+        console.warn("🔌 Firestore unavailable - may be offline");
+      } else {
+        console.warn("⚠️ Failed to load Firestore scopes:", e.message || e);
+      }
     }
-  } catch (e) {
-    console.warn("⚠️ Failed to load Firestore scopes (may not exist yet):", e);
   }
 
-  // Quick GAS connectivity check (simple GET)
+  // Quick GAS connectivity check
   let gasConnected = false;
-  try { await callGASEndpoint("getRole"); gasConnected = true; } catch {}
+  try { 
+    await callGASEndpoint("getRole"); 
+    gasConnected = true;
+    console.log("✅ GAS connection successful");
+  } catch (e) {
+    console.warn("⚠️ GAS connection failed:", e.message || e);
+  }
 
   SFP = { user, roles, scopes, gasConnected };
   document.dispatchEvent(new CustomEvent("sfp-auth-changed", { detail: { user } }));
   console.log("🎉 SFP object updated:", SFP);
 });
 
-// ---- Diagnostic helper ----
+// Add connection state monitoring
+if (typeof window !== 'undefined') {
+  // Monitor online/offline status
+  window.addEventListener('online', async () => {
+    console.log("🌐 Network connection restored");
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        await enableNetwork(db);
+        console.log("✅ Firestore re-enabled after network restore");
+      } catch (e) {
+        console.warn("Could not re-enable Firestore:", e);
+      }
+    }
+  });
+
+  window.addEventListener('offline', async () => {
+    console.log("📵 Network connection lost");
+    try {
+      await disableNetwork(db);
+      console.log("🔌 Firestore disabled due to network loss");
+    } catch (e) {
+      console.warn("Could not disable Firestore:", e);
+    }
+  });
+}
+
+// Enhanced diagnostic function
 window.testSFPAuth = async function () {
   console.log("🧪 Testing SFP Auth system…");
+  console.log("=".repeat(50));
+  
+  // Check Firebase configuration
+  console.log("🔧 Firebase Config:", {
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+    apiKey: firebaseConfig.apiKey ? "✅ Set" : "❌ Missing"
+  });
+  
+  // Check authentication status
   const user = auth.currentUser;
-  if (!user) { console.error("❌ No user logged in"); return false; }
+  if (!user) { 
+    console.error("❌ No user logged in"); 
+    console.log("💡 Tip: Log in first before running tests");
+    return false; 
+  }
 
   console.log("👤 Current user:", user.email);
+  console.log("🆔 User UID:", user.uid);
   console.log("🎭 Current role:", sfpGetCurrentRole());
   console.log("🏢 Current org:", sfpGetOrgId());
   console.log("📊 SFP object:", SFP);
-
+  
+  // Test Firestore connection
+  console.log("\n📚 Testing Firestore connection...");
+  try {
+    await enableNetwork(db);
+    const testDoc = await getDocFromServer(doc(db, "users", user.uid));
+    if (testDoc.exists()) {
+      console.log("✅ Firestore connection successful");
+      console.log("📄 User document:", testDoc.data());
+    } else {
+      console.log("⚠️ User document doesn't exist in Firestore");
+    }
+  } catch (e) {
+    console.error("❌ Firestore test failed:", e.message);
+    if (e.code === 'permission-denied') {
+      console.log("💡 Check Firestore security rules in Firebase Console");
+    }
+  }
+  
+  // Test GAS endpoints
+  console.log("\n🔗 Testing GAS endpoints...");
   try {
     const roleData = await callGASEndpoint("getRole");
     console.log("✅ GAS role check:", roleData);
@@ -255,10 +354,11 @@ window.testSFPAuth = async function () {
     const vehicleData = await sfpLookupVehicle("SFPV-000001");
     console.log("✅ Vehicle lookup test:", vehicleData);
 
-    console.log("🎉 All SFP Auth tests passed!");
+    console.log("\n🎉 All SFP Auth tests passed!");
     return true;
   } catch (error) {
-    console.error("💥 SFP Auth test failed:", error);
+    console.error("💥 GAS test failed:", error);
+    console.log("💡 Check GAS deployment and permissions");
     return false;
   }
 };
