@@ -6,13 +6,16 @@ import {
   signInWithEmailAndPassword, createUserWithEmailAndPassword,
   signOut, sendPasswordResetEmail, updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getFirestore, doc, getDoc,
+  disableNetwork, enableNetwork
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase configuration - your current setup
+// --- Firebase configuration ---
 const firebaseConfig = {
   apiKey: "AIzaSyBURlJUicOTobRLghN2RyEZfXEZvU_uiYU",
-  authDomain: "safe-freight-program.firebaseapp.com", // Fixed: should match your project
-  projectId: "safe-freight-program", // Fixed: should match your project  
+  authDomain: "safe-freight-program.firebaseapp.com",
+  projectId: "safe-freight-program",
   appId: "1:289281705793:web:94520fbf0138a6802103c0"
 };
 
@@ -20,58 +23,47 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- ID token helper (exported) ---
+// ---- ID token helper (exported) ----
 async function getIdToken(forceRefresh = false) {
   const u = auth.currentUser;
   if (!u) return null;
   return await u.getIdToken(forceRefresh);
 }
 
-// --- Enhanced GAS API call helper ---
-async function callGASEndpoint(action, params = {}) {
-  try {
-    const user = auth.currentUser;
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
-    // Build URL with action and email
-    const url = new URL(window.SFP_GAS_BASE || '');
-    url.searchParams.set('action', action);
-    url.searchParams.set('email', user.email);
-    
-    // Add other parameters
-    Object.keys(params).forEach(key => {
-      if (params[key] !== undefined && params[key] !== null) {
-        url.searchParams.set(key, params[key]);
-      }
-    });
-
-    console.log(`🔗 Calling GAS: ${action}`, params);
-
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    console.log(`✅ GAS response for ${action}:`, data);
-    
-    return data;
-  } catch (error) {
-    console.error(`❌ GAS call failed for ${action}:`, error);
-    throw error;
-  }
+// ---- GAS helper (simple GET, no custom headers -> no preflight) ----
+function buildGASUrl(action, params = {}) {
+  const base = window.SFP_GAS_BASE || "";
+  if (!base) throw new Error("SFP_GAS_BASE not set");
+  const url = new URL(base);
+  url.searchParams.set("action", action);
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
+  });
+  // cache-bust to avoid intermediates
+  url.searchParams.set("_ts", Date.now().toString(36));
+  return url;
 }
 
-// --- Minimal global auth API ---
+async function callGASEndpoint(action, params = {}) {
+  // attach user email if signed in (helps GAS identify requester), but do not add headers
+  const u = auth.currentUser;
+  const merged = { ...params };
+  if (u?.email && !merged.email) merged.email = u.email;
+
+  const url = buildGASUrl(action, merged);
+  const res = await fetch(url.toString(), { method: "GET" }); // no headers!
+
+  if (!res.ok) {
+    const t = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status} ${res.statusText} – ${t.slice(0, 300)}`);
+  }
+  const ct = res.headers.get("content-type") || "";
+  if (ct.includes("application/json")) return res.json();
+  const raw = await res.text();
+  try { return JSON.parse(raw); } catch { return raw; }
+}
+
+// ---- Minimal global auth API ----
 async function sfpLogin(email, password) {
   const cred = await signInWithEmailAndPassword(auth, email, password);
   await sfpAfterAuth(cred.user);
@@ -88,6 +80,8 @@ async function sfpSignup(email, password, displayName = "") {
 async function sfpLogout() {
   localStorage.removeItem("sfpRole");
   localStorage.removeItem("sfpOrgId");
+  // Silence Firestore chatter while logged out
+  try { await disableNetwork(db); } catch {}
   await signOut(auth);
 }
 
@@ -98,17 +92,14 @@ async function sfpReset(email) {
 // Called after login/signup to pull role from GAS
 async function sfpAfterAuth(user) {
   try {
-    console.log('🔑 Fetching user role from GAS...');
-    
-    // Use our enhanced GAS call
-    const data = await callGASEndpoint('getRole');
-    
+    console.log("🔑 Fetching user role from GAS…");
+    const data = await callGASEndpoint("getRole");
     if (data && data.role) {
       localStorage.setItem("sfpRole", data.role);
       localStorage.setItem("sfpOrgId", data.orgId || "");
-      console.log(`✅ Role fetched: ${data.role}, Org: ${data.orgId || 'None'}`);
+      console.log(`✅ Role fetched: ${data.role}, Org: ${data.orgId || "None"}`);
     } else {
-      console.warn('⚠️ No role data returned from GAS, defaulting to Guest');
+      console.warn("⚠️ No role data returned from GAS, defaulting to Guest");
       localStorage.setItem("sfpRole", "Guest");
       localStorage.setItem("sfpOrgId", "");
     }
@@ -123,50 +114,30 @@ function sfpGetCurrentUser() { return auth.currentUser; }
 function sfpGetCurrentRole() { return localStorage.getItem("sfpRole") || "Guest"; }
 function sfpGetOrgId() { return localStorage.getItem("sfpOrgId") || ""; }
 
-// --- Enhanced API functions for easier use ---
+// ---- Convenience wrappers to GAS (GET-only for now to avoid CORS) ----
 async function sfpLookupDriver(driverId) {
-  return await callGASEndpoint('getDriverData', { id: driverId });
+  if (!driverId) throw new Error("driverId required");
+  return callGASEndpoint("getDriverData", { id: driverId });
 }
 
 async function sfpLookupVehicle(vehicleId) {
-  return await callGASEndpoint('getVehicleData', { id: vehicleId });
+  if (!vehicleId) throw new Error("vehicleId required");
+  return callGASEndpoint("getVehicleData", { id: vehicleId });
 }
 
+// Submit inspection via GET for now (avoids preflight).
+// If payloads grow, we can switch to a proxy or GAS doPost with CORS allowed.
 async function sfpSubmitInspection(inspectionData) {
-  // For inspection submission, we need to use POST with JSON body
-  try {
-    const user = auth.currentUser;
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
-    const response = await fetch(window.SFP_GAS_BASE, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify({
-        action: 'submitInspection',
-        email: user.email,
-        ...inspectionData
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    console.log('✅ Inspection submitted:', data);
-    return data;
-  } catch (error) {
-    console.error('❌ Inspection submission failed:', error);
-    throw error;
-  }
+  if (!inspectionData) throw new Error("inspectionData required");
+  // Flatten simple primitives. For nested objects, stringify.
+  const payload = {};
+  Object.entries(inspectionData).forEach(([k, v]) => {
+    payload[k] = (v && typeof v === "object") ? JSON.stringify(v) : v;
+  });
+  return callGASEndpoint("submitInspection", payload);
 }
 
-// Expose legacy helper API (unchanged but enhanced)
+// Expose legacy helper API
 window.SFPAuth = {
   login: sfpLogin,
   signup: sfpSignup,
@@ -177,133 +148,114 @@ window.SFPAuth = {
   orgId: sfpGetOrgId,
   getIdToken,
   _auth: auth,
-  // Enhanced API functions
   lookupDriver: sfpLookupDriver,
   lookupVehicle: sfpLookupVehicle,
   submitInspection: sfpSubmitInspection,
   callGAS: callGASEndpoint
 };
 
-// ---- Enhanced SFP object with GAS integration ----
-export let SFP = { 
-  user: null, 
-  roles: [], 
+// ---- Public SFP snapshot object ----
+export let SFP = {
+  user: null,
+  roles: [],
   scopes: { ailIds: [], siteIds: [] },
   gasConnected: false
 };
 
+// ---- Auth state wiring ----
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    SFP = { 
-      user: null, 
-      roles: [], 
+    // Hard stop Firestore networking while logged out → no Listen 400 spam
+    try { await disableNetwork(db); } catch {}
+    SFP = {
+      user: null,
+      roles: [],
       scopes: { ailIds: [], siteIds: [] },
       gasConnected: false
     };
-    document.dispatchEvent(new CustomEvent("sfp-auth-changed", { detail: SFP }));
+    document.dispatchEvent(new CustomEvent("sfp-auth-changed", { detail: { user: null } }));
     return;
   }
 
-  console.log('🔄 Auth state changed, updating SFP object...');
+  console.log("🔄 Auth state changed, updating SFP object…");
 
-  // Try to get roles from Firebase custom claims first
+  // Enable networking now that we actually need it
+  try { await enableNetwork(db); } catch {}
+
+  // Prefer Firebase custom claims if present
   let roles = [];
   try {
     const token = await user.getIdTokenResult(true);
     roles = Array.isArray(token.claims?.roles) ? token.claims.roles : [];
-    console.log('🎭 Firebase roles:', roles);
+    console.log("🎭 Firebase roles:", roles);
   } catch (e) {
-    console.warn('⚠️ Could not fetch Firebase custom claims:', e);
+    console.warn("⚠️ Could not fetch Firebase custom claims:", e);
   }
 
-  // If no Firebase roles, try to determine from GAS role
+  // Fall back to GAS role (from localStorage set in sfpAfterAuth)
   if (roles.length === 0) {
     const gasRole = sfpGetCurrentRole();
-    console.log('🎭 GAS role:', gasRole);
-    
-    // Map GAS roles to array format
-    if (gasRole && gasRole !== 'Guest') {
-      switch (gasRole.toLowerCase()) {
-        case 'admin':
-          roles = ['admin'];
-          break;
-        case 'ail inspector':
-          roles = ['inspector', 'ail'];
-          break;
-        case 'ail manager':
-          roles = ['ail_manager', 'inspector'];
-          break;
-        case 'driver':
-          roles = ['driver'];
-          break;
-        default:
-          roles = ['guest'];
+    console.log("🎭 GAS role:", gasRole);
+    if (gasRole && gasRole !== "Guest") {
+      switch ((gasRole || "").toLowerCase()) {
+        case "admin": roles = ["admin"]; break;
+        case "ail inspector": roles = ["inspector", "ail"]; break;
+        case "ail manager": roles = ["ail_manager", "inspector"]; break;
+        case "driver": roles = ["driver"]; break;
+        default: roles = ["guest"];
       }
+    } else {
+      roles = ["guest"];
     }
   }
 
-  // Try to pull scopes from Firestore (optional - may not exist yet)
+  // One-shot scope read (no realtime listeners)
   let scopes = { ailIds: [], siteIds: [] };
   try {
     const snap = await getDoc(doc(db, "users", user.uid));
     if (snap.exists()) {
       const d = snap.data();
       scopes = d.scopes || scopes;
-      console.log('📊 Firestore scopes:', scopes);
+      console.log("📊 Firestore scopes:", scopes);
     }
   } catch (e) {
     console.warn("⚠️ Failed to load Firestore scopes (may not exist yet):", e);
   }
 
-  // Test GAS connection
+  // Quick GAS connectivity check (simple GET)
   let gasConnected = false;
-  try {
-    await callGASEndpoint('getRole');
-    gasConnected = true;
-    console.log('✅ GAS connection verified');
-  } catch (e) {
-    console.warn('⚠️ GAS connection failed:', e);
-  }
+  try { await callGASEndpoint("getRole"); gasConnected = true; } catch {}
 
   SFP = { user, roles, scopes, gasConnected };
-  document.dispatchEvent(new CustomEvent("sfp-auth-changed", { detail: SFP }));
-  
-  console.log('🎉 SFP object updated:', SFP);
+  document.dispatchEvent(new CustomEvent("sfp-auth-changed", { detail: { user } }));
+  console.log("🎉 SFP object updated:", SFP);
 });
 
-// Enhanced global test function
-window.testSFPAuth = async function() {
-  console.log('🧪 Testing SFP Auth system...');
-  
+// ---- Diagnostic helper ----
+window.testSFPAuth = async function () {
+  console.log("🧪 Testing SFP Auth system…");
   const user = auth.currentUser;
-  if (!user) {
-    console.error('❌ No user logged in');
-    return false;
-  }
-  
-  console.log('👤 Current user:', user.email);
-  console.log('🎭 Current role:', sfpGetCurrentRole());
-  console.log('🏢 Current org:', sfpGetOrgId());
-  console.log('📊 SFP object:', SFP);
-  
+  if (!user) { console.error("❌ No user logged in"); return false; }
+
+  console.log("👤 Current user:", user.email);
+  console.log("🎭 Current role:", sfpGetCurrentRole());
+  console.log("🏢 Current org:", sfpGetOrgId());
+  console.log("📊 SFP object:", SFP);
+
   try {
-    // Test GAS connection
-    const roleData = await callGASEndpoint('getRole');
-    console.log('✅ GAS role check:', roleData);
-    
-    // Test driver lookup
-    const driverData = await sfpLookupDriver('SFPD-001234');
-    console.log('✅ Driver lookup test:', driverData);
-    
-    // Test vehicle lookup
-    const vehicleData = await sfpLookupVehicle('SFPV-000001');
-    console.log('✅ Vehicle lookup test:', vehicleData);
-    
-    console.log('🎉 All SFP Auth tests passed!');
+    const roleData = await callGASEndpoint("getRole");
+    console.log("✅ GAS role check:", roleData);
+
+    const driverData = await sfpLookupDriver("SFPD-001234");
+    console.log("✅ Driver lookup test:", driverData);
+
+    const vehicleData = await sfpLookupVehicle("SFPV-000001");
+    console.log("✅ Vehicle lookup test:", vehicleData);
+
+    console.log("🎉 All SFP Auth tests passed!");
     return true;
-    
   } catch (error) {
-    console.error('💥 SFP Auth test failed:', error);
+    console.error("💥 SFP Auth test failed:", error);
     return false;
   }
 };
