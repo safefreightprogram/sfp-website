@@ -12,7 +12,8 @@
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
   <!-- 🔐 Firebase Auth -->
-  <script type="module">
+<script src="/js/unified-auth.js"></script>
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
       getAuth,
@@ -85,8 +86,8 @@
   </script>
 </head>
 
-<body class="bg-gray-50 text-gray-800 font-sans">
-<!-- Loading overlay -->
+<body class="bg-gray-50 text-gray-800 font-sans" data-requires-auth="true" data-requires-role="admin">
+  <!-- Loading overlay -->
 <div id="authLoader" class="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50">
   <div class="text-center">
     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto mb-4"></div>
