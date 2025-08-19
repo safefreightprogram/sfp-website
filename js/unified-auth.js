@@ -1,7 +1,7 @@
 // Unified Auth System for SFP
 const SFPAuth = (function() {
   // CONFIG - UPDATE THIS LINE WITH YOUR GAS URL
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwWahei0KkmggvoNHTcQHw1fHlaGnk4zNP1L_OQNxM8SI_IJlIhgFmOZRWEITH_W8nfkg/exec'; // <-- PASTE YOUR GAS URL HERE
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycby5n8wm9BTZJ0y_clHANe6TQSW7VGL0f7QIBHXr1tJfZUjZwxhA3CEzYvXzbUfjz-bE/exec'; // <-- PASTE YOUR GAS URL HERE
   
   const firebaseConfig = {
     apiKey: "AIzaSyBURlJUicOTobRLghN2RyEZfXEZvU_uiYU",
