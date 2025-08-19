@@ -10,7 +10,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-
+<script src="/js/unified-auth.js"></script>
   <!-- 🔐 Firebase Auth -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -111,8 +111,8 @@
   </script>
 </head>
 
-<body class="bg-gray-50 text-gray-800 font-sans">
-<!-- 🔄 Loading overlay for auth check -->
+<body class="bg-gray-50 text-gray-800 font-sans" data-requires-auth="true">
+  <!-- 🔄 Loading overlay for auth check -->
 <div id="authLoader" class="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50 transition-opacity duration-300">
   <div class="text-center">
     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto mb-4"></div>
