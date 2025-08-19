@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auth Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/unified-auth.js"></script>
+</head>
+<body class="p-8">
+  <h1 class="text-2xl font-bold mb-4">Auth System Test</h1>
+  
+  <div class="space-y-4">
+    <div class="p-4 bg-gray-100 rounded">
+      <h2 class="font-bold">Current Status:</h2>
+      <p>User: <span id="current-user" class="font-mono"></span></p>
+      <p>Role: <span id="current-role" class="font-mono"></span></p>
+      <p>GAS URL: <span id="gas-url" class="font-mono text-xs"></span></p>
+    </div>
+    
+    <button onclick="testGAS()" class="bg-blue-600 text-white px-4 py-2 rounded">
+      Test GAS Connection
+    </button>
+    
+    <button onclick="SFPAuth.logout()" class="bg-red-600 text-white px-4 py-2 rounded">
+      Logout
+    </button>
+    
+    <div id="result" class="p-4 bg-yellow-50 rounded hidden"></div>
+  </div>
+  
+  <script>
+    // Show current state
+    setInterval(() => {
+      document.getElementById('current-user').textContent = SFPAuth.getUser()?.email || 'Not logged in';
+      document.getElementById('current-role').textContent = SFPAuth.getRole() || 'None';
+      
+      // Show GAS URL (check if it's set correctly)
+      const scripts = document.querySelector('script[src="/js/unified-auth.js"]');
+      document.getElementById('gas-url').textContent = 'Check if GAS_URL is set in unified-auth.js';
+    }, 1000);
+    
+    async function testGAS() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.classList.remove('hidden');
+      
+      try {
+        const response = await SFPAuth.callGAS('getRole');
+        resultDiv.innerHTML = `
+          <strong>GAS Response:</strong>
+          <pre>${JSON.stringify(response, null, 2)}</pre>
+        `;
+        resultDiv.className = 'p-4 bg-green-50 rounded';
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <strong>GAS Error:</strong>
+          <p class="text-red-600">${error.message}</p>
+          <p class="text-sm mt-2">Make sure GAS_URL is set in unified-auth.js</p>
+        `;
+        resultDiv.className = 'p-4 bg-red-50 rounded';
+      }
+    }
+  </script>
+</body>
+</html>
