@@ -1,8 +1,8 @@
 # Safe Freight Program - Master Manual
 
 **Document Control:**
-- **Version**: 1.5
-- **Last Updated**: 22 August 2025 17:15 AEST
+- **Version**: 1.6
+- **Last Updated**: 23 August 2025 16:30 AEST
 - **Document Owner**: Safe Freight Program
 - **Classification**: Commercial in Confidence
 - **Next Review**: 22 September 2025
@@ -32,7 +32,7 @@
 - [2.3 Training & Content Strategy](#23-training--content-strategy)
 - [2.4 Quality Assurance Framework](#24-quality-assurance-framework)
 - [2.5 AIL Framework & Operating Guidelines](#25-ail-framework--operating-guidelines-sfp-og1)
-
+- [2.6 **Intelligence Platform Architecture**](#26-intelligence-platform-architecture)
 ### [Part 3: Technical Infrastructure](#part-3-technical-infrastructure)
 - [3.1 System Architecture Overview](#31-system-architecture-overview)
 - [3.2 Authentication & User Management](#32-authentication--user-management)
@@ -57,6 +57,7 @@
 - [5.4 Financial Operations](#54-financial-operations)
 
 ### [Part 6: Implementation Roadmap](#part-6-implementation-roadmap)
+- [6.0 **Phase -1: Market Intelligence Platform**](#60-phase--1-market-intelligence-platform-weeks-1-12)
 - [6.1 Phase 0: Pilot Preparation](#61-phase-0-pilot-preparation-weeks-1-8)
 - [6.2 Phase 1: Market Validation](#62-phase-1-market-validation-months-3-6)
 - [6.3 Phase 2: Market Penetration](#63-phase-2-market-penetration-months-7-12)
@@ -600,7 +601,45 @@ Given the strong AIL unit economics (15x CLV/CAC ratio), accelerated network exp
 **Professional Standards:**
 - **Competency Maintenance**: Ongoing training, certification updates, skills development
 - **Customer Relations# Safe Freight Program - Master Manual (Part 3)
+### 2.6 Intelligence Platform Architecture
 
+#### 2.6.1 Content Generation Engine
+**Automated Source Monitoring:**
+- NHVR media releases and enforcement bulletins
+- State WorkSafe agencies (NSW, VIC, QLD, WA, SA)
+- Industry publications (ATN, Fully Loaded, Big Rigs)
+- AustLII court and tribunal decisions
+- Transport industry association newsletters
+#### 2.6.2 Subscriber Segmentation
+**Professional Segments:**
+- Compliance Managers (carriers and receivers)
+- Transport Executives and Operations Managers
+- AIL Operators and Vehicle Inspectors
+- Legal and Risk Management Professionals
+- Industry Consultants and Trainers
+
+**Driver Segments:**
+- Owner-Operators (small business focus)
+- Employee Drivers (workplace safety focus)
+- Specialist Operators (dangerous goods, oversized)
+- Interstate Drivers (multi-jurisdiction compliance)
+- New Entrants (basic compliance education)
+
+#### 2.6.3 Analytics and Performance Tracking
+**Content Performance Metrics:**
+- Open rates by segment and content type
+- Click-through rates to source materials
+- Time spent reading (engagement scoring)
+- Forward and share rates (virality indicators)
+- Subscriber growth and churn patterns
+
+**Industry Intelligence Gathering:**
+- Popular content themes indicating market interests
+- Geographic distribution of subscriber base
+- Company affiliations of professional subscribers
+- Compliance topic trends and seasonal patterns
+- Competitor monitoring through subscriber feedback
+**Content Classification System:**
 ## Part 3: Technical Infrastructure
 
 ### 3.1 System Architecture Overview
@@ -1386,7 +1425,46 @@ As a condition of Safe Freight Program (SFP) accreditation, all operators consen
 - **Partner Commissions**: Automated calculation and payment systems# Safe Freight Program - Master Manual (Part 5)
 
 ## Part 6: Implementation Roadmap
+### 6.0 Phase -1: Market Intelligence Platform (Weeks 1-12)
+**Goal**: Establish industry credibility and build subscriber database through free CoR intelligence service
+**Investment**: $0-500 (automation tools only)
+**Timeline**: Launch while managing employment transition
+**Outcome**: 500+ qualified subscribers and industry recognition as compliance intelligence expert
 
+#### 6.0.1 Strategic Positioning
+**Market Entry Strategy:**
+This pre-launch phase positions you as the industry's go-to source for CoR intelligence before revealing SFP as a commercial platform. The approach builds trust and demonstrates value delivery capability without competitive pressure.
+
+**Risk Mitigation:**
+- Personal project status maintains employment separation
+- Free service avoids commercial conflicts during transition
+- Builds industry relationships independent of current role
+- Creates subscriber base for eventual SFP conversion
+
+#### 6.0.2 Content Architecture
+
+**Primary Publication: "CoR Intelligence Weekly"**
+- **Target Audience**: Compliance managers, transport executives, AIL operators
+- **Format**: Professional digest with stakeholder-specific takeaways
+- **Frequency**: Weekly (Friday distribution for weekend reading)
+- **Content Sources**: NHVR, WorkSafe agencies, court decisions, industry media
+
+**Secondary Publication: "Safe Freight Mate"**
+- **Target Audience**: Heavy vehicle drivers
+- **Format**: Plain-English updates with practical safety tips
+- **Tone**: Conversational, supportive, accessible
+- **Content Mix**: 70% safety compliance, 30% driver wellness/industry news
+
+#### 6.0.3 Technical Implementation
+
+**Automated Content Generation:**
+```javascript
+Weekly Content Pipeline:
+├── RSS Feed Monitoring (NHVR, WorkSafe, ATN, Big Rigs)
+├── Content Classification (Regulatory/Enforcement/Industry)
+├── Stakeholder Tagging (Carriers/Receivers/Drivers/AILs)
+├── Digest Generation (Professional + Driver versions)
+└── Distribution Management (Segmented subscriber lists)
 ### 6.1 Phase 0: Pilot Preparation (Weeks 1-8)
 **Goal**: Customer-ready system for Cleanaway pilot deployment
 **Investment**: $2,000-5,000 (tools and services only)
