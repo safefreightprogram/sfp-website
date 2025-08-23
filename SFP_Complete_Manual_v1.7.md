@@ -7,7 +7,8 @@
 - **Classification**: Commercial in Confidence
 - **Next Review**: 22 September 2025
 
-**Version History:**
+### Section: Version History
+
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 15 August 2025 | SFP Team | Initial comprehensive manual creation |
@@ -16,34 +17,15 @@
 | 1.3 | 22 August 2025 | SFP Team | Added Strategic Positioning, Random Inspection Framework, Enhanced AIL Data Entry Process |
 | 1.4 | 22 August 2025 | SFP Team | Enhanced mobile inspection workflow based on SLP competitive analysis |
 | 1.5 | 22 August 2025 | SFP Team | Added comprehensive Legal Documentation Framework and Administrative Forms & Templates |
-| 1.6 | 23 August 2025 | SFP Team | **Added Phase -1 Market Intelligence Platform, Newsletter Architecture, Pre-Launch Strategy** |
-## Table of Contents
+| 1.6 | 23 August 2025 | SFP Team | Added Phase -1 Market Intelligence Platform, Newsletter Architecture, Pre-Launch Strategy |
+| 1.7 | 23 August 2025 | SFP Team | Integrated **Website Style Guide** (derived from homepage HTML), updated business model, financial projections, and technical infrastructure with latest Google Sheets & Apps Script data |
+
+### Section: Table of Contents
 
 ### [Part 1: Strategic Foundation](#part-1-strategic-foundation)
 - [1.1 Executive Summary](#11-executive-summary)
 - [1.2 Business Model & Revenue Framework](#12-business-model--revenue-framework)
-#### Phase -1 Newsletter Impact on Financial Projections
-
-**Pre-Launch Value Creation (Year 0):**
-- Direct Revenue: $0 (free service maintains employment compliance)
-- Investment: $500 (automation tools and OpenAI API usage)
-- Subscriber Database Value: 200+ qualified industry contacts by Month 3
-- Industry Recognition: Speaking opportunities and media coverage
-- Relationship Capital: NHVR and regulator engagement
-- Content Library: 12+ compliance intelligence reports
-- Market Validation: Demonstrated demand for compliance intelligence services
-
-**Conversion Impact (Year 1 Projections Revised):**
-- Newsletter-to-SFP Conversion: 30% of newsletter subscribers become pilot participants
-- Warm Lead Generation: 60+ qualified leads for enterprise customer acquisition  
-- Customer Acquisition Cost Reduction: $25,000 savings through warm referrals
-- Timeline Acceleration: 3-month faster market entry through established relationships
-- Brand Recognition: 40% awareness among target enterprise customers vs 5% cold start
-
-**Updated Year 1 Revenue with Newsletter Foundation:**
-- Base projection: $400,000 (original forecast)
-- Newsletter conversion uplift: $75,000 (faster customer acquisition)
-- **Revised Year 1 Total**: $475,000
+- [1.3 Financial Projections](#13-financial-projections-revised-based-on-large-enterprise-focus)
 - [1.4 Market Analysis](#14-market-analysis)
 - [1.5 Strategic Considerations & Competitive Positioning](#15-strategic-considerations--competitive-positioning)
 
@@ -53,7 +35,8 @@
 - [2.3 Training & Content Strategy](#23-training--content-strategy)
 - [2.4 Quality Assurance Framework](#24-quality-assurance-framework)
 - [2.5 AIL Framework & Operating Guidelines](#25-ail-framework--operating-guidelines-sfp-og1)
-- [2.6 **Intelligence Platform Architecture**](#26-intelligence-platform-architecture)
+- [2.6 Intelligence Platform Architecture](#26-intelligence-platform-architecture)
+
 ### [Part 3: Technical Infrastructure](#part-3-technical-infrastructure)
 - [3.1 System Architecture Overview](#31-system-architecture-overview)
 - [3.2 Authentication & User Management](#32-authentication--user-management)
@@ -78,7 +61,7 @@
 - [5.4 Financial Operations](#54-financial-operations)
 
 ### [Part 6: Implementation Roadmap](#part-6-implementation-roadmap)
-- [6.0 **Phase -1: Market Intelligence Platform**](#60-phase--1-market-intelligence-platform-weeks-1-12)
+- [6.0 Phase -1: Market Intelligence Platform](#60-phase--1-market-intelligence-platform-weeks-1-12)
 - [6.1 Phase 0: Pilot Preparation](#61-phase-0-pilot-preparation-weeks-1-8)
 - [6.2 Phase 1: Market Validation](#62-phase-1-market-validation-months-3-6)
 - [6.3 Phase 2: Market Penetration](#63-phase-2-market-penetration-months-7-12)
@@ -106,6 +89,9 @@
 - [9.6 AIL Journey Administrative Forms](#96-ail-journey-administrative-forms)
 - [9.7 Trainer Journey Administrative Forms](#97-trainer-journey-administrative-forms)
 - [9.8 Form Processing and Integration](#98-form-processing-and-integration)
+
+### [Part 10: Website Style Guide](#part-10-website-style-guide)
+
 
 ---
 
@@ -2417,6 +2403,54 @@ When users log in after policy updates:
 **IMPORTANT DISCLAIMER:** These administrative forms must be reviewed by qualified Australian legal counsel before implementation to ensure compliance with current privacy, employment, and industry regulations.
 
 ---
+### Section: Website Style Guide
+
+## Part 10: Website Style Guide
+
+The Safe Freight Program (SFP) website reflects the organisation’s professional, safety-first ethos. The following design and communication standards ensure consistency across all digital touchpoints.
+
+### 10.1 Tone & Voice
+- **Professional but approachable**: Formal enough for regulators and corporate stakeholders, yet clear for drivers.
+- **Clarity and trustworthiness**: Avoid jargon; emphasize compliance, safety, and professionalism.
+- **Inclusive**: Language addresses all user types (drivers, carriers, receivers, AILs, trainers).
+- **Confidence**: Messaging communicates authority and reliability.
+
+### 10.2 Typography
+- **Base Font**: Tailwind default sans-serif (`font-sans`), prioritizing readability across devices.
+- **Headings**: Bold, high-contrast, using Tailwind classes:
+  - H1: `text-4xl md:text-5xl font-bold text-blue-800`
+  - H2: `text-2xl md:text-3xl font-semibold text-gray-700`
+  - H3: `text-lg font-semibold`
+- **Body Text**: `text-gray-800`, base size responsive to device.
+- **Supporting Text**: `text-sm text-gray-600` for descriptions.
+
+### 10.3 Color Palette
+- **Primary Colors**:
+  - Blue (`text-blue-800`, `text-blue-700`, `border-blue-300`, `bg-blue-100`)
+  - Gray (`text-gray-800`, `text-gray-700`, `text-gray-600`, `bg-gray-50`)
+- **Accents**: White (`bg-white`) used for content cards.
+- **Contrast**: High contrast between headings (blue/gray) and body (dark gray on light background).
+
+### 10.4 Layout & Components
+- **Grid System**: Responsive `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6`.
+- **Cards**: White background, rounded corners (`rounded-lg`), subtle borders (`border`), hover effects (`hover:shadow-lg hover:border-blue-300`).
+- **Icons**: SVG-based, circular blue backgrounds (`bg-blue-100 p-4 rounded-full`) with consistent sizing (`w-8 h-8 text-blue-700`).
+- **Animations**: Subtle `fadeInUp` animations (`animate-fadeInUp`) to enhance professionalism.
+
+### 10.5 Interaction & Accessibility
+- **Hover States**: Interactive elements darken borders and apply subtle shadows.
+- **Accessibility**:
+  - Minimum touch targets of 44px.
+  - Semantic HTML elements (`<h1>`, `<section>`, `<a>`).
+  - Color contrast meets WCAG AA standards.
+- **Responsiveness**: Mobile-first, scaling up to desktop with clear breakpoints.
+
+### 10.6 Branding & Messaging
+- **Tagline**: “Every Driver. Every Load. One Program.”
+- **Positioning**: Compliance-focused, professional, scalable for enterprise customers.
+- **Consistency**: Ensure all communications reflect the tone, typography, and color palette defined above.
+
+This guide governs website and related digital materials to ensure cohesive branding and consistent user experience across SFP’s ecosystem.
 
 ## Conclusion
 
