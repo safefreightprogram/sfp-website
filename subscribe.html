@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Subscribe – Safe Freight Update</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="icon" href="/favicon.ico" />
+</head>
+<body class="bg-gray-50 text-gray-900">
+<div id="header-placeholder"></div>
+
+
+<main class="max-w-4xl mx-auto px-4 py-10">
+<section class="text-center mb-8">
+<h1 class="text-3xl font-semibold">Subscribe to Safe Freight Update</h1>
+<p class="mt-2 text-gray-600">Choose your edition. Unsubscribe anytime.</p>
+</section>
+
+
+<div class="grid md:grid-cols-2 gap-6">
+<!-- Pro tile -->
+<div class="bg-white rounded-2xl shadow p-6">
+<h2 class="text-xl font-semibold">CoR Intelligence Weekly</h2>
+<p class="text-sm text-gray-600 mb-4">Concise chain‑of‑responsibility intel for operators, receivers and compliance leads.</p>
+<form id="form-pro" class="space-y-3" onsubmit="return submitForm(event,'pro')">
+<input type="text" name="name" placeholder="Name (optional)" class="w-full border rounded-lg px-3 py-2"/>
+<input required type="email" name="email" placeholder="Work email" class="w-full border rounded-lg px-3 py-2"/>
+<button class="w-full bg-blue-700 hover:bg-blue-800 text-white rounded-lg py-2">Subscribe</button>
+<p class="text-xs text-gray-500">By subscribing, you consent to receive emails from Safe Freight Program. We identify ourselves in every email and you can unsubscribe in one click.</p>
+</form>
+</div>
+
+
+<!-- Driver tile -->
+<div class="bg-white rounded-2xl shadow p-6">
+<h2 class="text-xl font-semibold">Safe Freight Mate</h2>
+<p class="text-sm text-gray-600 mb-4">Plain‑English safety and site‑access tips for drivers.</p>
+<form id="form-driver" class="space-y-3" onsubmit="return submitForm(event,'driver')">
+</html>
