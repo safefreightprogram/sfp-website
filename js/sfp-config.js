@@ -1,22 +1,22 @@
-// /js/sfp-config.js — central place for GAS endpoints (loaded on every page)
+// /js/sfp-config.js — Updated with newsletter endpoint
 
-// === NEWSLETTER ENDPOINT ===
+// === NEWSLETTER ENDPOINT (Primary) ===
 window.SFP_NEWSLETTER_URL = "https://script.google.com/macros/s/AKfycbzrrCrxMkAGNjTeRd5z2DQA_O8NhPcXZgnzhrtFHS_IpQASyQFp17sWwCFJiFjoAi_u1g/exec";
 
-
 // === BASE ENDPOINT ===
-window.SFP_GAS_BASE =
-  "https://script.google.com/macros/s/AKfycbwDQtLK_9q5gN_bkIDHFLLyvsB2dv1e8JUAG2jLODoJVVN5WOu7_4x_P50FRg4zmRLBWQ/exec";
+window.SFP_GAS_BASE = "https://script.google.com/macros/s/AKfycbwDQtLK_9q5gN_bkIDHFLLyvsB2dv1e8JUAG2jLODoJVVN5WOu7_4x_P50FRg4zmRLBWQ/exec";
 
 // === WELL-KNOWN ENDPOINTS ===
-window.SFP_ROLES_URL               = `${window.SFP_GAS_BASE}?action=getRole`;
-window.SFP_DRIVER_LOOKUP_URL       = `${window.SFP_GAS_BASE}?action=getDriverData`;
-window.SFP_VEHICLE_LOOKUP_URL      = `${window.SFP_GAS_BASE}?action=getVehicleData`;
-window.SFP_INSPECTION_SUBMIT_URL   = `${window.SFP_GAS_BASE}?action=submitInspection`;
-window.SFP_UPDATE_PROFILE_URL      = `${window.SFP_GAS_BASE}?action=updateProfile`;
-window.SFP_GET_PROFILE_URL         = `${window.SFP_GAS_BASE}?action=getProfile`;z
+window.SFP_ROLES_URL = `${window.SFP_GAS_BASE}?action=getRole`;
+window.SFP_DRIVER_LOOKUP_URL = `${window.SFP_GAS_BASE}?action=getDriverData`;
+window.SFP_VEHICLE_LOOKUP_URL = `${window.SFP_GAS_BASE}?action=getVehicleData`;
+window.SFP_INSPECTION_SUBMIT_URL = `${window.SFP_GAS_BASE}?action=submitInspection`;
+window.SFP_UPDATE_PROFILE_URL = `${window.SFP_GAS_BASE}?action=updateProfile`;
+window.SFP_GET_PROFILE_URL = `${window.SFP_GAS_BASE}?action=getProfile`;
 
+// Consolidated endpoints object
 window.SFP_ENDPOINTS = Object.freeze({
+  newsletter: window.SFP_NEWSLETTER_URL,
   base: window.SFP_GAS_BASE,
   getRole: window.SFP_ROLES_URL,
   getDriverData: window.SFP_DRIVER_LOOKUP_URL,
@@ -27,9 +27,44 @@ window.SFP_ENDPOINTS = Object.freeze({
 });
 
 /**
- * Simple GET to GAS without custom headers to avoid CORS preflight.
- * NOTE: Do NOT add custom headers here (like X-Requested-With or Authorization),
- * or the browser will send an OPTIONS preflight that GAS won’t answer.
+ * Newsletter-specific API call function
+ */
+window.sfpNewsletterCall = async function sfpNewsletterCall(action, params = {}) {
+  const formData = new URLSearchParams({
+    action: action,
+    ...params
+  });
+
+  console.log('Newsletter API call:', action, params);
+  
+  const response = await fetch(window.SFP_NEWSLETTER_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: formData
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`HTTP ${response.status} ${response.statusText} – ${text.slice(0, 300)}`);
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  const rawText = await response.text();
+  try { 
+    return JSON.parse(rawText); 
+  } catch { 
+    return rawText; 
+  }
+};
+
+/**
+ * Regular SFP API call function (existing)
  */
 window.sfpApiCall = async function sfpApiCall(action, params = {}) {
   const url = new URL(window.SFP_GAS_BASE);
@@ -54,7 +89,25 @@ window.sfpApiCall = async function sfpApiCall(action, params = {}) {
   try { return JSON.parse(raw); } catch { return raw; }
 };
 
-// Quick manual test (run in DevTools: await testSFPConnection())
+// Newsletter testing function
+window.testNewsletterConnection = async function testNewsletterConnection() {
+  console.log("🧪 Testing Newsletter connection...");
+  try {
+    const result = await sfpNewsletterCall("newsletter_subscribe", {
+      email: "test@example.com",
+      name: "Test User",
+      segment: "pro",
+      consent: "true"
+    });
+    console.log("✅ Newsletter test result:", result);
+    return true;
+  } catch (err) {
+    console.error("💥 Newsletter test failed:", err);
+    return false;
+  }
+};
+
+// Quick manual test for main SFP system
 window.testSFPConnection = async function testSFPConnection() {
   console.log("🧪 Testing SFP connection…");
   try {
