@@ -376,33 +376,6 @@ const result = await window.SFP_CONFIG.callNewsletterAPI('newsletter_subscribe',
         });
     }
 });
-    </script>
-    <script>
-// Debug script - remove after testing
-document.addEventListener('DOMContentLoaded', function() {
-    // Check multiple possible sources
-    console.log('=== GAS URL Debug ===');
-    
-    // 1. From window.SFP_CONFIG
-    if (window.SFP_CONFIG?.newsletter?.apiUrl) {
-        console.log('✓ Config URL:', window.SFP_CONFIG.newsletter.apiUrl);
-    } else {
-        console.log('✗ No URL in SFP_CONFIG');
-    }
-    
-    // 2. From environment (if using edge function)
-    if (window.ENV?.GAS_NEWSLETTER_URL) {
-        console.log('✓ Env URL:', window.ENV.GAS_NEWSLETTER_URL);
-    }
-    
-    // 3. Direct test
-    const testUrl = 'https://script.google.com/macros/s/AKfycbzH_IA0BiSpPiSnsE1YuGW0NIJX294_nrJVrKsvvBw8-joi9MT-brsqn8aGVbAombqaKw/exec';
-    
-    fetch(testUrl + '?action=ping')
-        .then(r => r.json())
-        .then(data => console.log('✓ Direct test success:', data))
-        .catch(e => console.log('✗ Direct test failed:', e));
-});
 </script>
 </body>
 </html>
