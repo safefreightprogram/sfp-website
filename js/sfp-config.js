@@ -1,7 +1,7 @@
 // /js/sfp-config.js — central place for GAS endpoints (loaded on every page)
 
 // === NEWSLETTER ENDPOINT ===
-window.SFP_NEWSLETTER_URL = "https://script.google.com/macros/s/AKfycbwDQtLK_9q5gN_bkIDHFLLyvsB2dv1e8JUAG2jLODoJVVN5WOu7_4x_P50FRg4zmRLBWQ/exec";
+window.SFP_NEWSLETTER_URL = "https://script.google.com/macros/s/AKfycbxxa6EPPQaMim175dRkAaR07c65r0hDY1C7iLYAL0cxc7qVGtXQUHD9X_4Sj_NeLARZ2g/exec";
 
 
 // === BASE ENDPOINT ===
