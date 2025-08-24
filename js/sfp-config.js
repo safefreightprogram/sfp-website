@@ -1,5 +1,9 @@
 // /js/sfp-config.js — central place for GAS endpoints (loaded on every page)
 
+// === NEWSLETTER ENDPOINT ===
+window.SFP_NEWSLETTER_URL = "https://script.google.com/macros/s/AKfycbwDQtLK_9q5gN_bkIDHFLLyvsB2dv1e8JUAG2jLODoJVVN5WOu7_4x_P50FRg4zmRLBWQ/exec";
+
+
 // === BASE ENDPOINT ===
 window.SFP_GAS_BASE =
   "https://script.google.com/macros/s/AKfycbwDQtLK_9q5gN_bkIDHFLLyvsB2dv1e8JUAG2jLODoJVVN5WOu7_4x_P50FRg4zmRLBWQ/exec";
@@ -10,7 +14,7 @@ window.SFP_DRIVER_LOOKUP_URL       = `${window.SFP_GAS_BASE}?action=getDriverDat
 window.SFP_VEHICLE_LOOKUP_URL      = `${window.SFP_GAS_BASE}?action=getVehicleData`;
 window.SFP_INSPECTION_SUBMIT_URL   = `${window.SFP_GAS_BASE}?action=submitInspection`;
 window.SFP_UPDATE_PROFILE_URL      = `${window.SFP_GAS_BASE}?action=updateProfile`;
-window.SFP_GET_PROFILE_URL         = `${window.SFP_GAS_BASE}?action=getProfile`;
+window.SFP_GET_PROFILE_URL         = `${window.SFP_GAS_BASE}?action=getProfile`;z
 
 window.SFP_ENDPOINTS = Object.freeze({
   base: window.SFP_GAS_BASE,
