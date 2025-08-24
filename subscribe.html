@@ -147,23 +147,24 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-3">Newsletter Edition *</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-3">Newsletter Edition * <span class="text-red-500">(Select at least one)</span></label>
                         <div class="space-y-3">
                             <label class="flex items-center cursor-pointer p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                <input type="checkbox" name="segments" value="pro" required class="mr-3">
+                                <input type="checkbox" name="segments" value="pro" class="mr-3 newsletter-checkbox">
                                 <div>
                                     <div class="font-semibold text-gray-800">CoR Intel Weekly</div>
                                     <div class="text-sm text-gray-600">Professional compliance intelligence</div>
                                 </div>
                             </label>
                             <label class="flex items-center cursor-pointer p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                <input type="checkbox" name="segments" value="driver" class="mr-3">
+                                <input type="checkbox" name="segments" value="driver" class="mr-3 newsletter-checkbox">
                                 <div>
                                     <div class="font-semibold text-gray-800">Safe Freight Mate</div>
                                     <div class="text-sm text-gray-600">Driver-focused updates and tips</div>
                                 </div>
                             </label>
                         </div>
+                        <div id="segment-error" class="text-red-600 text-sm mt-1 hidden">Please select at least one newsletter edition.</div>
                     </div>
 
                     <div>
@@ -194,12 +195,12 @@
                         <input type="checkbox" id="consent" name="consent" required class="mt-1 mr-3">
                         <label for="consent" class="text-sm text-gray-600">
                             I consent to receiving the selected newsletter and understand I can unsubscribe at any time. 
-                            I have read the <a href="/privacy.html" class="text-blue-600 hover:underline" target="_blank">Privacy Policy</a>.
+                            I have read the <a href="/privacy.html" class="text-blue-600 hover:underline" target="_blank">Privacy Policy</a>.*
                         </label>
                     </div>
 
                     <button type="submit" id="submit-btn" 
-                            class="w-full bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-800 transition-colors">
+                            class="w-full bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                         Subscribe Now
                     </button>
                 </form>
@@ -244,138 +245,175 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('newsletter-form');
-    const submitBtn = document.getElementById('submit-btn');
-    const messages = document.getElementById('form-messages');
+        const form = document.getElementById('newsletter-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const messages = document.getElementById('form-messages');
+        const segmentError = document.getElementById('segment-error');
 
-    // Ensure the newsletter URL is available
-if (!window.SFP_CONFIG || !window.SFP_CONFIG.newsletter || !window.SFP_CONFIG.newsletter.apiUrl) {
-    console.error('Newsletter configuration not found');
-    showErrorMessage('Configuration error. Please contact support.');
-    return;
-}
-// Set the URL from config
-const newsletterUrl = window.SFP_CONFIG.newsletter.apiUrl;
-
-    console.log('Newsletter system initialized with URL:', window.SFP_CONFIG.newsletter.apiUrl);
-
-    form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        
-        // Collect all selected newsletter segments
-        const selectedSegments = Array.from(document.querySelectorAll('input[name="segments"]:checked'))
-            .map(el => el.value);
-        
-        // Validation
-        if (selectedSegments.length === 0) {
-            showErrorMessage('Selection Required', 'Please select at least one newsletter edition.');
+        // Ensure the newsletter URL is available
+        if (!window.SFP_CONFIG || !window.SFP_CONFIG.newsletter || !window.SFP_CONFIG.newsletter.apiUrl) {
+            console.error('Newsletter configuration not found');
+            showErrorMessage('Configuration Error', 'Newsletter service is not properly configured. Please contact support.');
             return;
         }
 
-        if (!formData.get('consent')) {
-            showErrorMessage('Consent Required', 'Please confirm you consent to receiving the newsletter.');
-            return;
-        }
+        console.log('Newsletter system initialized with URL:', window.SFP_CONFIG.newsletter.apiUrl);
 
-        // Show loading state
-        setLoadingState(true);
-        hideMessages();
-        
-        try {
-            // Use the new newsletter API function
-            // Correct version
-const result = await window.SFP_CONFIG.callNewsletterAPI('newsletter_subscribe', {
-    email: formData.get('email'),
-    name: formData.get('name') || '',
-    segment: selectedSegments.join(','),
-    company: formData.get('company') || '',
-    role: formData.get('role') || '',
-    consent: 'true'
-});
+        // Add real-time validation for segments
+        const checkboxes = document.querySelectorAll('.newsletter-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const selectedSegments = Array.from(document.querySelectorAll('input[name="segments"]:checked'));
+                if (selectedSegments.length > 0) {
+                    segmentError.classList.add('hidden');
+                    checkboxes.forEach(cb => cb.setCustomValidity(''));
+                }
+            });
+        });
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
             
-            console.log('Subscription result:', result);
+            const formData = new FormData(this);
             
-            if (result.success) {
-                showSuccessMessage('Check Your Email', 
-                    `We've sent a confirmation link to ${formData.get('email')}. Click it to complete your subscription.`);
-                form.reset();
+            // Collect all selected newsletter segments
+            const selectedSegments = Array.from(document.querySelectorAll('input[name="segments"]:checked'))
+                .map(el => el.value);
+            
+            // Validation
+            if (selectedSegments.length === 0) {
+                segmentError.classList.remove('hidden');
+                segmentError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
             } else {
-                throw new Error(result.error || 'Subscription failed');
+                segmentError.classList.add('hidden');
             }
-            
-        } catch (error) {
-            console.error('Subscription error:', error);
-            
-            let errorMessage = 'Unknown error occurred';
-            if (error.message) {
-                errorMessage = error.message;
-            } else if (typeof error === 'string') {
-                errorMessage = error;
+
+            if (!formData.get('consent')) {
+                showErrorMessage('Consent Required', 'Please confirm you consent to receiving the newsletter.');
+                return;
             }
+
+            // Show loading state
+            setLoadingState(true);
+            hideMessages();
             
-            showErrorMessage('Subscription Failed', errorMessage);
-        } finally {
-            setLoadingState(false);
-        }
-    });
+            try {
+                console.log('Submitting subscription:', {
+                    email: formData.get('email'),
+                    segments: selectedSegments,
+                    company: formData.get('company'),
+                    role: formData.get('role')
+                });
 
-    function setLoadingState(isLoading) {
-        submitBtn.disabled = isLoading;
-        submitBtn.innerHTML = isLoading ? 
-            '<span class="animate-pulse">Subscribing...</span>' : 
-            'Subscribe Now';
-    }
-
-    function hideMessages() {
-        messages.classList.add('hidden');
-    }
-
-    function showSuccessMessage(title, message) {
-        messages.innerHTML = `
-            <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <div>
-                        <h3 class="font-semibold text-green-800">${title}</h3>
-                        <p class="text-green-700">${message}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-        messages.classList.remove('hidden');
-    }
-
-    function showErrorMessage(title, message) {
-        messages.innerHTML = `
-            <div class="p-4 bg-red-100 border border-red-300 rounded-lg">
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 text-red-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    <div>
-                        <h3 class="font-semibold text-red-800">${title}</h3>
-                        <p class="text-red-700">${message}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-        messages.classList.remove('hidden');
-    }
-
-    // Test connection on page load (optional - remove if not needed)
-    if (window.testNewsletterConnection) {
-        console.log('Testing newsletter connection...');
-        window.testNewsletterConnection().then(success => {
-            if (!success) {
-                console.warn('Newsletter system test failed - form may not work properly');
+                // Call the newsletter API
+                const result = await window.SFP_CONFIG.callNewsletterAPI('newsletter_subscribe', {
+                    email: formData.get('email'),
+                    name: formData.get('name') || '',
+                    segment: selectedSegments.join(','), // Backend expects comma-separated string
+                    company: formData.get('company') || '',
+                    role: formData.get('role') || '',
+                    consent: 'true'
+                });
+                
+                console.log('Subscription result:', result);
+                
+                if (result.success) {
+                    showSuccessMessage('Check Your Email', 
+                        `We've sent a confirmation link to ${formData.get('email')}. Please check your email and click the confirmation link to complete your subscription.`);
+                    form.reset();
+                    
+                    // Track successful subscription if analytics available
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'newsletter_subscribe', {
+                            'event_category': 'engagement',
+                            'event_label': selectedSegments.join(','),
+                            'value': selectedSegments.length
+                        });
+                    }
+                } else {
+                    throw new Error(result.error || 'Subscription failed');
+                }
+                
+            } catch (error) {
+                console.error('Subscription error:', error);
+                
+                let errorMessage = 'An unexpected error occurred. Please try again.';
+                if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                // Handle common error types
+                if (errorMessage.includes('email') && errorMessage.includes('invalid')) {
+                    errorMessage = 'Please enter a valid email address.';
+                } else if (errorMessage.includes('rate limit')) {
+                    errorMessage = 'Too many requests. Please wait a moment and try again.';
+                } else if (errorMessage.includes('already exists')) {
+                    errorMessage = 'This email is already subscribed. Check your inbox for previous confirmation emails.';
+                }
+                
+                showErrorMessage('Subscription Failed', errorMessage);
+            } finally {
+                setLoadingState(false);
             }
         });
-    }
-});
-</script>
+
+        function setLoadingState(isLoading) {
+            submitBtn.disabled = isLoading;
+            submitBtn.innerHTML = isLoading ? 
+                '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Subscribing...' : 
+                'Subscribe Now';
+        }
+
+        function hideMessages() {
+            messages.classList.add('hidden');
+        }
+
+        function showSuccessMessage(title, message) {
+            messages.innerHTML = `
+                <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <div>
+                            <h3 class="font-semibold text-green-800">${title}</h3>
+                            <p class="text-green-700 mt-1">${message}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            messages.classList.remove('hidden');
+            messages.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function showErrorMessage(title, message) {
+            messages.innerHTML = `
+                <div class="p-4 bg-red-100 border border-red-300 rounded-lg">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <h3 class="font-semibold text-red-800">${title}</h3>
+                            <p class="text-red-700 mt-1">${message}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            messages.classList.remove('hidden');
+            messages.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Test connection on page load
+        window.SFP_CONFIG.testNewsletterConnection().then(result => {
+            if (!result.success) {
+                console.warn('Newsletter service connection test failed:', result.error);
+            } else {
+                console.log('Newsletter service connection test passed');
+            }
+        });
+    });
+    </script>
 </body>
 </html>
