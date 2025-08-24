@@ -1,7 +1,7 @@
 // /js/sfp-config.js — Updated with newsletter endpoint
 
 // === NEWSLETTER ENDPOINT (Primary) ===
-window.SFP_NEWSLETTER_URL = "https://script.google.com/macros/s/AKfycbw6KhhnBSmMYUG0TaJsT04azFv_QXNQN4j4VQ3dGTeKRa3HENUyhNL9np8n8EJxipQq5w/exec";
+window.SFP_NEWSLETTER_URL = "https://script.google.com/macros/s/AKfycbzH_IA0BiSpPiSnsE1YuGW0NIJX294_nrJVrKsvvBw8-joi9MT-brsqn8aGVbAombqaKw/exec";
 
 // === BASE ENDPOINT ===
 window.SFP_GAS_BASE = "https://script.google.com/macros/s/AKfycbwDQtLK_9q5gN_bkIDHFLLyvsB2dv1e8JUAG2jLODoJVVN5WOu7_4x_P50FRg4zmRLBWQ/exec";
