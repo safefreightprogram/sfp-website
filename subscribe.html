@@ -243,118 +243,136 @@
     <script src="/js/account-indicator.js" defer></script>
 
     <script>
-    document.getElementById('newsletter-form').addEventListener('submit', async function(e) {
+    document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('newsletter-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const messages = document.getElementById('form-messages');
+
+    // Ensure the newsletter URL is available
+    if (!window.SFP_NEWSLETTER_URL) {
+        console.error('Newsletter URL not configured');
+        showErrorMessage('Configuration error. Please contact support.');
+        return;
+    }
+
+    console.log('Newsletter system initialized with URL:', window.SFP_NEWSLETTER_URL);
+
+    form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        const submitBtn = document.getElementById('submit-btn');
-        const messages = document.getElementById('form-messages');
         const formData = new FormData(this);
         
         // Collect all selected newsletter segments
-        const selectedSegments = Array.from(document.querySelectorAll('input[name="segments"]:checked')).map(el => el.value);
+        const selectedSegments = Array.from(document.querySelectorAll('input[name="segments"]:checked'))
+            .map(el => el.value);
         
         // Validation
         if (selectedSegments.length === 0) {
-            messages.innerHTML = `
-                <div class="p-4 bg-red-100 border border-red-300 rounded-lg">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 text-red-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        <div>
-                            <h3 class="font-semibold text-red-800">Selection Required</h3>
-                            <p class="text-red-700">Please select at least one newsletter edition.</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            messages.classList.remove('hidden');
+            showErrorMessage('Selection Required', 'Please select at least one newsletter edition.');
+            return;
+        }
+
+        if (!formData.get('consent')) {
+            showErrorMessage('Consent Required', 'Please confirm you consent to receiving the newsletter.');
             return;
         }
 
         // Show loading state
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="animate-pulse">Subscribing...</span>';
-        messages.className = 'mt-4 hidden';
-        
-        // Debug: Log the URL we're using
-        console.log('Newsletter URL:', window.SFP_NEWSLETTER_URL);
+        setLoadingState(true);
+        hideMessages();
         
         try {
-            // Create URLSearchParams for proper form encoding
-            const params = new URLSearchParams({
-                action: 'newsletter_subscribe',
+            // Use the new newsletter API function
+            const result = await window.sfpNewsletterCall('newsletter_subscribe', {
                 email: formData.get('email'),
                 name: formData.get('name') || '',
                 segment: selectedSegments.join(','),
                 company: formData.get('company') || '',
                 role: formData.get('role') || '',
-                consent: formData.get('consent') ? 'true' : 'false'
+                consent: 'true'
             });
             
-            console.log('Sending data:', params.toString());
-            
-            const response = await fetch(window.SFP_NEWSLETTER_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: params
-            });
-            
-            console.log('Response status:', response.status);
-            console.log('Response headers:', [...response.headers.entries()]);
-            
-            let result;
-            try {
-                const text = await response.text();
-                console.log('Raw response:', text);
-                result = JSON.parse(text);
-            } catch (parseError) {
-                console.error('Failed to parse response as JSON:', parseError);
-                throw new Error('Invalid response from server');
-            }
+            console.log('Subscription result:', result);
             
             if (result.success) {
-                messages.innerHTML = `
-                    <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
-                        <div class="flex items-center">
-                            <svg class="w-5 h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                            <div>
-                                <h3 class="font-semibold text-green-800">Check Your Email</h3>
-                                <p class="text-green-700">We've sent a confirmation link to ${formData.get('email')}. Click it to complete your subscription.</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                this.reset();
+                showSuccessMessage('Check Your Email', 
+                    `We've sent a confirmation link to ${formData.get('email')}. Click it to complete your subscription.`);
+                form.reset();
             } else {
                 throw new Error(result.error || 'Subscription failed');
             }
+            
         } catch (error) {
             console.error('Subscription error:', error);
-            messages.innerHTML = `
-                <div class="p-4 bg-red-100 border border-red-300 rounded-lg">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 text-red-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        <div>
-                            <h3 class="font-semibold text-red-800">Subscription Failed</h3>
-                            <p class="text-red-700">${error.message}</p>
-                            <p class="text-red-600 text-sm mt-1">Check the browser console for more details.</p>
-                        </div>
-                    </div>
-                </div>
-            `;
+            
+            let errorMessage = 'Unknown error occurred';
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (typeof error === 'string') {
+                errorMessage = error;
+            }
+            
+            showErrorMessage('Subscription Failed', errorMessage);
         } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Subscribe Now';
-            messages.classList.remove('hidden');
+            setLoadingState(false);
         }
     });
+
+    function setLoadingState(isLoading) {
+        submitBtn.disabled = isLoading;
+        submitBtn.innerHTML = isLoading ? 
+            '<span class="animate-pulse">Subscribing...</span>' : 
+            'Subscribe Now';
+    }
+
+    function hideMessages() {
+        messages.classList.add('hidden');
+    }
+
+    function showSuccessMessage(title, message) {
+        messages.innerHTML = `
+            <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div>
+                        <h3 class="font-semibold text-green-800">${title}</h3>
+                        <p class="text-green-700">${message}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        messages.classList.remove('hidden');
+    }
+
+    function showErrorMessage(title, message) {
+        messages.innerHTML = `
+            <div class="p-4 bg-red-100 border border-red-300 rounded-lg">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-red-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <div>
+                        <h3 class="font-semibold text-red-800">${title}</h3>
+                        <p class="text-red-700">${message}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        messages.classList.remove('hidden');
+    }
+
+    // Test connection on page load (optional - remove if not needed)
+    if (window.testNewsletterConnection) {
+        console.log('Testing newsletter connection...');
+        window.testNewsletterConnection().then(success => {
+            if (!success) {
+                console.warn('Newsletter system test failed - form may not work properly');
+            }
+        });
+    }
+});
     </script>
 </body>
 </html>
