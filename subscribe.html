@@ -257,7 +257,7 @@ if (!window.SFP_CONFIG || !window.SFP_CONFIG.newsletter || !window.SFP_CONFIG.ne
 // Set the URL from config
 const newsletterUrl = window.SFP_CONFIG.newsletter.apiUrl;
 
-    console.log('Newsletter system initialized with URL:', window.SFP_NEWSLETTER_URL);
+    console.log('Newsletter system initialized with URL:', window.window.SFP_CONFIG.newsletter.apiUrl);
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
