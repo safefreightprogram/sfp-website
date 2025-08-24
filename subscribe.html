@@ -249,11 +249,13 @@
     const messages = document.getElementById('form-messages');
 
     // Ensure the newsletter URL is available
-    if (!window.SFP_NEWSLETTER_URL) {
-        console.error('Newsletter URL not configured');
-        showErrorMessage('Configuration error. Please contact support.');
-        return;
-    }
+if (!window.SFP_CONFIG || !window.SFP_CONFIG.newsletter || !window.SFP_CONFIG.newsletter.apiUrl) {
+    console.error('Newsletter configuration not found');
+    showErrorMessage('Configuration error. Please contact support.');
+    return;
+}
+// Set the URL from config
+const newsletterUrl = window.SFP_CONFIG.newsletter.apiUrl;
 
     console.log('Newsletter system initialized with URL:', window.SFP_NEWSLETTER_URL);
 
