@@ -285,14 +285,15 @@ const newsletterUrl = window.SFP_CONFIG.newsletter.apiUrl;
         
         try {
             // Use the new newsletter API function
-            const result = await window.SFP_CONFIG.callNewsletterAPI('newsletter_subscribe', data); {
-                email: formData.get('email'),
-                name: formData.get('name') || '',
-                segment: selectedSegments.join(','),
-                company: formData.get('company') || '',
-                role: formData.get('role') || '',
-                consent: 'true'
-            });
+            // Correct version
+const result = await window.SFP_CONFIG.callNewsletterAPI('newsletter_subscribe', {
+    email: formData.get('email'),
+    name: formData.get('name') || '',
+    segment: selectedSegments.join(','),
+    company: formData.get('company') || '',
+    role: formData.get('role') || '',
+    consent: 'true'
+});
             
             console.log('Subscription result:', result);
             
