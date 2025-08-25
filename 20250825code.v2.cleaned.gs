@@ -347,10 +347,6 @@ function getUserAgent() {
 }
 
 
-function getUserAgent() {
-  // In Apps Script, user agent is not directly available
-  return 'Google Apps Script';
-}
 
 function getNewslettersSent(timeRange, segment) {
   try {
@@ -2034,201 +2030,10 @@ Important safety updates for winter driving conditions including new road rules 
   return { content: fallbackContent, issueId, sources: fallbackSources };
 }
 
-function handleSendNewsletter(data, e) {
-  try {
-    const segment = (data.segment || '').toString().toLowerCase();
-    const isTest = (data.isTest === true || data.isTest === 'true');
-
-    if (!checkRateLimit('CONTENT_GENERATION', 'all_segments')) {
-      return { success: false, error: 'Content generation rate limit exceeded' };
-    }
-    if (!['pro', 'driver'].includes(segment)) {
-      return { success: false, error: 'Invalid newsletter segment' };
-    }
-
-    const newsletterDB = getNewsletterSpreadsheet();
-    const subscribersSheet = getOrCreateSheet(newsletterDB, 'Subscribers');
-
-    let relevantSubscribers = [];
-    const all = subscribersSheet.getDataRange().getValues();
-
-    if (isTest) {
-      for (let i = 1; i < all.length; i++) {
-        if (all[i][3] === segment && all[i][4] === 'active') {
-          relevantSubscribers.push({
-            email: all[i][1], 
-            name: all[i][2], 
-            segment: all[i][3], 
-            unsubToken: all[i][8]
-          });
-          break;
-        }
-      }
-    } else {
-      relevantSubscribers = all.slice(1)
-        .filter(r => r[3] === segment && r[4] === 'active')
-        .map(r => ({ 
-          email: r[1], 
-          name: r[2], 
-          segment: r[3], 
-          unsubToken: r[8] 
-        }));
-    }
-
-    if (relevantSubscribers.length === 0) {
-      return { success: false, error: 'No active subscribers found for this segment.' };
-    }
-
-    const sourceData = {
-      pro: [
-        { 
-          title: 'NHVR Latest News and Prosecutions', 
-          snippet: 'NHVR opens public consultation on heavy vehicle reforms... Recent prosecutions include Chain of Responsibility breaches... New permits approved for Victoria Emergency Drought Network Operations...', 
-          url: 'https://www.nhvr.gov.au/news'
-        },
-        { 
-          title: 'WorkSafe NSW Transport Industry Focus', 
-          snippet: 'Practical WHS guidance for transport operations... Recent transport sector fatality statistics and prevention strategies... Updated manual handling guidelines for loading dock operations...', 
-          url: 'https://www.safework.nsw.gov.au/hazards-a-z/manual-handling/transport'
-        },
-        {
-          title: 'AustLII Transport Law Decisions',
-          snippet: 'Recent court decisions affecting heavy vehicle operators... Chain of Responsibility penalty updates... Appeals tribunal outcomes for transport compliance breaches...',
-          url: 'https://www.austlii.edu.au/cgi-bin/viewdoc/au/cases/cth/FCA/'
-        },
-        {
-          title: 'ACCC Transport and Logistics Updates',
-          snippet: 'Competition and consumer protection in freight markets... Port access and pricing transparency initiatives... Supply chain competition compliance guidance...',
-          url: 'https://www.accc.gov.au/business/industry-specific-guidance/transport'
-        },
-        {
-          title: 'Healthy Heads Transport Mental Health Resources',
-          snippet: 'Mental health and wellbeing programs for transport workers... Workplace mental health initiatives... Resources for supporting driver psychological safety...',
-          url: 'https://www.healthyheads.org.au/'
-        }
-      ],
-      driver: [
-        { 
-          title: 'NHVR Driver Information and Safety Updates', 
-          snippet: 'Road Safety Week reminders for heavy vehicle drivers... Rail Safety Week safety alerts... Driver fatigue management resources and requirements...', 
-          url: 'https://www.nhvr.gov.au/safety-accreditation-compliance/fatigue-management'
-        },
-        { 
-          title: 'PowerTorque Industry News for Drivers', 
-          snippet: 'SA leading changes to truck licence processes and medical requirements... New training programs for professional drivers... Industry updates affecting driver operations...', 
-          url: 'https://www.powertorque.com.au'
-        },
-        {
-          title: 'Transport Workers Union Safety Alerts',
-          snippet: 'Workplace safety updates for transport workers... Driver rights and safety obligations... Industrial relations updates affecting driver conditions...',
-          url: 'https://www.twu.com.au/safety'
-        },
-        {
-          title: 'Australian Trucking Association Driver Resources',
-          snippet: 'Professional development opportunities for drivers... Industry advocacy updates... Driver training and certification programs available nationwide...',
-          url: 'https://www.truck.net.au/industry-resources'
-        },
-        {
-          title: 'Healthy Heads Driver Wellbeing',
-          snippet: 'Mental health support for truck drivers... Stress management techniques for long-haul drivers... Family support resources and workplace mental health programs...',
-          url: 'https://www.healthyheads.org.au/'
-        }
-      ]
-    };
-
-    const newsletterContent = generateNewsletterContent(segment, sourceData[segment]);
-
-    let sentCount = 0, failedCount = 0;
-    
-    for (const sub of relevantSubscribers) {
-      try {
-        const subject = (segment === 'pro' ? 'CoR Intelligence Weekly' : 'Safe Freight Mate') +
-                        ' - ' + new Date().toLocaleDateString('en-AU');
-        
-        // Use the formatted email template with source data
-        const emailBody = formatNewsletterEmail(
-          newsletterContent.content, 
-          segment, 
-          sub, 
-          newsletterContent.sources || sourceData[segment]
-        );
-        
-        MailApp.sendEmail({
-          to: sub.email,
-          subject: subject,
-          htmlBody: emailBody,
-          from: CONFIG.NEWSLETTER.SENDER_EMAIL,
-          name: CONFIG.NEWSLETTER.SENDER_NAME
-        });
-        
-        sentCount++;
-      } catch (err) {
-        console.error('Failed to send email to ' + sub.email + ':', err);
-        failedCount++;
-      }
-    }
-
-    const sendLogSheet = getOrCreateSheet(newsletterDB, 'Send_Log');
-    sendLogSheet.appendRow([
-      new Date().toISOString(), 
-      segment, 
-      sentCount, 
-      failedCount, 
-      isTest, 
-      'Newsletter sent via script'
-    ]);
-
-    return { 
-      success: true, 
-      message: `Newsletter sent to ${sentCount} subscribers. ${failedCount} failures.` 
-    };
-
-  } catch (error) {
-    console.error('Newsletter sending error:', error);
-    return { success: false, error: 'Newsletter sending failed: ' + error.message };
-  }
-}
-
 // =============================================================================
 // EMAIL TEMPLATE FUNCTIONS
 // =============================================================================
 
-function formatNewsletterEmail(content, segment, subscriber, sources) {
-  // Determine newsletter name
-  const newsletterName = segment === 'pro' ? 'CoR Intelligence Weekly' : 'Safe Freight Mate';
-
-  // Parse the AI-generated content into structured articles with source URLs
-  const articles = parseContentIntoArticles(content, sources);
-
-  // Build the HTML for all articles
-  let articlesHTML = '';
-  articles.forEach((article, index) => {
-    articlesHTML += buildArticleHTML(article, index);
-  });
-
-  // Compute template variables
-  const unsubscribeUrl =
-    ScriptApp.getService().getUrl() +
-    '?action=newsletter_unsubscribe&token=' +
-    subscriber.unsubToken +
-    '&segment=' + segment;
-
-  const formattedDate = new Date().toLocaleDateString('en-AU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
-  // Get the template and replace placeholders
-  const template = getEmailTemplate();
-  const emailHTML = template
-    .replace(/{{NEWSLETTER_NAME}}/g, newsletterName)
-    .replace(/{{ARTICLES_CONTENT}}/g, articlesHTML)
-    .replace(/{{UNSUBSCRIBE_URL}}/g, unsubscribeUrl)
-    .replace(/{{DATE}}/g, formattedDate);
-
-  return emailHTML;
-}
 
 function parseContentIntoArticles(content, sources) {
   // Split content by ### headers
@@ -2330,8 +2135,6 @@ function buildArticleHTML(article, index) {
     </table>`;
 }
 
-function getEmailTemplate() {
-  return `<!DOCTYPE html>
 <html lang="en-AU">
 <head>
     <meta charset="UTF-8">
@@ -2518,49 +2321,6 @@ function getOrCreateSheet(spreadsheet, sheetName) {
   return sheet;
 }
 
-function setupSheetHeaders(sheet, sheetName) {
-  let headers = [];
-  switch (sheetName) {
-    case 'Subscribers':
-      headers = [
-        'Subscriber_ID','Email','Name','Segment','Status','Source_IP',
-        'Subscribed_At','Confirm_Token','Unsub_Token','Company','Role',
-        'Notes','Updated_At','Confirmed_At','Unsubscribed_At'
-      ];
-      break;
-    case 'Content_Archive':
-      headers = [
-        'Issue_ID','Segment','Subject','Published_At','Sent_Count',
-        'Failed_Count','Open_Rate','Click_Rate','Content_JSON','Notes'
-      ];
-      break;
-    case 'Engagement_Tracking':
-      headers = ['Subscriber_ID','Issue_ID','Action','Timestamp','IP_Address','User_Agent'];
-      break;
-    case 'SFP_Conversions':
-      headers = [
-        'Subscriber_ID','Email','Newsletter_Segment','SFP_Interest_Level',
-        'Conversion_Date','Revenue_Value','Notes'
-      ];
-      break;
-    case 'Subscription_Audit':
-      headers = ['Timestamp','Action','Email','Metadata','IP_Address','User_Agent'];
-      break;
-    case 'Send_Log':
-      headers = ['Timestamp','Segment','Sent_Count','Failed_Count','Is_Test','Notes'];
-      break;
-  }
-
-  if (headers.length === 0) return;
-
-  const lastCol = sheet.getLastColumn();
-  const current = lastCol ? sheet.getRange(1,1,1,lastCol).getValues()[0] : [];
-  // Add missing headers without breaking existing data
-  const merged = [...current];
-  headers.forEach(h => { if (!merged.includes(h)) merged.push(h); });
-  sheet.getRange(1,1,1,merged.length).setValues([merged]);
-  sheet.getRange(1,1,1,merged.length).setFontWeight('bold');
-}
 
 function findSubscribersByEmail(sheet, email) {
   const data = sheet.getDataRange().getValues();
