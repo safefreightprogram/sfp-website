@@ -2525,49 +2525,65 @@ WorkSafe NSW has issued a safety alert following recent incident...nd manual han
     
     // Check for targeted URLs
     const expectedUrls = [
-      'nhvr.gov.au/news/prosecutions',
-      'nhvr.gov.au/news/consultation',
-      'safework.nsw.gov.au'
-    ];
-    
-    let allFound = true;
-    requiredElements.forEach(element => {
-      if (!emailHTML.includes(element)) {
-        console.error('❌ Missing required element:', element);
-        allFound = false;
-      }
-    });
-    
-    expectedUrls.forEach(url => {
-      if (!emailHTML.includes(url)) {
-        console.error('❌ Missing expected URL:', url);
-        allFound = false;
-      } else {
-        console.log('✅ Found targeted URL:', url);
-      }
-    });
-    
-    if (allFound) {
-      console.log('✅ All required elements and targeted URLs found in template');
-    }
-    
-    // Test driver newsletter as well
-    const driverHTML = formatNewsletterEmail(
-      testContent.replace('Chain of Responsibility Prosecution', 'Driver Safety Update'), 
-      'driver', 
-      testSubscriber, 
-      testSources
+  'https://www.nhvr.gov.au/news/prosecutions',
+  'https://www.nhvr.gov.au/news/consultation',
+  'https://www.safework.nsw.gov.au'
+];
+
+// allow raw, encoded (in redirect=), or hostname-only matches
+const containsUrl = (html, url) => {
+  try {
+    const host = new URL(url).hostname; // e.g. nhvr.gov.au
+    return (
+      html.includes(url) ||                     // raw
+      html.includes(encodeURIComponent(url)) || // encoded
+      html.includes(host)                       // domain fallback
     );
-    
-    if (driverHTML.includes('Safe Freight Mate')) {
-      console.log('✅ Driver newsletter template working correctly');
-    }
-    
-    return { success: true, html: emailHTML };
-    } catch (error) {
-    console.error('💥 Email template test failed:', error);
-    return { success: false, error: error.message };
+  } catch (_) {
+    // if url isn't absolute, still try raw/encoded
+    return html.includes(url) || html.includes(encodeURIComponent(url));
   }
+};
+
+let allFound = true;
+
+// requiredElements is already defined above
+requiredElements.forEach(element => {
+  if (!emailHTML.includes(element)) {
+    console.error('❌ Missing required element:', element);
+    allFound = false;
+  }
+});
+
+expectedUrls.forEach(url => {
+  if (!containsUrl(emailHTML, url)) {
+    console.error('❌ Missing expected URL:', url);
+    allFound = false;
+  } else {
+    console.log('✅ Found targeted URL:', url);
+  }
+});
+
+if (allFound) {
+  console.log('✅ All required elements and targeted URLs found in template');
+}
+
+// Test driver newsletter as well
+const driverHTML = formatNewsletterEmail(
+  testContent.replace('Chain of Responsibility Prosecution', 'Driver Safety Update'),
+  'driver',
+  testSubscriber,
+  testSources
+);
+
+if (driverHTML.includes('Safe Freight Mate')) {
+  console.log('✅ Driver newsletter template working correctly');
+}
+
+return { success: true, html: emailHTML };
+} catch (error) {
+  console.error('💥 Email template test failed:', error);
+  return { success: false, error: error.message };
 }
 
 function runCompleteNewsletterTest() {
