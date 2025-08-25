@@ -337,14 +337,15 @@ function extractTopicsFromContent(content) {
   const sections = content.split('###').filter(s => s.trim());
   return sections.map(section => {
     const lines = section.trim().split('\n');
-function extractTopicsFromContent(content) {
-  // Simple topic extraction from article titles
-  const sections = content.split('###').filter(s => s.trim());
-  return sections.map(section => {
-    const lines = section.trim().split('\n');
     return lines[0].trim().toLowerCase();
   });
 }
+
+function getUserAgent() {
+  // In Apps Script, user agent is not directly available
+  return 'Google Apps Script';
+}
+
 
 function getUserAgent() {
   // In Apps Script, user agent is not directly available
@@ -2907,12 +2908,11 @@ WorkSafe NSW has issued a safety alert following recent incident...nd manual han
     }
     
     return { success: true, html: emailHTML };
-  } catch (error) {
+    } catch (error) {
     console.error('💥 Email template test failed:', error);
     return { success: false, error: error.message };
   }
 }
-
 
 function runCompleteNewsletterTest() {
   console.log('🔍 Running complete newsletter system test...');
