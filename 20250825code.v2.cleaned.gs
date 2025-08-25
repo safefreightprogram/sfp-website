@@ -2828,27 +2828,21 @@ function testEmailTemplate() {
   console.log('🧪 Testing Email Template Generation...');
   
   const testContent = `### NHVR Chain of Responsibility Prosecution
-The National Heavy Vehicle Regulator has secured a major prosecution against a transport operator for Chain of Responsibility breaches. The case demonstrates the serious consequences of failing to maintain proper safety management systems.
+The National Heavy Vehicle Regulator has secured a major prosecu...quences of failing to maintain proper safety management systems.
 
 ### New Vehicle Standards Consultation Opens
-NHVR has opened public consultation on proposed changes to heavy vehicle standards. The consultation provides industry stakeholders opportunity to provide feedback on operational impacts and implementation timeframes.
+NHVR has opened public consultation on proposed changes to heavy...e feedback on operational impacts and implementation timeframes.
 
 ### WorkSafe NSW Issues Transport Safety Alert
-WorkSafe NSW has issued a safety alert following recent incidents in transport operations. The alert focuses on loading dock safety and manual handling procedures for freight handling activities.`;
+WorkSafe NSW has issued a safety alert following recent incident...nd manual handling procedures for freight handling activities.`;
 
   const testSources = [
     { 
       title: 'NHVR Chain of Responsibility Prosecution', 
       url: 'https://www.nhvr.gov.au/news/prosecutions'
-    },
-    { 
-      title: 'New Vehicle Standards Consultation', 
-      url: 'https://www.nhvr.gov.au/news/consultation' 
-    },
-    { 
-      title: 'WorkSafe NSW Transport Safety Alert', 
-      url: 'https://www.safework.nsw.gov.au/hazards-a-z/manual-handling/transport' 
+      // ... keep the rest of your sources exactly as-is
     }
+    // ... rest of array unchanged
   ];
 
   const testSubscriber = {
@@ -2917,35 +2911,8 @@ WorkSafe NSW has issued a safety alert following recent incidents in transport o
     console.error('💥 Email template test failed:', error);
     return { success: false, error: error.message };
   }
-}characters');
-    
-    // Check for required placeholders
-    const requiredElements = [
-      'CoR Intelligence Weekly',
-      'NHVR Regulatory Update',
-      'Transport Safety Initiative',
-      'Safe Freight Program',
-      'Unsubscribe'
-    ];
-    
-    let allFound = true;
-    requiredElements.forEach(element => {
-      if (!emailHTML.includes(element)) {
-        console.error('❌ Missing required element:', element);
-        allFound = false;
-      }
-    });
-    
-    if (allFound) {
-      console.log('✅ All required elements found in template');
-    }
-    
-    return { success: true, html: emailHTML };
-  } catch (error) {
-    console.error('💥 Email template test failed:', error);
-    return { success: false, error: error.message };
-  }
 }
+
 
 function runCompleteNewsletterTest() {
   console.log('🔍 Running complete newsletter system test...');
