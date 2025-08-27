@@ -371,6 +371,18 @@ function getNewslettersSent(timeRange, segment) {
   }
 }
 
+function setupWeeklyTrigger() {
+  const t = ScriptApp.getProjectTriggers();
+  t.forEach(tr => (tr.getHandlerFunction() === 'sendWeeklyNewsletters') && ScriptApp.deleteTrigger(tr));
+  ScriptApp.newTrigger('sendWeeklyNewsletters').timeBased()
+    .everyWeeks(1).onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(9).create();
+}
+function sendWeeklyNewsletters() {
+  handleSendNewsletter({ segment:'pro',    isTest:false });
+  handleSendNewsletter({ segment:'driver', isTest:false });
+}
+
+
 function getTopPerformingContent(timeRange, segment) {
   try {
     const engagementSheet = getOrCreateSheet(getNewsletterSpreadsheet(), 'Engagement_Tracking');
@@ -1597,14 +1609,14 @@ const CONFIG = {
   OPENAI: {
     MODEL: 'gpt-4o-mini',
     MAX_TOKENS: 500,
-    API_KEY: 'REPLACE_WITH_OPENAIKEY'
+    API_KEY: 'INSERT_OPENAI_API_KEY_HERE'
   },
   RATE_LIMITS: {
     SUBSCRIBE: { max: 5, window: 300000 },
     CONTENT_GENERATION: { max: 10, window: 3600000 }
   },
   ANALYTICS: {
-    TRACKING_PIXEL_BASE: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=track',
+    TRACKING_PIXEL_BASE: 'INSERT_GAS_URL',
     AB_TEST_ENABLED: true,
     PERSONALIZATION_ENABLED: true
   },
@@ -1688,12 +1700,38 @@ function handleAPIRequest(e, method) {
     case 'send_newsletter':            return handleSendNewsletter(data, e);
     case 'send_urgent_alert':          return handleUrgentAlert(data, e);
     case 'track_engagement':           return handleEngagementTracking(data, e);
+    case 'track':                      return handlePixelTracking_(e);
     case 'update_preferences':         return handlePreferenceUpdate(data, e);
     case 'analytics_dashboard':        return getAnalyticsDashboard(data, e);
     case 'pause_subscription':         return handleSubscriptionPause(data, e);
     default: throw new Error(`Invalid action: ${action}`);
   }
 }
+
+function handlePixelTracking_(e) {
+  try {
+    const p = e.parameter || {};
+    trackEngagement(
+      p.subscriber || 'unknown',
+      p.category || 'newsletter',
+      p.action || 'open',
+      p.title || '',
+      p.issue || 'unknown',
+      getClientIP(e)
+    );
+    if ((p.action || 'open') === 'click' && p.redirect) {
+      const url = decodeURIComponent(p.redirect);
+      return HtmlService.createHtmlOutput(
+        `<html><head><meta http-equiv="refresh" content="0; url=${url}"></head><body>Redirecting…</body></html>`
+      ).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    }
+    const gif = Utilities.base64Decode('R0lGODlhAQABAPAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==');
+    return ContentService.createBinaryOutput(gif).setMimeType(ContentService.MimeType.GIF);
+  } catch (err) {
+    return ContentService.createTextOutput('OK');
+  }
+}
+
 
 // =============================================================================
 // SUBSCRIPTION HANDLERS
@@ -2390,6 +2428,10 @@ function createHTMLResponse(html) {
 function isValidEmail(email) {
   return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
 }
+
+function sendProNow()    { handleSendNewsletter({ segment:'pro',    isTest:false }); }
+
+function sendDriverNow() { handleSendNewsletter({ segment:'driver', isTest:false }); }
 
 function generateToken() {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
