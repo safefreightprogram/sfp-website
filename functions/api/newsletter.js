@@ -39,7 +39,7 @@ export async function onRequest(context) {
 
   // --- GAS endpoint: set in CF Pages env var GAS_NEWSLETTER_URL (recommended) ---
   const gasUrl = env.GAS_NEWSLETTER_URL 
-              || "https://script.google.com/macros/s/AKfycbweXsbxzWP25NhzC2gMoYg6vy6mlZCQM6QiQSe6RaLg7mcBv5bHeyxoyQ4TWMbdJ3LoSA/exec";
+              || "https://script.google.com/macros/s/AKfycbyBUEiJWPmr1ClWvc9uAQPUJ7T2BIOjlofoJ00MFJsWwtrKwn6oGM3KHoGbWN3q5i9Hxg/exec";
 
   // --- Server-to-server fetch to GAS ---
   const upstream = await fetch(gasUrl, {
