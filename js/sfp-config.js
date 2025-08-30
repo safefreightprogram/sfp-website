@@ -5,7 +5,7 @@ window.SFP_CONFIG = {
     // Newsletter configuration
     newsletter: {
         // Most recent GAS deployment URL
-        apiUrl: 'https://script.google.com/macros/s/AKfycbzdbloc967dbTmEhZR2kwJafYmHB7e-wXnyPWEqcnLFbZmUHaHGEo6dZCj_-fWNSGWW-w/exec',
+        apiUrl: 'https://script.google.com/macros/s/AKfycbzYq-wYfwv7o4hLEMDUJM97j2yhkZ_DC5Mhybg_rnXoSAM5c81zmVTkmoEMgFVYr-X9Xg/exec',
         endpoints: {
             subscribe: 'newsletter_subscribe',
             confirm: 'newsletter_confirm',
