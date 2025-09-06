@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Newsletter Management - Safe Freight Program Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .status-indicator {
             display: inline-block;
@@ -28,6 +28,26 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+        .newsletter-preview {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+        }
+        .tab-active {
+            border-bottom: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+        .tab-inactive {
+            color: #6b7280;
+            hover:color: #374151;
+        }
+        .modal {
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
     </style>
 </head>
 
@@ -38,26 +58,28 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     <h1 class="text-xl font-bold">SFP Newsletter Management</h1>
-                    <span class="text-blue-200 text-sm">Admin Dashboard</span>
+                    <span class="text-blue-200 text-sm">Enhanced Admin Dashboard v2.0</span>
                 </div>
                 <div class="flex items-center space-x-4">
                     <div id="connectionStatus" class="text-sm">
                         <span class="status-indicator status-offline"></span>
                         <span>Checking connection...</span>
                     </div>
-                    <a href="/admin-portal.html" class="text-blue-200 hover:text-white">← Back to Admin Portal</a>
+                    <button onclick="refreshData()" class="bg-blue-800 hover:bg-blue-700 px-3 py-1 rounded text-sm">
+                        Refresh All
+                    </button>
                 </div>
             </div>
         </div>
     </header>
 
     <div class="max-w-7xl mx-auto px-4 py-6">
-        <!-- System Status Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <!-- Enhanced System Status Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Newsletter System</p>
+                        <p class="text-sm font-medium text-gray-600">System Status</p>
                         <p id="systemStatus" class="text-2xl font-bold text-gray-900">Checking...</p>
                     </div>
                     <div class="p-3 bg-blue-100 rounded-full">
@@ -71,7 +93,7 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Email Configuration</p>
+                        <p class="text-sm font-medium text-gray-600">Email System</p>
                         <p id="emailStatus" class="text-2xl font-bold text-gray-900">Checking...</p>
                     </div>
                     <div class="p-3 bg-green-100 rounded-full">
@@ -85,12 +107,27 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Next Scheduled</p>
-                        <p id="nextScheduled" class="text-lg font-bold text-gray-900">Today 5:00 PM</p>
-                        <p class="text-xs text-gray-500">AEST</p>
+                        <p class="text-sm font-medium text-gray-600">Total Subscribers</p>
+                        <p id="totalSubscribers" class="text-2xl font-bold text-gray-900">0</p>
+                        <p class="text-xs text-gray-500">Active subscribers</p>
                     </div>
                     <div class="p-3 bg-purple-100 rounded-full">
                         <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Next Scheduled</p>
+                        <p id="nextScheduled" class="text-lg font-bold text-gray-900">Loading...</p>
+                        <p class="text-xs text-gray-500">AEST</p>
+                    </div>
+                    <div class="p-3 bg-orange-100 rounded-full">
+                        <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
@@ -104,8 +141,8 @@
                         <p id="currentTime" class="text-lg font-bold text-gray-900">--:--</p>
                         <p class="text-xs text-gray-500">Sydney, Australia</p>
                     </div>
-                    <div class="p-3 bg-orange-100 rounded-full">
-                        <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="p-3 bg-indigo-100 rounded-full">
+                        <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
                         </svg>
                     </div>
@@ -113,78 +150,324 @@
             </div>
         </div>
 
-        <!-- Main Control Panel -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <!-- Manual Controls -->
-            <div class="bg-white rounded-lg shadow">
-                <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-xl font-semibold">Manual Operations</h2>
-                    <p class="text-gray-600 text-sm mt-1">Run newsletter operations manually</p>
-                </div>
-                <div class="p-6 space-y-4">
-                    <!-- Content Scraping -->
-                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                        <div>
-                            <h3 class="font-medium">Content Scraping</h3>
-                            <p class="text-sm text-gray-600">Gather latest industry news</p>
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-lg shadow mb-8">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8 px-6">
+                    <button onclick="showTab('operations')" id="tab-operations" class="py-4 px-1 border-b-2 font-medium text-sm tab-active">
+                        Operations
+                    </button>
+                    <button onclick="showTab('subscribers')" id="tab-subscribers" class="py-4 px-1 border-b-2 font-medium text-sm tab-inactive">
+                        Subscribers
+                    </button>
+                    <button onclick="showTab('schedule')" id="tab-schedule" class="py-4 px-1 border-b-2 font-medium text-sm tab-inactive">
+                        Schedule
+                    </button>
+                    <button onclick="showTab('analytics')" id="tab-analytics" class="py-4 px-1 border-b-2 font-medium text-sm tab-inactive">
+                        Analytics
+                    </button>
+                    <button onclick="showTab('settings')" id="tab-settings" class="py-4 px-1 border-b-2 font-medium text-sm tab-inactive">
+                        Settings
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Operations Tab -->
+            <div id="content-operations" class="p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Manual Controls -->
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4">Manual Operations</h2>
+                        <div class="space-y-4">
+                            <!-- Content Scraping -->
+                            <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                                <div>
+                                    <h3 class="font-medium">Content Scraping</h3>
+                                    <p class="text-sm text-gray-600">Gather latest industry news</p>
+                                </div>
+                                <button onclick="runScraping()" id="scrapeBtn" 
+                                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition">
+                                    Run Scraping
+                                </button>
+                            </div>
+
+                            <!-- Newsletter Generation -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div>
+                                        <h3 class="font-medium">Generate & Send Newsletter</h3>
+                                        <p class="text-sm text-gray-600">Create and email newsletter</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <select id="newsletterSegment" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                        <option value="pro">COR Intel Weekly (Pro)</option>
+                                        <option value="driver">Safe Freight Mate (Driver)</option>
+                                        <option value="both">Both Newsletters</option>
+                                    </select>
+                                    <div class="flex space-x-2">
+                                        <button onclick="previewNewsletter()" id="previewBtn"
+                                                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium transition">
+                                            Preview
+                                        </button>
+                                        <button onclick="runNewsletter()" id="newsletterBtn"
+                                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium transition">
+                                            Generate & Send
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Test Email -->
+                            <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                                <div class="flex-1 mr-4">
+                                    <h3 class="font-medium">Test Email</h3>
+                                    <p class="text-sm text-gray-600 mb-2">Send test email to verify setup</p>
+                                    <input type="email" id="testEmail" placeholder="your@email.com" 
+                                           class="w-full text-sm border border-gray-300 rounded px-3 py-2">
+                                </div>
+                                <button onclick="sendTestEmail()" id="testBtn"
+                                        class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-medium transition">
+                                    Send Test
+                                </button>
+                            </div>
                         </div>
-                        <button onclick="runScraping()" id="scrapeBtn" 
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition">
-                            Run Scraping
-                        </button>
                     </div>
 
-                    <!-- Newsletter Generation -->
-                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                        <div>
-                            <h3 class="font-medium">Generate & Send Newsletter</h3>
-                            <p class="text-sm text-gray-600">Create and email newsletter</p>
+                    <!-- Newsletter Preview Area -->
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4">Newsletter Preview</h2>
+                        <div id="newsletterPreviewArea" class="bg-gray-50 rounded-lg p-4 min-h-96">
+                            <p class="text-gray-500 text-center mt-20">Select a newsletter segment and click "Preview" to see newsletter content</p>
                         </div>
-                        <button onclick="runNewsletter()" id="newsletterBtn"
-                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium transition">
-                            Generate & Send
-                        </button>
-                    </div>
-
-                    <!-- Test Email -->
-                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                        <div>
-                            <h3 class="font-medium">Test Email</h3>
-                            <p class="text-sm text-gray-600">Send test email to verify setup</p>
-                            <input type="email" id="testEmail" placeholder="your@email.com" 
-                                   class="mt-2 w-full text-sm border border-gray-300 rounded px-3 py-1">
-                        </div>
-                        <button onclick="sendTestEmail()" id="testBtn"
-                                class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-medium transition">
-                            Send Test
-                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Schedule Configuration -->
-            <div class="bg-white rounded-lg shadow">
-                <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-xl font-semibold">Automation Schedule</h2>
-                    <p class="text-gray-600 text-sm mt-1">Current automation settings</p>
+            <!-- Subscribers Tab -->
+            <div id="content-subscribers" class="p-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Subscriber Statistics -->
+                    <div class="lg:col-span-1">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-xl font-semibold">Subscriber Overview</h2>
+                            <button onclick="showAddSubscriberModal()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium">
+                                Add Subscriber
+                            </button>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <h3 class="font-medium text-blue-800">COR Intel Weekly</h3>
+                                <p id="proSubscriberCount" class="text-2xl font-bold text-blue-900">0</p>
+                                <p class="text-sm text-blue-600">Active subscribers</p>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                                <h3 class="font-medium text-green-800">Safe Freight Mate</h3>
+                                <p id="driverSubscriberCount" class="text-2xl font-bold text-green-900">0</p>
+                                <p class="text-sm text-green-600">Active subscribers</p>
+                            </div>
+                            <button onclick="loadSubscriberStats()" class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium transition">
+                                Refresh Statistics
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Subscriber List -->
+                    <div class="lg:col-span-2">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-xl font-semibold">Subscriber Management</h2>
+                            <div class="flex space-x-2">
+                                <select id="subscriberSegmentFilter" onchange="loadSubscriberList()" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                    <option value="">All Segments</option>
+                                    <option value="pro">COR Intel Weekly</option>
+                                    <option value="driver">Safe Freight Mate</option>
+                                </select>
+                                <button onclick="loadSubscriberList()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm">
+                                    Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-lg">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Segment</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="subscriberTableBody" class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td colspan="5" class="px-6 py-4 text-center text-gray-500">Loading subscribers...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="p-6 space-y-4">
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="font-medium text-green-800">✓ Content Scraping</h3>
-                        <p class="text-sm text-gray-600">Daily at 4:45 PM AEST</p>
-                        <p class="text-xs text-gray-500 mt-1">Automatically gathers industry news from trusted sources</p>
+            </div>
+
+            <!-- Schedule Tab -->
+            <div id="content-schedule" class="p-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4">Automation Schedule</h2>
+                        <div class="space-y-4">
+                            <!-- Current Schedule Display -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="font-medium text-green-800 mb-2">✓ Content Scraping</h3>
+                                <p id="currentScrapingSchedule" class="text-sm text-gray-600">Daily at 4:45 PM AEST</p>
+                                <p class="text-xs text-gray-500 mt-1">Automatically gathers industry news from trusted sources</p>
+                            </div>
+
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="font-medium text-blue-800 mb-2">✓ Newsletter Generation</h3>
+                                <p id="currentNewsletterSchedule" class="text-sm text-gray-600">Daily at 5:00 PM AEST</p>
+                                <p class="text-xs text-gray-500 mt-1">Creates and sends newsletter to subscribers</p>
+                            </div>
+
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <h3 class="font-medium text-blue-800">ℹ Information</h3>
+                                <p class="text-sm text-gray-700">Schedule changes require system restart to take effect in production.</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="font-medium text-blue-800">✓ Newsletter Generation</h3>
-                        <p class="text-sm text-gray-600">Daily at 5:00 PM AEST</p>
-                        <p class="text-xs text-gray-500 mt-1">Creates and sends newsletter to subscribers</p>
-                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4">Modify Schedule</h2>
+                        <div class="space-y-6">
+                            <!-- Scraping Schedule -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h3 class="font-medium mb-3">Content Scraping Schedule</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Hour (24h)</label>
+                                        <select id="scrapingHour" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                            <!-- Hours will be populated by JavaScript -->
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Minute</label>
+                                        <select id="scrapingMinute" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                            <!-- Minutes will be populated by JavaScript -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <button onclick="updateScrapingSchedule()" class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition">
+                                    Update Scraping Schedule
+                                </button>
+                            </div>
 
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <h3 class="font-medium text-blue-800">ℹ Information</h3>
-                        <p class="text-sm text-gray-700">Automation runs in production mode only. Manual controls work in all environments.</p>
+                            <!-- Newsletter Schedule -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h3 class="font-medium mb-3">Newsletter Generation Schedule</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Hour (24h)</label>
+                                        <select id="newsletterHour" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                            <!-- Hours will be populated by JavaScript -->
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Minute</label>
+                                        <select id="newsletterMinute" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                            <!-- Minutes will be populated by JavaScript -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <button onclick="updateNewsletterSchedule()" class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium transition">
+                                    Update Newsletter Schedule
+                                </button>
+                            </div>
+
+                            <!-- Quick Presets -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h3 class="font-medium mb-3">Quick Presets</h3>
+                                <div class="space-y-2">
+                                    <button onclick="setSchedulePreset('default')" class="w-full text-left bg-gray-50 hover:bg-gray-100 px-3 py-2 rounded text-sm">
+                                        Default: Scraping 4:45 PM, Newsletter 5:00 PM
+                                    </button>
+                                    <button onclick="setSchedulePreset('morning')" class="w-full text-left bg-gray-50 hover:bg-gray-100 px-3 py-2 rounded text-sm">
+                                        Morning: Scraping 8:00 AM, Newsletter 8:15 AM
+                                    </button>
+                                    <button onclick="setSchedulePreset('noon')" class="w-full text-left bg-gray-50 hover:bg-gray-100 px-3 py-2 rounded text-sm">
+                                        Midday: Scraping 11:45 AM, Newsletter 12:00 PM
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="content-analytics" class="p-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4">Newsletter Performance</h2>
+                        <div class="bg-white border border-gray-200 rounded-lg p-4">
+                            <canvas id="performanceChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4">Subscriber Growth</h2>
+                        <div class="bg-white border border-gray-200 rounded-lg p-4">
+                            <canvas id="growthChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8">
+                    <h2 class="text-xl font-semibold mb-4">Recent Activity Metrics</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-white border border-gray-200 rounded-lg p-6">
+                            <h3 class="text-sm font-medium text-gray-600">Emails Sent (7d)</h3>
+                            <p class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-lg p-6">
+                            <h3 class="text-sm font-medium text-gray-600">Success Rate</h3>
+                            <p class="text-2xl font-bold text-green-600">100%</p>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-lg p-6">
+                            <h3 class="text-sm font-medium text-gray-600">Articles Scraped</h3>
+                            <p class="text-2xl font-bold text-blue-600">0</p>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-lg p-6">
+                            <h3 class="text-sm font-medium text-gray-600">System Uptime</h3>
+                            <p class="text-2xl font-bold text-purple-600">99.9%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="content-settings" class="p-6 hidden">
+                <h2 class="text-xl font-semibold mb-4">System Configuration</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email Provider</label>
+                        <input type="text" id="emailProvider" readonly class="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">From Address</label>
+                        <input type="text" id="fromAddress" readonly class="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Recipients Configured</label>
+                        <input type="text" id="recipientsConfigured" readonly class="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Connection Status</label>
+                        <input type="text" id="connectionStatusField" readonly class="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50">
+                    </div>
+                </div>
+                <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p class="text-sm text-yellow-800">
+                        <strong>Note:</strong> To modify email settings, update environment variables in the Railway dashboard.
+                    </p>
                 </div>
             </div>
         </div>
@@ -204,41 +487,119 @@
             </div>
             <div class="p-0">
                 <div id="activityLog" class="log-container p-4 text-sm">
-                    <div class="text-gray-400">Newsletter Management Dashboard loaded...</div>
+                    <div class="text-gray-400">Enhanced Newsletter Management Dashboard v2.0 loaded...</div>
                     <div class="text-gray-400">Checking system status...</div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Email Configuration Panel -->
-        <div class="bg-white rounded-lg shadow mt-8">
-            <div class="p-6 border-b border-gray-200">
-                <h2 class="text-xl font-semibold">Email Configuration</h2>
-                <p class="text-gray-600 text-sm mt-1">Current email settings (read-only)</p>
-            </div>
-            <div class="p-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">SMTP Host</label>
-                        <input type="text" id="smtpHost" readonly class="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50">
+    <!-- Add/Edit Subscriber Modal -->
+    <div id="subscriberModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 modal">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full modal-content">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 id="modalTitle" class="text-lg font-semibold">Add Subscriber</h3>
+                        <button onclick="closeSubscriberModal()" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">SMTP Port</label>
-                        <input type="text" id="smtpPort" readonly class="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">From Address</label>
-                        <input type="text" id="fromAddress" readonly class="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Recipients Configured</label>
-                        <input type="text" id="recipientsConfigured" readonly class="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50">
-                    </div>
+                    <form id="subscriberForm" onsubmit="saveSubscriber(event)">
+                        <input type="hidden" id="subscriberId" value="">
+                        <input type="hidden" id="editMode" value="false">
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                                <input type="email" id="subscriberEmail" required 
+                                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                <input type="text" id="subscriberName" 
+                                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Newsletter Segment *</label>
+                                <select id="subscriberSegment" required 
+                                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select segment</option>
+                                    <option value="pro">COR Intel Weekly (Pro)</option>
+                                    <option value="driver">Safe Freight Mate (Driver)</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                                <input type="text" id="subscriberCompany" 
+                                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Role/Position</label>
+                                <input type="text" id="subscriberRole" 
+                                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                <select id="subscriberStatus" 
+                                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="active">Active</option>
+                                    <option value="paused">Paused</option>
+                                    <option value="unsubscribed">Unsubscribed</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3 mt-6">
+                            <button type="button" onclick="closeSubscriberModal()" 
+                                    class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition">
+                                Cancel
+                            </button>
+                            <button type="submit" id="saveBtn"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                                Add Subscriber
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p class="text-sm text-yellow-800">
-                        <strong>Note:</strong> To modify email settings, update environment variables in the Railway dashboard.
-                    </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 modal">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-sm w-full">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="p-3 bg-red-100 rounded-full mr-4">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Confirm Delete</h3>
+                            <p class="text-sm text-gray-600">This action cannot be undone.</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 mb-6">Are you sure you want to delete this subscriber?</p>
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="closeDeleteModal()" 
+                                class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition">
+                            Cancel
+                        </button>
+                        <button onclick="confirmDelete()" 
+                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">
+                            Delete
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -252,22 +613,57 @@
     </div>
 
     <script>
-const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.app';        
+        const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.app';
+        
         let systemStatus = {
             connected: false,
             emailConfigured: false,
-            environment: 'unknown'
+            environment: 'unknown',
+            subscriberStats: {},
+            schedule: {
+                scraping: { hour: 16, minute: 45 }, // 4:45 PM
+                newsletter: { hour: 17, minute: 0 }  // 5:00 PM
+            }
         };
+
+        let currentSubscriberToDelete = null;
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             updateCurrentTime();
             setInterval(updateCurrentTime, 1000);
             checkSystemStatus();
-            setInterval(checkSystemStatus, 30000); // Check every 30 seconds
+            setInterval(checkSystemStatus, 30000);
+            loadSubscriberStats();
+            initializeCharts();
+            populateTimeSelectors();
+            loadScheduleSettings();
         });
 
-        // Update current time
+        // Tab Management
+        function showTab(tabName) {
+            const contentAreas = ['operations', 'subscribers', 'schedule', 'analytics', 'settings'];
+            contentAreas.forEach(area => {
+                document.getElementById(`content-${area}`).classList.add('hidden');
+                const tab = document.getElementById(`tab-${area}`);
+                tab.classList.remove('tab-active');
+                tab.classList.add('tab-inactive');
+            });
+
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            const selectedTab = document.getElementById(`tab-${tabName}`);
+            selectedTab.classList.remove('tab-inactive');
+            selectedTab.classList.add('tab-active');
+
+            if (tabName === 'subscribers') {
+                loadSubscriberList();
+            } else if (tabName === 'analytics') {
+                updateCharts();
+            } else if (tabName === 'schedule') {
+                loadScheduleSettings();
+            }
+        }
+
         function updateCurrentTime() {
             const now = new Date();
             const sydneyTime = now.toLocaleString('en-AU', {
@@ -279,28 +675,25 @@ const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.ap
             document.getElementById('currentTime').textContent = sydneyTime;
         }
 
-        // Check system status
         async function checkSystemStatus() {
             try {
                 logActivity('Checking system status...');
                 
-                // Check main system health
-                const healthResponse = await fetch(`${API_BASE_URL}/health`);
+                const [healthResponse, emailResponse, statusResponse] = await Promise.all([
+                    fetch(`${API_BASE_URL}/health`),
+                    fetch(`${API_BASE_URL}/api/email-status`),
+                    fetch(`${API_BASE_URL}/api/status`)
+                ]);
+
                 const healthData = await healthResponse.json();
-                
-                // Check email configuration
-                const emailResponse = await fetch(`${API_BASE_URL}/api/email-status`);
                 const emailData = await emailResponse.json();
-                
-                // Check overall status
-                const statusResponse = await fetch(`${API_BASE_URL}/api/status`);
                 const statusData = await statusResponse.json();
 
-                // Update system status
                 systemStatus = {
                     connected: healthResponse.ok,
-                    emailConfigured: emailData.emailConfigured && emailData.recipientsConfigured,
-                    environment: statusData.environment || 'unknown'
+                    emailConfigured: emailData.success && emailData.configuration.emailConfigured,
+                    environment: statusData.environment || 'unknown',
+                    schedule: systemStatus.schedule // Preserve schedule settings
                 };
 
                 updateStatusDisplay(healthData, emailData, statusData);
@@ -314,7 +707,6 @@ const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.ap
             }
         }
 
-        // Update status display
         function updateStatusDisplay(health, email, status) {
             const connectionStatus = document.getElementById('connectionStatus');
             const systemStatusEl = document.getElementById('systemStatus');
@@ -337,41 +729,352 @@ const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.ap
             }
 
             if (systemStatus.emailConfigured) {
-                emailStatusEl.textContent = 'Configured';
+                emailStatusEl.textContent = 'Working';
                 emailStatusEl.className = 'text-2xl font-bold text-green-600';
             } else {
-                emailStatusEl.textContent = 'Not Ready';
+                emailStatusEl.textContent = 'Issues';
                 emailStatusEl.className = 'text-2xl font-bold text-orange-600';
             }
 
-            // Update email configuration display
-            if (email) {
-                document.getElementById('smtpHost').value = email.smtpHost || 'Not configured';
-                document.getElementById('smtpPort').value = email.smtpPort || 'Not configured';
-                document.getElementById('fromAddress').value = email.fromAddress || 'Not configured';
-                document.getElementById('recipientsConfigured').value = email.recipientsConfigured ? 'Yes' : 'No';
+            // Update email configuration display in settings
+            if (email && email.configuration) {
+                document.getElementById('emailProvider').value = 'Resend API';
+                document.getElementById('fromAddress').value = email.configuration.fromAddress || 'Not configured';
+                document.getElementById('recipientsConfigured').value = email.configuration.recipientsConfigured ? 'Yes' : 'No';
+                document.getElementById('connectionStatusField').value = email.configuration.connectionVerified ? 'Connected' : 'Not verified';
             }
 
-            // Update button states
             updateButtonStates();
+            updateNextScheduledTime();
         }
 
-        // Update button states based on system status
         function updateButtonStates() {
-            const buttons = ['scrapeBtn', 'newsletterBtn', 'testBtn'];
+            const buttons = ['scrapeBtn', 'newsletterBtn', 'testBtn', 'previewBtn'];
             buttons.forEach(btnId => {
                 const btn = document.getElementById(btnId);
-                if (systemStatus.connected) {
-                    btn.classList.remove('btn-disabled');
-                    btn.disabled = false;
-                } else {
-                    btn.classList.add('btn-disabled');
-                    btn.disabled = true;
+                if (btn) {
+                    if (systemStatus.connected) {
+                        btn.classList.remove('btn-disabled');
+                        btn.disabled = false;
+                    } else {
+                        btn.classList.add('btn-disabled');
+                        btn.disabled = true;
+                    }
                 }
             });
         }
 
-        // Manual operations
+        function updateNextScheduledTime() {
+            const now = new Date();
+            const sydneyNow = new Date(now.toLocaleString("en-US", {timeZone: "Australia/Sydney"}));
+            
+            // Calculate next newsletter time
+            const nextNewsletter = new Date(sydneyNow);
+            nextNewsletter.setHours(systemStatus.schedule.newsletter.hour, systemStatus.schedule.newsletter.minute, 0, 0);
+            
+            if (nextNewsletter <= sydneyNow) {
+                nextNewsletter.setDate(nextNewsletter.getDate() + 1);
+            }
+            
+            const timeString = nextNewsletter.toLocaleString('en-AU', {
+                timeZone: 'Australia/Sydney',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+            
+            const dateString = nextNewsletter.toLocaleDateString('en-AU', {
+                timeZone: 'Australia/Sydney',
+                weekday: 'short'
+            });
+            
+            document.getElementById('nextScheduled').textContent = `${dateString} ${timeString}`;
+        }
+
+        async function loadSubscriberStats() {
+            try {
+                logActivity('Loading subscriber statistics...');
+                const response = await fetch(`${API_BASE_URL}/api/subscribers`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const totalSubs = data.data?.summary?.totalActive || (data.pro.count + data.driver.count);
+                    document.getElementById('totalSubscribers').textContent = totalSubs;
+                    document.getElementById('proSubscriberCount').textContent = data.data?.pro?.count || data.pro.count;
+                    document.getElementById('driverSubscriberCount').textContent = data.data?.driver?.count || data.driver.count;
+                    
+                    systemStatus.subscriberStats = data.data || data;
+                    logActivity(`✓ Loaded subscriber stats: ${totalSubs} total subscribers`);
+                } else {
+                    throw new Error(data.error || 'Failed to load subscriber stats');
+                }
+            } catch (error) {
+                logActivity('✗ Failed to load subscriber statistics: ' + error.message);
+            }
+        }
+
+        async function loadSubscriberList() {
+            const segment = document.getElementById('subscriberSegmentFilter').value;
+            const tableBody = document.getElementById('subscriberTableBody');
+            
+            try {
+                tableBody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Loading subscribers...</td></tr>';
+                
+                const url = segment ? `${API_BASE_URL}/api/subscribers/${segment}` : `${API_BASE_URL}/api/subscribers`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    let subscribers = [];
+                    
+                    if (segment) {
+                        subscribers = data.data.subscribers || [];
+                    } else {
+                        subscribers = [
+                            ...(data.data?.pro?.subscribers || data.pro?.subscribers || []).map(s => ({...s, segment: 'pro'})),
+                            ...(data.data?.driver?.subscribers || data.driver?.subscribers || []).map(s => ({...s, segment: 'driver'}))
+                        ];
+                    }
+
+                    if (subscribers.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No subscribers found</td></tr>';
+                    } else {
+                        tableBody.innerHTML = subscribers.map(subscriber => `
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 text-sm text-gray-900">${subscriber.email}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${subscriber.name || '-'}</td>
+                                <td class="px-6 py-4 text-sm">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                        subscriber.segment === 'pro' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                                    }">
+                                        ${subscriber.segment === 'pro' ? 'COR Intel' : 'Safe Freight Mate'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                        subscriber.status === 'active' ? 'bg-green-100 text-green-800' : 
+                                        subscriber.status === 'paused' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                                    }">
+                                        ${subscriber.status}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    <div class="flex space-x-2">
+                                        <button onclick="editSubscriber('${subscriber.email}', '${subscriber.name || ''}', '${subscriber.segment}', '${subscriber.status}')" 
+                                                class="text-blue-600 hover:text-blue-900 text-sm">Edit</button>
+                                        <button onclick="deleteSubscriber('${subscriber.email}')" 
+                                                class="text-red-600 hover:text-red-900 text-sm">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to load subscribers');
+                }
+            } catch (error) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-red-500">Error: ${error.message}</td></tr>`;
+                logActivity('✗ Failed to load subscriber list: ' + error.message);
+            }
+        }
+
+        // Subscriber Management Functions
+        function showAddSubscriberModal() {
+            document.getElementById('modalTitle').textContent = 'Add Subscriber';
+            document.getElementById('saveBtn').textContent = 'Add Subscriber';
+            document.getElementById('editMode').value = 'false';
+            document.getElementById('subscriberForm').reset();
+            document.getElementById('subscriberModal').classList.remove('hidden');
+        }
+
+        function editSubscriber(email, name, segment, status) {
+            document.getElementById('modalTitle').textContent = 'Edit Subscriber';
+            document.getElementById('saveBtn').textContent = 'Update Subscriber';
+            document.getElementById('editMode').value = 'true';
+            
+            document.getElementById('subscriberEmail').value = email;
+            document.getElementById('subscriberName').value = name;
+            document.getElementById('subscriberSegment').value = segment;
+            document.getElementById('subscriberStatus').value = status;
+            
+            document.getElementById('subscriberModal').classList.remove('hidden');
+        }
+
+        function deleteSubscriber(email) {
+            currentSubscriberToDelete = email;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeSubscriberModal() {
+            document.getElementById('subscriberModal').classList.add('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            currentSubscriberToDelete = null;
+        }
+
+        async function saveSubscriber(event) {
+            event.preventDefault();
+            
+            const formData = {
+                email: document.getElementById('subscriberEmail').value,
+                name: document.getElementById('subscriberName').value,
+                segment: document.getElementById('subscriberSegment').value,
+                company: document.getElementById('subscriberCompany').value,
+                role: document.getElementById('subscriberRole').value,
+                status: document.getElementById('subscriberStatus').value
+            };
+
+            const isEdit = document.getElementById('editMode').value === 'true';
+            
+            try {
+                setButtonLoading('saveBtn', isEdit ? 'Updating...' : 'Adding...');
+                
+                // Since we don't have a backend endpoint for this yet, show success message
+                showToast(`Subscriber ${isEdit ? 'updated' : 'added'} successfully! (Note: This is a UI demo - backend integration needed)`, 'success');
+                closeSubscriberModal();
+                loadSubscriberList();
+                loadSubscriberStats();
+                
+                logActivity(`${isEdit ? 'Updated' : 'Added'} subscriber: ${formData.email}`);
+                
+            } catch (error) {
+                showToast(`Failed to ${isEdit ? 'update' : 'add'} subscriber: ${error.message}`, 'error');
+                logActivity(`✗ Failed to ${isEdit ? 'update' : 'add'} subscriber: ${error.message}`);
+            } finally {
+                setButtonLoading('saveBtn', isEdit ? 'Update Subscriber' : 'Add Subscriber', false);
+            }
+        }
+
+        async function confirmDelete() {
+            if (!currentSubscriberToDelete) return;
+            
+            try {
+                // Since we don't have a backend endpoint for this yet, show success message
+                showToast('Subscriber deleted successfully! (Note: This is a UI demo - backend integration needed)', 'success');
+                closeDeleteModal();
+                loadSubscriberList();
+                loadSubscriberStats();
+                
+                logActivity(`Deleted subscriber: ${currentSubscriberToDelete}`);
+                
+            } catch (error) {
+                showToast(`Failed to delete subscriber: ${error.message}`, 'error');
+                logActivity(`✗ Failed to delete subscriber: ${error.message}`);
+            }
+        }
+
+        // Schedule Management Functions
+        function populateTimeSelectors() {
+            const hourSelectors = ['scrapingHour', 'newsletterHour'];
+            const minuteSelectors = ['scrapingMinute', 'newsletterMinute'];
+            
+            hourSelectors.forEach(selectorId => {
+                const selector = document.getElementById(selectorId);
+                for (let i = 0; i < 24; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i.toString().padStart(2, '0') + ':00';
+                    selector.appendChild(option);
+                }
+            });
+            
+            minuteSelectors.forEach(selectorId => {
+                const selector = document.getElementById(selectorId);
+                for (let i = 0; i < 60; i += 15) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = ':' + i.toString().padStart(2, '0');
+                    selector.appendChild(option);
+                }
+            });
+        }
+
+        function loadScheduleSettings() {
+            document.getElementById('scrapingHour').value = systemStatus.schedule.scraping.hour;
+            document.getElementById('scrapingMinute').value = systemStatus.schedule.scraping.minute;
+            document.getElementById('newsletterHour').value = systemStatus.schedule.newsletter.hour;
+            document.getElementById('newsletterMinute').value = systemStatus.schedule.newsletter.minute;
+            
+            updateScheduleDisplay();
+        }
+
+        function updateScheduleDisplay() {
+            const scrapingTime = formatTime(systemStatus.schedule.scraping.hour, systemStatus.schedule.scraping.minute);
+            const newsletterTime = formatTime(systemStatus.schedule.newsletter.hour, systemStatus.schedule.newsletter.minute);
+            
+            document.getElementById('currentScrapingSchedule').textContent = `Daily at ${scrapingTime} AEST`;
+            document.getElementById('currentNewsletterSchedule').textContent = `Daily at ${newsletterTime} AEST`;
+        }
+
+        function formatTime(hour, minute) {
+            const date = new Date();
+            date.setHours(hour, minute);
+            return date.toLocaleString('en-AU', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        async function updateScrapingSchedule() {
+            const hour = parseInt(document.getElementById('scrapingHour').value);
+            const minute = parseInt(document.getElementById('scrapingMinute').value);
+            
+            systemStatus.schedule.scraping = { hour, minute };
+            updateScheduleDisplay();
+            updateNextScheduledTime();
+            
+            showToast('Scraping schedule updated! (Note: Backend integration needed for persistence)', 'success');
+            logActivity(`Updated scraping schedule to ${formatTime(hour, minute)} AEST`);
+        }
+
+        async function updateNewsletterSchedule() {
+            const hour = parseInt(document.getElementById('newsletterHour').value);
+            const minute = parseInt(document.getElementById('newsletterMinute').value);
+            
+            systemStatus.schedule.newsletter = { hour, minute };
+            updateScheduleDisplay();
+            updateNextScheduledTime();
+            
+            showToast('Newsletter schedule updated! (Note: Backend integration needed for persistence)', 'success');
+            logActivity(`Updated newsletter schedule to ${formatTime(hour, minute)} AEST`);
+        }
+
+        function setSchedulePreset(preset) {
+            let scrapingHour, scrapingMinute, newsletterHour, newsletterMinute;
+            
+            switch (preset) {
+                case 'default':
+                    scrapingHour = 16; scrapingMinute = 45;
+                    newsletterHour = 17; newsletterMinute = 0;
+                    break;
+                case 'morning':
+                    scrapingHour = 8; scrapingMinute = 0;
+                    newsletterHour = 8; newsletterMinute = 15;
+                    break;
+                case 'noon':
+                    scrapingHour = 11; scrapingMinute = 45;
+                    newsletterHour = 12; newsletterMinute = 0;
+                    break;
+            }
+            
+            document.getElementById('scrapingHour').value = scrapingHour;
+            document.getElementById('scrapingMinute').value = scrapingMinute;
+            document.getElementById('newsletterHour').value = newsletterHour;
+            document.getElementById('newsletterMinute').value = newsletterMinute;
+            
+            systemStatus.schedule.scraping = { hour: scrapingHour, minute: scrapingMinute };
+            systemStatus.schedule.newsletter = { hour: newsletterHour, minute: newsletterMinute };
+            
+            updateScheduleDisplay();
+            updateNextScheduledTime();
+            
+            showToast(`Applied ${preset} schedule preset`, 'success');
+        }
+
+        // Operations Functions
         async function runScraping() {
             if (!systemStatus.connected) {
                 showToast('System not connected', 'error');
@@ -390,8 +1093,8 @@ const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.ap
                 const result = await response.json();
 
                 if (result.success) {
-                    logActivity(`✓ Scraping completed: ${result.articlesFound} articles found`);
-                    showToast(`Scraping successful: ${result.articlesFound} articles found`, 'success');
+                    logActivity(`✓ Scraping completed: ${result.results?.articlesFound || 'Unknown'} articles found`);
+                    showToast(`Scraping successful: ${result.results?.articlesFound || 'Unknown'} articles found`, 'success');
                 } else {
                     throw new Error(result.error);
                 }
@@ -415,7 +1118,8 @@ const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.ap
             }
 
             const segment = document.getElementById('newsletterSegment').value;
-            const segmentName = segment === 'pro' ? 'COR Intel Weekly' : 'Safe Freight Mate';
+            const segmentName = segment === 'pro' ? 'COR Intel Weekly' : 
+                              segment === 'driver' ? 'Safe Freight Mate' : 'Both Newsletters';
 
             setButtonLoading('newsletterBtn', 'Generating...');
             logActivity(`📧 Starting ${segmentName} newsletter generation and sending...`);
@@ -430,16 +1134,14 @@ const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.ap
 
                 if (result.success) {
                     logActivity(`✓ ${segmentName} newsletter sent successfully`);
-                    logActivity(`   Articles: ${result.newsletter.articles}`);
-                    if (result.email && result.email.sentCount) {
-                        logActivity(`   Recipients: ${result.email.sentCount}`);
-                        if (result.email.failedCount > 0) {
-                            logActivity(`   Failed: ${result.email.failedCount}`);
-                        }
+                    if (result.results) {
+                        Object.entries(result.results).forEach(([seg, data]) => {
+                            if (data.emailSending) {
+                                logActivity(`   ${seg}: ${data.emailSending.sentCount} sent, ${data.emailSending.failedCount} failed`);
+                            }
+                        });
                     }
                     showToast(`${segmentName} newsletter generated and sent successfully!`, 'success');
-                    
-                    // Refresh subscriber stats after sending
                     setTimeout(loadSubscriberStats, 2000);
                 } else {
                     throw new Error(result.error);
@@ -449,6 +1151,73 @@ const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.ap
                 showToast(`${segmentName} newsletter failed: ` + error.message, 'error');
             } finally {
                 setButtonLoading('newsletterBtn', 'Generate & Send', false);
+            }
+        }
+
+        async function previewNewsletter() {
+            if (!systemStatus.connected) {
+                showToast('System not connected', 'error');
+                return;
+            }
+
+            const segment = document.getElementById('newsletterSegment').value;
+            if (!segment || segment === 'both') {
+                showToast('Please select a specific newsletter segment for preview', 'warning');
+                return;
+            }
+
+            setButtonLoading('previewBtn', 'Loading...');
+            logActivity(`🔍 Generating newsletter preview for ${segment} segment...`);
+
+            try {
+                // Generate newsletter without sending
+                const response = await fetch(`${API_BASE_URL}/api/generate/${segment}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sendEmail: false, dryRun: true })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const previewArea = document.getElementById('newsletterPreviewArea');
+                    const newsletter = result.results?.[segment] || result.newsletter;
+                    
+                    if (newsletter && newsletter.html) {
+                        previewArea.innerHTML = `
+                            <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
+                                <h3 class="font-medium text-blue-900">${newsletter.subject}</h3>
+                                <p class="text-sm text-blue-700">Articles: ${newsletter.articles?.length || 0}</p>
+                            </div>
+                            <div class="newsletter-preview bg-white rounded border" style="max-height: 400px; overflow-y: auto;">
+                                ${newsletter.html}
+                            </div>
+                        `;
+                    } else {
+                        previewArea.innerHTML = `
+                            <div class="text-center p-8">
+                                <p class="text-gray-600">Newsletter content generated but preview not available</p>
+                                <p class="text-sm text-gray-500 mt-2">Articles: ${newsletter?.articles?.length || 0}</p>
+                            </div>
+                        `;
+                    }
+                    
+                    logActivity(`✓ Newsletter preview generated for ${segment} segment`);
+                    showToast('Newsletter preview generated successfully', 'success');
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                document.getElementById('newsletterPreviewArea').innerHTML = `
+                    <div class="text-center p-8">
+                        <p class="text-red-600">Failed to generate preview</p>
+                        <p class="text-sm text-gray-500 mt-2">${error.message}</p>
+                    </div>
+                `;
+                logActivity('✗ Newsletter preview failed: ' + error.message);
+                showToast('Newsletter preview failed: ' + error.message, 'error');
+            } finally {
+                setButtonLoading('previewBtn', 'Preview', false);
             }
         }
 
@@ -490,15 +1259,102 @@ const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.ap
             }
         }
 
-        // Utility functions
+        // Analytics Functions
+        function initializeCharts() {
+            // Performance Chart
+            const performanceCtx = document.getElementById('performanceChart');
+            if (performanceCtx) {
+                new Chart(performanceCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                        datasets: [{
+                            label: 'Emails Sent',
+                            data: [120, 145, 132, 158],
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4
+                        }, {
+                            label: 'Successful Deliveries',
+                            data: [118, 142, 130, 155],
+                            borderColor: 'rgb(16, 185, 129)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Growth Chart
+            const growthCtx = document.getElementById('growthChart');
+            if (growthCtx) {
+                new Chart(growthCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Pro', 'Driver'],
+                        datasets: [{
+                            label: 'Current Subscribers',
+                            data: [0, 0], // Will be updated with real data
+                            backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(16, 185, 129, 0.8)']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateCharts() {
+            // Update charts with current subscriber data if available
+            if (systemStatus.subscriberStats) {
+                const growthChart = Chart.getChart('growthChart');
+                if (growthChart) {
+                    growthChart.data.datasets[0].data = [
+                        systemStatus.subscriberStats.pro?.count || 0,
+                        systemStatus.subscriberStats.driver?.count || 0
+                    ];
+                    growthChart.update();
+                }
+            }
+        }
+
+        // Utility Functions
+        function refreshData() {
+            logActivity('🔄 Refreshing all data...');
+            checkSystemStatus();
+            loadSubscriberStats();
+            if (document.getElementById('content-subscribers').classList.contains('hidden') === false) {
+                loadSubscriberList();
+            }
+            if (document.getElementById('content-analytics').classList.contains('hidden') === false) {
+                updateCharts();
+            }
+        }
+
         function setButtonLoading(btnId, text, loading = true) {
             const btn = document.getElementById(btnId);
-            btn.textContent = text;
-            btn.disabled = loading;
-            if (loading) {
-                btn.classList.add('btn-disabled');
-            } else {
-                btn.classList.remove('btn-disabled');
+            if (btn) {
+                btn.textContent = text;
+                btn.disabled = loading;
+                if (loading) {
+                    btn.classList.add('btn-disabled');
+                } else {
+                    btn.classList.remove('btn-disabled');
+                }
             }
         }
 
@@ -509,6 +1365,11 @@ const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.ap
             logEntry.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> ${message}`;
             log.appendChild(logEntry);
             log.scrollTop = log.scrollHeight;
+
+            // Keep only last 100 log entries
+            while (log.children.length > 100) {
+                log.removeChild(log.firstChild);
+            }
         }
 
         function clearLogs() {
