@@ -1084,15 +1084,28 @@
             const isEdit = document.getElementById('editMode').value === 'true';
             
             try {
-                setButtonLoading('saveBtn', isEdit ? 'Updating...' : 'Adding...');
-                
-                // Since we don't have a backend endpoint for this yet, show success message
-                showToast(`Subscriber ${isEdit ? 'updated' : 'added'} successfully! (Note: This is a UI demo - backend integration needed)`, 'success');
-                closeSubscriberModal();
-                loadSubscriberList();
-                loadSubscriberStats();
-                
-                logActivity(`${isEdit ? 'Updated' : 'Added'} subscriber: ${formData.email}`);
+    setButtonLoading('saveBtn', isEdit ? 'Updating...' : 'Adding...');
+    
+    const url = isEdit ? `${API_BASE_URL}/api/subscribers/${formData.email}` : `${API_BASE_URL}/api/subscribers`;
+    const method = isEdit ? 'PUT' : 'POST';
+    
+    const response = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+        showToast(`Subscriber ${isEdit ? 'updated' : 'added'} successfully!`, 'success');
+        closeSubscriberModal();
+        loadSubscriberList();
+        loadSubscriberStats();
+        logActivity(`${isEdit ? 'Updated' : 'Added'} subscriber: ${formData.email}`);
+    } else {
+        throw new Error(result.error || `Failed to ${isEdit ? 'update' : 'add'} subscriber`);
+    }
                 
             } catch (error) {
                 showToast(`Failed to ${isEdit ? 'update' : 'add'} subscriber: ${error.message}`, 'error');
@@ -1106,13 +1119,22 @@
             if (!currentSubscriberToDelete) return;
             
             try {
-                // Since we don't have a backend endpoint for this yet, show success message
-                showToast('Subscriber deleted successfully! (Note: This is a UI demo - backend integration needed)', 'success');
-                closeDeleteModal();
-                loadSubscriberList();
-                loadSubscriberStats();
-                
-                logActivity(`Deleted subscriber: ${currentSubscriberToDelete}`);
+    const response = await fetch(`${API_BASE_URL}/api/subscribers/${currentSubscriberToDelete}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+        showToast('Subscriber deleted successfully!', 'success');
+        closeDeleteModal();
+        loadSubscriberList();
+        loadSubscriberStats();
+        logActivity(`Deleted subscriber: ${currentSubscriberToDelete}`);
+    } else {
+        throw new Error(result.error || 'Failed to delete subscriber');
+    }
                 
             } catch (error) {
                 showToast(`Failed to delete subscriber: ${error.message}`, 'error');
