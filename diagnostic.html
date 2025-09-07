@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter Subscriber Diagnostics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-6">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Newsletter Subscriber Diagnostics</h1>
+        
+        <!-- API Connection Test -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">API Connection Test</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button onclick="testEndpoint('/api/subscribers')" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    Test /api/subscribers
+                </button>
+                <button onclick="testEndpoint('/api/subscribers/pro')" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                    Test /api/subscribers/pro
+                </button>
+                <button onclick="testEndpoint('/api/subscribers/driver')" 
+                        class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
+                    Test /api/subscribers/driver
+                </button>
+                <button onclick="testHealthCheck()" 
+                        class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded">
+                    Test /health
+                </button>
+            </div>
+            <div id="apiResults" class="mt-4 p-4 bg-gray-100 rounded-lg min-h-32">
+                <p class="text-gray-600">Click a button above to test API endpoints...</p>
+            </div>
+        </div>
+
+        <!-- Raw Subscriber Data Analysis -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Raw Subscriber Data Analysis</h2>
+            <button onclick="analyzeSubscriberData()" 
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded mb-4">
+                Fetch & Analyze All Subscriber Data
+            </button>
+            <div id="analysisResults" class="space-y-4">
+                <p class="text-gray-600">Click the button above to analyze your subscriber data...</p>
+            </div>
+        </div>
+
+        <!-- Google Sheets Direct Test -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Google Sheets Integration Test</h2>
+            <p class="text-gray-600 mb-4">Based on your sheet: <a href="https://docs.google.com/spreadsheets/d/1Gz3qHzlxPGsI-ar-d28zoE-oTfrfmxGnXyPmko76uNM/edit" class="text-blue-600 underline" target="_blank">Your Google Sheet</a></p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 bg-gray-50 rounded">
+                    <h3 class="font-semibold text-gray-800 mb-2">Expected Data (from your sheet):</h3>
+                    <div class="text-sm space-y-1">
+                        <div><strong>Pro Subscribers:</strong> 3</div>
+                        <div><strong>Driver Subscribers:</strong> 3</div>
+                        <div><strong>Total Active:</strong> 6</div>
+                        <div><strong>Unique Emails:</strong> 3 (same person, different emails)</div>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-gray-50 rounded">
+                    <h3 class="font-semibold text-gray-800 mb-2">Status Breakdown (from your data):</h3>
+                    <div class="text-sm space-y-1">
+                        <div><strong>Active:</strong> 6 subscribers</div>
+                        <div><strong>Inactive:</strong> 0 subscribers</div>
+                        <div><strong>All Confirmed:</strong> All have confirmed_at dates</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manual Subscriber Status Update Test -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Manual Status Update Test</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <input type="email" id="updateEmail" placeholder="Email to update" 
+                       class="border border-gray-300 rounded px-3 py-2">
+                <select id="updateStatus" class="border border-gray-300 rounded px-3 py-2">
+                    <option value="active">Active</option>
+                    <option value="paused">Paused</option>
+                    <option value="unsubscribed">Unsubscribed</option>
+                </select>
+                <button onclick="testStatusUpdate()" 
+                        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                    Test Status Update
+                </button>
+            </div>
+            <div id="updateResults" class="p-4 bg-gray-100 rounded-lg">
+                <p class="text-gray-600">Enter an email and new status to test updates...</p>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard Simulation -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Admin Dashboard Simulation</h2>
+            <button onclick="simulateAdminDashboard()" 
+                    class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded mb-4">
+                Simulate Admin Dashboard Data Loading
+            </button>
+            <div id="dashboardResults" class="space-y-4">
+                <p class="text-gray-600">Click the button above to simulate how your admin dashboard loads data...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.app';
+
+        async function testEndpoint(endpoint) {
+            const resultsDiv = document.getElementById('apiResults');
+            resultsDiv.innerHTML = `<p class="text-blue-600">Testing ${endpoint}...</p>`;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`);
+                const data = await response.json();
+                
+                resultsDiv.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="font-semibold text-green-600">✅ ${endpoint} - Status: ${response.status}</div>
+                        <pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-auto max-h-64">${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="text-red-600">
+                        <div class="font-semibold">❌ ${endpoint} - Error</div>
+                        <div class="text-sm mt-2">${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        async function testHealthCheck() {
+            await testEndpoint('/health');
+        }
+
+        async function analyzeSubscriberData() {
+            const resultsDiv = document.getElementById('analysisResults');
+            resultsDiv.innerHTML = `<p class="text-blue-600">Fetching and analyzing subscriber data...</p>`;
+            
+            try {
+                // Test all endpoints
+                const [allResponse, proResponse, driverResponse] = await Promise.all([
+                    fetch(`${API_BASE_URL}/api/subscribers`),
+                    fetch(`${API_BASE_URL}/api/subscribers/pro`),
+                    fetch(`${API_BASE_URL}/api/subscribers/driver`)
+                ]);
+
+                const [allData, proData, driverData] = await Promise.all([
+                    allResponse.json(),
+                    proResponse.json(),
+                    driverResponse.json()
+                ]);
+
+                // Analyze the data
+                let analysis = '<div class="space-y-4">';
+                
+                // All subscribers analysis
+                analysis += `
+                    <div class="border border-gray-200 rounded p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">All Subscribers Endpoint (/api/subscribers)</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div><strong>Success:</strong> ${allData.success ? '✅' : '❌'}</div>
+                            <div><strong>Response Structure:</strong> ${Object.keys(allData).join(', ')}</div>
+                `;
+
+                if (allData.success && allData.data) {
+                    const { data } = allData;
+                    if (data.summary) {
+                        analysis += `
+                            <div><strong>Total Active:</strong> ${data.summary.totalActive || 'N/A'}</div>
+                            <div><strong>Total All:</strong> ${data.summary.totalAll || 'N/A'}</div>
+                        `;
+                    }
+                    if (data.pro) {
+                        analysis += `<div><strong>Pro Count:</strong> ${data.pro.count || 0}</div>`;
+                    }
+                    if (data.driver) {
+                        analysis += `<div><strong>Driver Count:</strong> ${data.driver.count || 0}</div>`;
+                    }
+                }
+
+                analysis += `
+                        </div>
+                        <details class="mt-2">
+                            <summary class="cursor-pointer text-blue-600">Show Raw Response</summary>
+                            <pre class="bg-gray-100 p-2 rounded text-xs mt-2 overflow-auto max-h-32">${JSON.stringify(allData, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+
+                // Pro subscribers analysis
+                analysis += `
+                    <div class="border border-gray-200 rounded p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">Pro Subscribers (/api/subscribers/pro)</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div><strong>Success:</strong> ${proData.success ? '✅' : '❌'}</div>
+                            <div><strong>Count:</strong> ${proData.data?.count || 0}</div>
+                            <div><strong>Subscribers Array Length:</strong> ${proData.data?.subscribers?.length || 0}</div>
+                        </div>
+                `;
+
+                if (proData.data?.subscribers?.length > 0) {
+                    analysis += `
+                        <div class="mt-2">
+                            <strong>Sample Subscriber:</strong>
+                            <pre class="bg-gray-100 p-2 rounded text-xs mt-1">${JSON.stringify(proData.data.subscribers[0], null, 2)}</pre>
+                        </div>
+                    `;
+                }
+
+                analysis += `
+                        <details class="mt-2">
+                            <summary class="cursor-pointer text-blue-600">Show All Pro Subscribers</summary>
+                            <pre class="bg-gray-100 p-2 rounded text-xs mt-2 overflow-auto max-h-32">${JSON.stringify(proData, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+
+                // Driver subscribers analysis
+                analysis += `
+                    <div class="border border-gray-200 rounded p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">Driver Subscribers (/api/subscribers/driver)</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div><strong>Success:</strong> ${driverData.success ? '✅' : '❌'}</div>
+                            <div><strong>Count:</strong> ${driverData.data?.count || 0}</div>
+                            <div><strong>Subscribers Array Length:</strong> ${driverData.data?.subscribers?.length || 0}</div>
+                        </div>
+                `;
+
+                if (driverData.data?.subscribers?.length > 0) {
+                    analysis += `
+                        <div class="mt-2">
+                            <strong>Sample Subscriber:</strong>
+                            <pre class="bg-gray-100 p-2 rounded text-xs mt-1">${JSON.stringify(driverData.data.subscribers[0], null, 2)}</pre>
+                        </div>
+                    `;
+                }
+
+                analysis += `
+                        <details class="mt-2">
+                            <summary class="cursor-pointer text-blue-600">Show All Driver Subscribers</summary>
+                            <pre class="bg-gray-100 p-2 rounded text-xs mt-2 overflow-auto max-h-32">${JSON.stringify(driverData, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+
+                // Recommendations
+                analysis += `
+                    <div class="border border-yellow-200 bg-yellow-50 rounded p-4">
+                        <h3 class="font-semibold text-yellow-800 mb-2">🔍 Diagnostic Findings</h3>
+                        <div class="text-sm text-yellow-700 space-y-1">
+                `;
+
+                const expectedTotal = 6; // Based on your sheet data
+                const actualTotal = (allData.data?.summary?.totalActive || 0) + (allData.data?.summary?.totalInactive || 0);
+
+                if (actualTotal < expectedTotal) {
+                    analysis += `<div>⚠️ Expected ${expectedTotal} subscribers but found ${actualTotal}. Check Google Sheets integration.</div>`;
+                }
+
+                if (!allData.success) {
+                    analysis += `<div>❌ Main subscribers endpoint failing. Check API configuration.</div>`;
+                }
+
+                if ((proData.data?.count || 0) < 3) {
+                    analysis += `<div>⚠️ Expected 3 pro subscribers but found ${proData.data?.count || 0}.</div>`;
+                }
+
+                if ((driverData.data?.count || 0) < 3) {
+                    analysis += `<div>⚠️ Expected 3 driver subscribers but found ${driverData.data?.count || 0}.</div>`;
+                }
+
+                analysis += `
+                        </div>
+                    </div>
+                </div>
+                `;
+
+                resultsDiv.innerHTML = analysis;
+
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="text-red-600">
+                        <div class="font-semibold">❌ Analysis Failed</div>
+                        <div class="text-sm mt-2">${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        async function testStatusUpdate() {
+            const email = document.getElementById('updateEmail').value;
+            const status = document.getElementById('updateStatus').value;
+            const resultsDiv = document.getElementById('updateResults');
+
+            if (!email) {
+                resultsDiv.innerHTML = '<p class="text-red-600">Please enter an email address</p>';
+                return;
+            }
+
+            resultsDiv.innerHTML = `<p class="text-blue-600">Testing status update for ${email}...</p>`;
+
+            try {
+                // This would test if you have an update endpoint
+                const response = await fetch(`${API_BASE_URL}/api/subscribers/update`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, status })
+                });
+
+                const data = await response.json();
+
+                resultsDiv.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="font-semibold ${response.ok ? 'text-green-600' : 'text-red-600'}">
+                            ${response.ok ? '✅' : '❌'} Update Status: ${response.status}
+                        </div>
+                        <pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-auto max-h-32">${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="text-orange-600">
+                        <div class="font-semibold">⚠️ Update endpoint not available or error occurred</div>
+                        <div class="text-sm mt-2">${error.message}</div>
+                        <div class="text-sm mt-2">This suggests you may need to implement subscriber update functionality in your backend.</div>
+                    </div>
+                `;
+            }
+        }
+
+        async function simulateAdminDashboard() {
+            const resultsDiv = document.getElementById('dashboardResults');
+            resultsDiv.innerHTML = `<p class="text-blue-600">Simulating admin dashboard data loading...</p>`;
+
+            try {
+                // Simulate the exact calls your admin dashboard makes
+                const response = await fetch(`${API_BASE_URL}/api/subscribers`);
+                const data = await response.json();
+
+                let simulation = '<div class="space-y-4">';
+
+                simulation += `
+                    <div class="border border-gray-200 rounded p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">Dashboard Data Loading Simulation</h3>
+                        <div class="text-sm space-y-2">
+                `;
+
+                if (data.success) {
+                    // Simulate how your dashboard calculates totals
+                    const totalSubs = data.data?.summary?.totalActive || (data.pro?.count + data.driver?.count) || 0;
+                    const proCount = data.data?.pro?.count || data.pro?.count || 0;
+                    const driverCount = data.data?.driver?.count || data.driver?.count || 0;
+
+                    simulation += `
+                        <div><strong>What your dashboard sees:</strong></div>
+                        <div class="ml-4">Total Subscribers: ${totalSubs}</div>
+                        <div class="ml-4">Pro Subscribers: ${proCount}</div>
+                        <div class="ml-4">Driver Subscribers: ${driverCount}</div>
+                    `;
+
+                    // Check if subscriber list loading works
+                    const subscribersList = [
+                        ...(data.data?.pro?.subscribers || data.pro?.subscribers || []).map(s => ({...s, segment: 'pro'})),
+                        ...(data.data?.driver?.subscribers || data.driver?.subscribers || []).map(s => ({...s, segment: 'driver'}))
+                    ];
+
+                    simulation += `
+                        <div class="mt-4"><strong>Subscriber List Loading:</strong></div>
+                        <div class="ml-4">Found ${subscribersList.length} subscribers for table display</div>
+                    `;
+
+                    if (subscribersList.length > 0) {
+                        simulation += `
+                            <div class="mt-2"><strong>Sample subscriber data structure:</strong></div>
+                            <pre class="bg-gray-100 p-2 rounded text-xs mt-1 ml-4">${JSON.stringify(subscribersList[0], null, 2)}</pre>
+                        `;
+                    }
+
+                    // Status breakdown
+                    const statusBreakdown = subscribersList.reduce((acc, sub) => {
+                        acc[sub.status || 'unknown'] = (acc[sub.status || 'unknown'] || 0) + 1;
+                        return acc;
+                    }, {});
+
+                    simulation += `
+                        <div class="mt-4"><strong>Status Breakdown:</strong></div>
+                    `;
+                    Object.entries(statusBreakdown).forEach(([status, count]) => {
+                        simulation += `<div class="ml-4">${status}: ${count}</div>`;
+                    });
+
+                } else {
+                    simulation += `
+                        <div class="text-red-600"><strong>❌ Dashboard would show error:</strong> ${data.error || 'Unknown error'}</div>
+                    `;
+                }
+
+                simulation += `
+                        </div>
+                    </div>
+                `;
+
+                // Recommendations for fixing the dashboard
+                simulation += `
+                    <div class="border border-blue-200 bg-blue-50 rounded p-4">
+                        <h3 class="font-semibold text-blue-800 mb-2">💡 Dashboard Fix Recommendations</h3>
+                        <div class="text-sm text-blue-700 space-y-1">
+                            <div>1. Ensure your /api/subscribers endpoint returns ALL subscribers (not just active ones)</div>
+                            <div>2. Add status filtering in the frontend, not the backend</div>
+                            <div>3. Implement /api/subscribers/update endpoint for status changes</div>
+                            <div>4. Add proper error handling for Google Sheets connection issues</div>
+                            <div>5. Consider adding pagination for large subscriber lists</div>
+                        </div>
+                    </div>
+                `;
+
+                simulation += '</div>';
+                resultsDiv.innerHTML = simulation;
+
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="text-red-600">
+                        <div class="font-semibold">❌ Dashboard Simulation Failed</div>
+                        <div class="text-sm mt-2">${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
