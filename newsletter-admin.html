@@ -192,31 +192,27 @@
                             </div>
 
                             <!-- Newsletter Generation -->
-                            <div class="border border-gray-200 rounded-lg p-4">
-                                <div class="flex items-center justify-between mb-3">
-                                    <div>
-                                        <h3 class="font-medium">Generate & Send Newsletter</h3>
-                                        <p class="text-sm text-gray-600">Create and email newsletter</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <select id="newsletterSegment" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                                        <option value="pro">COR Intel Weekly (Pro)</option>
-                                        <option value="driver">Safe Freight Mate (Driver)</option>
-                                        <option value="both">Both Newsletters</option>
-                                    </select>
-                                    <div class="flex space-x-2">
-                                        <button onclick="previewNewsletter()" id="previewBtn"
-                                                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium transition">
-                                            Preview
-                                        </button>
-                                        <button onclick="runNewsletter()" id="newsletterBtn"
-                                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium transition">
-                                            Generate & Send
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                           <!-- Newsletter Generation -->
+<div class="border border-gray-200 rounded-lg p-4">
+    <div class="flex items-center justify-between mb-3">
+        <div>
+            <h3 class="font-medium">Newsletter Workflow</h3>
+            <p class="text-sm text-gray-600">Generate → Preview → Send</p>
+        </div>
+    </div>
+    <div class="flex items-center justify-between">
+        <select id="newsletterSegment" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+            <option value="pro">COR Intel Weekly (Pro)</option>
+            <option value="driver">Safe Freight Mate (Driver)</option>
+        </select>
+        <div class="flex space-x-2">
+            <button onclick="generatePreview()" id="previewBtn"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition">
+                Generate Preview
+            </button>
+        </div>
+    </div>
+</div>
 
                             <!-- Test Email -->
                             <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
@@ -750,6 +746,8 @@
 
     <script>
         const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.app';
+let currentNewsletterData = null;
+let previewMode = false;
         // Advanced scheduling variables
         let currentJobType = 'scraping';
         let scheduleConfig = {
@@ -1511,55 +1509,176 @@
             }
         }
 
-        async function runNewsletter() {
-            if (!systemStatus.connected) {
-                showToast('System not connected', 'error');
-                return;
-            }
+        async function generatePreview() {
+    if (!systemStatus.connected) {
+        showToast('System not connected', 'error');
+        return;
+    }
 
-            if (!systemStatus.emailConfigured) {
-                showToast('Email not configured', 'error');
-                return;
-            }
+    const segment = document.getElementById('newsletterSegment').value;
+    if (!segment || segment === 'both') {
+        showToast('Please select a specific newsletter segment for preview', 'warning');
+        return;
+    }
 
-            const segment = document.getElementById('newsletterSegment').value;
-            const segmentName = segment === 'pro' ? 'COR Intel Weekly' : 
-                              segment === 'driver' ? 'Safe Freight Mate' : 'Both Newsletters';
+    setButtonLoading('previewBtn', 'Generating...');
+    logActivity(`🔍 Generating newsletter preview for ${segment} segment...`);
 
-            setButtonLoading('newsletterBtn', 'Generating...');
-            logActivity(`📧 Starting ${segmentName} newsletter generation and sending...`);
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/newsletter/generate/${segment}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/generate/${segment}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
+        const result = await response.json();
 
-                const result = await response.json();
+        if (result.success) {
+            currentNewsletterData = {
+                newsletterId: result.data.newsletterId,
+                segment: result.data.segment,
+                subject: result.data.subject,
+                articlesCount: result.data.articlesCount
+            };
 
-                if (result.success) {
-                    logActivity(`✓ ${segmentName} newsletter sent successfully`);
-                    if (result.results) {
-                        Object.entries(result.results).forEach(([seg, data]) => {
-                            if (data.emailSending) {
-                                logActivity(`   ${seg}: ${data.emailSending.sentCount} sent, ${data.emailSending.failedCount} failed`);
-                            }
-                        });
-                    }
-                    showToast(`${segmentName} newsletter generated and sent successfully!`, 'success');
-                    setTimeout(loadSubscriberStats, 2000);
-                } else {
-                    throw new Error(result.error);
-                }
-            } catch (error) {
-                logActivity(`✗ ${segmentName} newsletter generation failed: ` + error.message);
-                showToast(`${segmentName} newsletter failed: ` + error.message, 'error');
-            } finally {
-                setButtonLoading('newsletterBtn', 'Generate & Send', false);
-            }
+            const previewArea = document.getElementById('newsletterPreviewArea');
+            previewArea.innerHTML = `
+                <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
+                    <h3 class="font-medium text-blue-900">${result.data.subject}</h3>
+                    <p class="text-sm text-blue-700">Articles: ${result.data.articlesCount} | Generated: ${new Date().toLocaleTimeString()}</p>
+                    <p class="text-xs text-blue-600 mt-2">Newsletter ID: ${result.data.newsletterId}</p>
+                    <p class="text-xs text-green-600 mt-1">✓ Articles NOT marked as used (preview only)</p>
+                </div>
+                <div class="newsletter-preview bg-white rounded border" style="max-height: 400px; overflow-y: auto;">
+                    ${result.data.previewHtml || 'Preview HTML not available'}
+                </div>
+                <div class="mt-4 flex space-x-3">
+                    <button onclick="sendTestEmailFromPreview()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded font-medium">
+                        Send Test Email
+                    </button>
+                    <button onclick="sendNewsletter()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium">
+                        ⚠️ Send to All Subscribers
+                    </button>
+                    <button onclick="clearPreview()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded font-medium">
+                        Clear Preview
+                    </button>
+                </div>
+                <div class="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                    <strong>⚠️ Important:</strong> Articles will only be marked as "used" when you click "Send to All Subscribers". Test emails do not mark articles as used.
+                </div>
+            `;
+
+            previewMode = true;
+            logActivity(`✅ Newsletter preview generated for ${segment} segment`);
+            showToast('Newsletter preview generated successfully', 'success');
+
+        } else {
+            throw new Error(result.error);
         }
+    } catch (error) {
+        document.getElementById('newsletterPreviewArea').innerHTML = `
+            <div class="text-center p-8">
+                <p class="text-red-600">Failed to generate preview</p>
+                <p class="text-sm text-gray-500 mt-2">${error.message}</p>
+            </div>
+        `;
+        logActivity('✗ Newsletter preview failed: ' + error.message);
+        showToast('Newsletter preview failed: ' + error.message, 'error');
+    } finally {
+        setButtonLoading('previewBtn', 'Generate Preview', false);
+    }
+}
+
+async function sendTestEmailFromPreview() {
+    if (!currentNewsletterData) {
+        showToast('No newsletter preview available. Generate preview first.', 'error');
+        return;
+    }
+
+    const testEmail = document.getElementById('testEmail').value;
+    if (!testEmail) {
+        showToast('Please enter a test email address', 'error');
+        return;
+    }
+
+    logActivity(`📧 Sending test email to ${testEmail}...`);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/newsletter/send/${currentNewsletterData.newsletterId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                testEmail: testEmail
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            logActivity(`✅ Test email sent to ${testEmail}`);
+            showToast('Test email sent successfully!', 'success');
+        } else {
+            throw new Error(result.error);
+        }
+    } catch (error) {
+        logActivity('✗ Test email failed: ' + error.message);
+        showToast('Test email failed: ' + error.message, 'error');
+    }
+}
+
+async function sendNewsletter() {
+    if (!currentNewsletterData) {
+        showToast('No newsletter preview available. Generate preview first.', 'error');
+        return;
+    }
+
+    const confirmed = confirm(`Send newsletter "${currentNewsletterData.subject}" to all ${currentNewsletterData.segment} subscribers?\n\nThis action cannot be undone and will mark articles as used.`);
+    if (!confirmed) return;
+
+    logActivity(`📤 Sending newsletter to all ${currentNewsletterData.segment} subscribers...`);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/newsletter/send/${currentNewsletterData.newsletterId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                confirmSend: true
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            const emailResults = result.data.emailResults;
+            logActivity(`✅ Newsletter sent: ${emailResults.success} sent, ${emailResults.failed} failed`);
+            showToast(`Newsletter sent successfully: ${emailResults.success} sent, ${emailResults.failed} failed`, 'success');
+            
+            clearPreview();
+            setTimeout(loadSubscriberStats, 2000);
+        } else {
+            throw new Error(result.error);
+        }
+    } catch (error) {
+        logActivity('✗ Newsletter sending failed: ' + error.message);
+        showToast('Newsletter sending failed: ' + error.message, 'error');
+    }
+}
+
+function clearPreview() {
+    document.getElementById('newsletterPreviewArea').innerHTML = `
+        <p class="text-gray-500 text-center mt-20">Select a newsletter segment and click "Generate Preview" to see newsletter content</p>
+    `;
+    currentNewsletterData = null;
+    previewMode = false;
+}
+
+async function runNewsletter() {
+    showToast('Please use "Generate Preview" for better control', 'info');
+    generatePreview();
+}
 
         async function previewNewsletter() {
+    generatePreview();
+}
             if (!systemStatus.connected) {
                 showToast('System not connected', 'error');
                 return;
