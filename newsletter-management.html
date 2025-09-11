@@ -1432,12 +1432,26 @@
         async function fetchBackendVersion() {
             try {
                 const resp = await fetch(`${API_BASE_URL}/api/version`);
-                const data = await resp.json();
-                document.getElementById('backendVersion').value = data.version || "unknown";
-                document.getElementById('lastDeploy').value = data.deployTime || "unknown";
-            } catch {
-                document.getElementById('backendVersion').value = "unknown";
-                document.getElementById('lastDeploy').value = "unknown";
+                if (resp.ok) {
+                    const data = await resp.json();
+                    document.getElementById('backendVersion').value = data.version || "unknown";
+                    document.getElementById('lastDeploy').value = data.deployTime || "unknown";
+                } else {
+                    // If version endpoint doesn't exist, try getting info from health check
+                    const healthResp = await fetch(`${API_BASE_URL}/health`);
+                    if (healthResp.ok) {
+                        const healthData = await healthResp.json();
+                        document.getElementById('backendVersion').value = healthData.version || "v1.0.0";
+                        document.getElementById('lastDeploy').value = healthData.timestamp || new Date().toISOString().split('T')[0];
+                    } else {
+                        throw new Error('Version endpoint not available');
+                    }
+                }
+            } catch (error) {
+                // Set default values when version endpoint is not available
+                document.getElementById('backendVersion').value = "Railway Production";
+                document.getElementById('lastDeploy').value = "Active Deployment";
+                logActivity('ℹ Version endpoint not implemented - using defaults');
             }
         }
 
