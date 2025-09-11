@@ -1244,24 +1244,30 @@
             toggleSpinner('scrapeBtn', 'scrapeSpinner', false);
         }
         async function generatePreview() {
-            toggleSpinner('previewBtn', 'previewSpinner', true);
-            const segment = document.getElementById('newsletterSegment').value;
-            try {
-                // Adjust this endpoint as per your backend
-                const resp = await fetch(`${API_BASE_URL}/api/newsletter/preview?segment=${segment}`);
-                const data = await resp.json();
-                if (data.success) {
-                    currentNewsletterData = data;
-                    updateNewsletterPreviewUI();
-                    showToast("Preview generated.", "success");
-                } else {
-                    showToast("Generation failed: " + (data.error || "Unknown error"), "error");
-                }
-            } catch (err) {
-                showToast("Preview error: " + err.message, "error");
-            }
-            toggleSpinner('previewBtn', 'previewSpinner', false);
+    toggleSpinner('previewBtn', 'previewSpinner', true);
+    const segment = document.getElementById('newsletterSegment').value;
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/newsletter/generate/${segment}`, {
+            method: 'POST'
+        });
+        const data = await resp.json();
+        if (data.success) {
+            currentNewsletterData = {
+                html: data.data.previewHtml,
+                text: data.data.previewText || 'Plain text version not available',
+                subject: data.data.subject,
+                newsletterId: data.data.newsletterId
+            };
+            updateNewsletterPreviewUI();
+            showToast("Preview generated.", "success");
+        } else {
+            showToast("Generation failed: " + (data.error || "Unknown error"), "error");
         }
+    } catch (err) {
+        showToast("Preview error: " + err.message, "error");
+    }
+    toggleSpinner('previewBtn', 'previewSpinner', false);
+}
         function setPreviewMode(mode) {
             previewModeType = mode;
             document.getElementById('previewModeHtml').classList.toggle('bg-blue-50', mode==='html');
