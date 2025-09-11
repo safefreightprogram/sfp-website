@@ -948,17 +948,45 @@
                 const response = await fetch(`${API_BASE_URL}/api/subscribers`);
                 const data = await response.json();
                 if (data.success) {
-                    const totalSubs = data.data?.summary?.totalActive || (data.pro.count + data.driver.count);
+                    // Handle different API response structures
+                    let proCount = 0;
+                    let driverCount = 0;
+                    let totalSubs = 0;
+
+                    // Check for nested data structure
+                    if (data.data) {
+                        proCount = data.data.pro?.count || 0;
+                        driverCount = data.data.driver?.count || 0;
+                        totalSubs = data.data.summary?.totalActive || (proCount + driverCount);
+                    } 
+                    // Check for direct structure
+                    else if (data.pro || data.driver) {
+                        proCount = data.pro?.count || 0;
+                        driverCount = data.driver?.count || 0;
+                        totalSubs = proCount + driverCount;
+                    }
+                    // Fallback: count subscribers directly if available
+                    else if (data.subscribers) {
+                        const subscribers = Array.isArray(data.subscribers) ? data.subscribers : [];
+                        proCount = subscribers.filter(s => s.segment === 'pro').length;
+                        driverCount = subscribers.filter(s => s.segment === 'driver').length;
+                        totalSubs = subscribers.length;
+                    }
+
                     document.getElementById('totalSubscribers').textContent = totalSubs;
-                    document.getElementById('proSubscriberCount').textContent = data.data?.pro?.count || data.pro.count;
-                    document.getElementById('driverSubscriberCount').textContent = data.data?.driver?.count || data.driver.count;
+                    document.getElementById('proSubscriberCount').textContent = proCount;
+                    document.getElementById('driverSubscriberCount').textContent = driverCount;
                     systemStatus.subscriberStats = data.data || data;
-                    logActivity(`✓ Loaded subscriber stats: ${totalSubs} total subscribers`);
+                    logActivity(`✓ Loaded subscriber stats: ${totalSubs} total subscribers (${proCount} pro, ${driverCount} driver)`);
                 } else {
                     throw new Error(data.error || 'Failed to load subscriber stats');
                 }
             } catch (error) {
                 logActivity('✗ Failed to load subscriber statistics: ' + error.message);
+                // Set default values on error
+                document.getElementById('totalSubscribers').textContent = '0';
+                document.getElementById('proSubscriberCount').textContent = '0';
+                document.getElementById('driverSubscriberCount').textContent = '0';
             }
         }
 
