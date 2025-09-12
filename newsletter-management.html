@@ -1325,17 +1325,26 @@
         }
 
         function updateNewsletterPreviewUI() {
-            const area = document.getElementById('newsletterPreviewArea');
-            if (!currentNewsletterData) {
-                area.innerHTML = `<p class="text-gray-500 text-center mt-20">Select a newsletter segment and click "Preview" to see newsletter content</p>`;
-                return;
-            }
-            if (previewModeType === 'html') {
-                area.innerHTML = `<iframe class="w-full h-96 bg-white border" srcdoc="${currentNewsletterData.html || ''}"></iframe>`;
-            } else {
-                area.innerHTML = `<pre class="whitespace-pre-wrap">${currentNewsletterData.text || '[No plain text version available]'}</pre>`;
-            }
-        }
+  const area = document.getElementById('newsletterPreviewArea');
+  if (!currentNewsletterData) {
+    area.innerHTML = `<p class="text-gray-500 text-center mt-20">Select a newsletter segment and click "Preview" to see newsletter content</p>`;
+    return;
+  }
+
+  area.innerHTML = ''; // clear
+  if (previewModeType === 'html') {
+    const iframe = document.createElement('iframe');
+    iframe.className = 'w-full h-96 bg-white border';
+    // Use the DOM property — avoids attribute-escaping issues entirely
+    iframe.srcdoc = currentNewsletterData.html || '';
+    area.appendChild(iframe);
+  } else {
+    const pre = document.createElement('pre');
+    pre.className = 'whitespace-pre-wrap';
+    pre.textContent = currentNewsletterData.text || '[No plain text version available]';
+    area.appendChild(pre);
+  }
+}
 
         async function sendTestEmail() {
             toggleSpinner('testBtn', 'testSpinner', true);
