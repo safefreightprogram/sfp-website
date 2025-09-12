@@ -761,7 +761,7 @@
 
     <!-- JavaScript - COMPLETE AND PROPERLY ENCLOSED -->
     <script>
-        const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.app';
+        const API_BASE_URL = window.API_BASE_URL || window.location.origin;
         let currentNewsletterData = null;
         let previewModeType = 'html';
         let previewMode = false;
