@@ -761,7 +761,7 @@
 
     <!-- JavaScript - COMPLETE AND PROPERLY ENCLOSED -->
     <script>
-        const API_BASE_URL = window.API_BASE_URL || window.location.origin;
+        const API_BASE_URL = window.API_BASE_URL || 'https://sfp-newsletter-automation-production.up.railway.app';
         let currentNewsletterData = null;
         let previewModeType = 'html';
         let previewMode = false;
@@ -843,31 +843,40 @@
         }
 
         async function checkSystemStatus() {
-            try {
-                logActivity('Checking system status...');
-                const [healthResponse, emailResponse, statusResponse] = await Promise.all([
-                    fetch(`${API_BASE_URL}/health`),
-                    fetch(`${API_BASE_URL}/api/email-status`),
-                    fetch(`${API_BASE_URL}/api/status`)
-                ]);
-                const healthData = await healthResponse.json();
-                const emailData = await emailResponse.json();
-                const statusData = await statusResponse.json();
-                systemStatus = {
-                    connected: healthResponse.ok,
-                    emailConfigured: emailData.success && emailData.configuration.emailConfigured,
-                    environment: statusData.environment || 'unknown',
-                    schedule: systemStatus.schedule
-                };
-                updateStatusDisplay(healthData, emailData, statusData);
-                logActivity('✓ System status updated successfully');
-            } catch (error) {
-                console.error('Status check failed:', error);
-                systemStatus.connected = false;
-                updateStatusDisplay(null, null, null);
-                logActivity('✗ System status check failed: ' + error.message);
-            }
-        }
+  try {
+    logActivity('Checking system status...');
+    const healthResp = await fetch(`${API_BASE_URL}/health`).catch(() => null);
+    const statusResp = await fetch(`${API_BASE_URL}/api/status`).catch(() => null);
+    const emailResp  = await fetch(`${API_BASE_URL}/api/email-status`).catch(() => null);
+
+    const healthOK = !!(healthResp && healthResp.ok);
+    const healthData = healthOK ? await healthResp.json().catch(() => null) : null;
+
+    // Only parse JSON if resp exists & is ok & content-type is JSON
+    let emailData = null;
+    if (emailResp && emailResp.ok && /application\/json/i.test(emailResp.headers.get('content-type') || '')) {
+      emailData = await emailResp.json().catch(() => null);
+    }
+
+    let statusData = null;
+    if (statusResp && statusResp.ok && /application\/json/i.test(statusResp.headers.get('content-type') || '')) {
+      statusData = await statusResp.json().catch(() => null);
+    }
+
+    systemStatus.connected = healthOK; // drive “Connected” from /health only
+    systemStatus.emailConfigured = !!(emailData && emailData.configuration && emailData.configuration.emailConfigured);
+    systemStatus.environment = (statusData && statusData.environment) || 'unknown';
+
+    updateStatusDisplay(healthData, emailData, statusData);
+    logActivity('✓ System status updated successfully');
+  } catch (error) {
+    console.error('Status check failed:', error);
+    systemStatus.connected = false;
+    updateStatusDisplay(null, null, null);
+    logActivity('✗ System status check failed: ' + error.message);
+  }
+}
+
 
         function updateStatusDisplay(health, email, status) {
             const connectionStatus = document.getElementById('connectionStatus');
