@@ -101,7 +101,17 @@
       <div class="bg-white rounded-lg border p-8 shadow-lg">
         <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Subscribe for Free</h2>
 
-        <form id="newsletter-form" class="space-y-6" novalidate>
+        <form id="newsletter-form" class="space-y-6"
+      action="https://script.google.com/macros/s/AKfycbzpItDNhfjRDMgCpYSZv_NZoqBmMDAZIzXCRIWl5UhJWYH55LbQaqOgBFiHqnQq9tIOIw/exec"
+      method="POST">
+  <!-- required for server-side routing -->
+  <input type="hidden" name="action" value="newsletter_subscribe">
+  <!-- redirect after success -->
+  <input type="hidden" name="redirect" value="https://www.safefreightprogram.com/subscribe-thanks.html">
+  <!-- honeypot field -->
+  <input type="text" name="hp" autocomplete="off" tabindex="-1"
+         style="position:absolute;left:-9999px" aria-hidden="true">
+
           <div class="grid md:grid-cols-2 gap-4">
             <div>
               <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
@@ -121,14 +131,14 @@
             <label class="block text-sm font-semibold text-gray-700 mb-3">Newsletter Edition * <span class="text-red-500">(Select at least one)</span></label>
             <div class="space-y-3">
               <label class="flex items-center cursor-pointer p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                <input type="checkbox" name="segments" value="pro" class="mr-3 newsletter-checkbox">
+                <input type="checkbox" name="segments[]" value="pro" class="mr-3 newsletter-checkbox">
                 <div>
                   <div class="font-semibold text-gray-800">CoR Intel Weekly</div>
                   <div class="text-sm text-gray-600">Professional compliance intelligence</div>
                 </div>
               </label>
               <label class="flex items-center cursor-pointer p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                <input type="checkbox" name="segments" value="driver" class="mr-3 newsletter-checkbox">
+                <input type="checkbox" name="segments[]" value="driver" class="mr-3 newsletter-checkbox">
                 <div>
                   <div class="font-semibold text-gray-800">Safe Freight Mate</div>
                   <div class="text-sm text-gray-600">Driver-focused updates and tips</div>
@@ -209,137 +219,15 @@
 
   <div id="footer-placeholder"></div>
 
-  <!-- Load config BEFORE auth (order matters) -->
-  <script src="/js/sfp-config.js"></script>
-  <script type="module" src="/js/sfp-auth.js"></script>
+  <!-- Config must load BEFORE auth -->
+<script src="/js/sfp-config.js"></script>
+<script type="module" src="/js/sfp-auth.js"></script>
+
 
   <!-- Header/footer loader & account indicator -->
   <script src="/js/load-header-footer.js" defer></script>
   <script src="/js/account-indicator.js" defer></script>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // If header partial fails to load within 2s, reveal fallback header.
-      const headerFallbackTimer = setTimeout(() => {
-        const el = document.getElementById('site-header');
-        if (el) el.classList.remove('hidden');
-      }, 2000);
-
-      // If your loader exposes an event when it succeeds, clear the timer to keep the partial.
-      window.addEventListener('sfp:headerLoaded', () => clearTimeout(headerFallbackTimer));
-      window.addEventListener('sfp:headerLoadFailed', () => {
-        clearTimeout(headerFallbackTimer);
-        const el = document.getElementById('site-header');
-        if (el) el.classList.remove('hidden');
-      });
-
-      const form = document.getElementById('newsletter-form');
-      const submitBtn = document.getElementById('submit-btn');
-      const messages = document.getElementById('form-messages');
-      const segmentError = document.getElementById('segment-error');
-
-      if (!window.SFP_CONFIG || !window.SFP_CONFIG.newsletter || !window.SFP_CONFIG.newsletter.apiUrl) {
-        console.error('Newsletter configuration not found');
-        showErrorMessage('Configuration Error', 'Newsletter service is not properly configured. Please contact support.');
-        return;
-      }
-
-      // Real-time validation for segments
-      document.querySelectorAll('.newsletter-checkbox').forEach(cb => {
-        cb.addEventListener('change', () => {
-          const selected = document.querySelectorAll('input[name="segments"]:checked').length;
-          if (selected > 0) {
-            segmentError.classList.add('hidden');
-            cb.setCustomValidity('');
-          }
-        });
-      });
-
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const selectedSegments = Array.from(document.querySelectorAll('input[name="segments"]:checked')).map(el => el.value);
-        if (selectedSegments.length === 0) {
-          segmentError.classList.remove('hidden');
-          segmentError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          return;
-        } else {
-          segmentError.classList.add('hidden');
-        }
-
-        const data = new FormData(form);
-        if (!data.get('consent')) {
-          showErrorMessage('Consent Required', 'Please confirm you consent to receiving the newsletter.');
-          return;
-        }
-
-        setLoading(true);
-        hideMessages();
-
-        try {
-          const result = await window.SFP_CONFIG.callNewsletterAPI('newsletter_subscribe', {
-            email: data.get('email'),
-            name: data.get('name') || '',
-            segment: selectedSegments.join(','),
-            company: data.get('company') || '',
-            role: data.get('role') || '',
-            consent: 'true'
-          });
-
-          if (result && result.success) {
-            showSuccess('Check Your Email', `We've sent a confirmation link to ${data.get('email')}. Please click it to complete your subscription.`);
-            form.reset();
-            if (typeof gtag !== 'undefined') {
-              gtag('event', 'newsletter_subscribe', {
-                event_category: 'engagement',
-                event_label: selectedSegments.join(','),
-                value: selectedSegments.length
-              });
-            }
-          } else {
-            throw new Error(result?.error || 'Subscription failed');
-          }
-        } catch (err) {
-          let msg = err?.message || 'An unexpected error occurred. Please try again.';
-          if (msg.match(/invalid/i) && msg.match(/email/i)) msg = 'Please enter a valid email address.';
-          if (msg.match(/rate limit/i)) msg = 'Too many requests. Please wait a moment and try again.';
-          if (msg.match(/already exists/i)) msg = 'This email is already subscribed. Check your inbox for previous confirmation emails.';
-          showErrorMessage('Subscription Failed', msg);
-        } finally {
-          setLoading(false);
-        }
-      });
-
-      function setLoading(v) {
-        submitBtn.disabled = v;
-        submitBtn.innerHTML = v
-          ? '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Subscribing...'
-          : 'Subscribe Now';
-      }
-      function hideMessages() { messages.classList.add('hidden'); }
-      function showSuccess(title, text) {
-        messages.innerHTML = `
-          <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <div><h3 class="font-semibold text-green-800">${title}</h3><p class="text-green-700 mt-1">${text}</p></div>
-            </div>
-          </div>`;
-        messages.classList.remove('hidden');
-        messages.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      function showErrorMessage(title, text) {
-        messages.innerHTML = `
-          <div class="p-4 bg-red-100 border border-red-300 rounded-lg">
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <div><h3 class="font-semibold text-red-800">${title}</h3><p class="text-red-700 mt-1">${text}</p></div>
-            </div>
-          </div>`;
-        messages.classList.remove('hidden');
-        messages.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    });
-  </script>
+  
 </body>
 </html>
