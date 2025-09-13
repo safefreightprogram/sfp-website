@@ -1,419 +1,345 @@
 <!DOCTYPE html>
 <html lang="en-AU">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Subscribe to Safe Freight Intel – Safe Freight Program</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <meta name="description" content="Stay informed with CoR Intel Weekly for professionals and Safe Freight Mate for drivers. Up to date analysis of regulatory changes, enforcement trends, and industry developments." />
-    <meta property="og:title" content="Safe Freight Intel Newsletter" />
-    <meta property="og:description" content="Professional compliance intelligence for Australia's freight industry" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subscribe to Safe Freight Intel – Safe Freight Program</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <style>
-        @keyframes fadeInUp { 0% { opacity: 0; transform: translateY(20px);} 100% { opacity: 1; transform: translateY(0);} }
-        .animate-fadeInUp { animation: fadeInUp 0.6s ease-out both; }
-        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
-    </style>
+  <meta name="description" content="Stay informed with CoR Intel Weekly for professionals and Safe Freight Mate for drivers. Up to date analysis of regulatory changes, enforcement trends, and industry developments." />
+  <meta property="og:title" content="Safe Freight Intel Newsletter" />
+  <meta property="og:description" content="Professional compliance intelligence for Australia's freight industry" />
+
+  <style>
+    @keyframes fadeInUp { 0% { opacity: 0; transform: translateY(20px);} 100% { opacity: 1; transform: translateY(0);} }
+    .animate-fadeInUp { animation: fadeInUp 0.6s ease-out both; }
+    .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+
+    /* --- Header/logo hard caps to stop giant logos leaking in from partials --- */
+    #site-header img, #site-header svg, #header-placeholder img, #header-placeholder svg {
+      max-height: 40px; width: auto; height: auto;
+    }
+    /* Ensure any raw images in the header don’t expand the layout */
+    #site-header, #header-placeholder { overflow: hidden; }
+  </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
 
-    <div id="header-placeholder"></div>
+  <!-- Header placeholder (for partial injection) -->
+  <div id="header-placeholder"></div>
 
-    <main class="max-w-4xl mx-auto px-4 py-8">
-        <section class="text-center mb-12 animate-fadeInUp">
-            <div class="bg-blue-100 p-4 rounded-full w-16 h-16 mx-auto mb-6 flex items-center justify-center">
-                <svg class="w-8 h-8 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                </svg>
+  <!-- Minimal header fallback (shown only if partial load fails) -->
+  <header id="site-header" class="hidden bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3">
+        <img src="/assets/sfp-logo-small.png" alt="Safe Freight Program" class="h-8 w-auto">
+        <span class="sr-only">Safe Freight Program</span>
+      </a>
+      <nav class="text-sm">
+        <a href="/subscribe.html" class="text-blue-700 font-semibold">Subscribe</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <section class="text-center mb-12 animate-fadeInUp">
+      <div class="bg-blue-100 p-4 rounded-full w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+        <svg class="w-8 h-8 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+        </svg>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold text-blue-800 mb-4">Safe Freight Intel</h1>
+      <p class="text-xl text-gray-700 mb-6">Stay ahead of regulatory changes, enforcement trends, and industry developments</p>
+      <p class="text-gray-600 max-w-2xl mx-auto">Up to date analysis delivered weekly to your inbox. Choose the edition that matches your role in Australia's freight industry.</p>
+    </section>
+
+    <section class="grid md:grid-cols-2 gap-8 mb-12">
+      <!-- CoR Intel Weekly -->
+      <div class="bg-white rounded-lg border-2 border-blue-200 p-8 hover:border-blue-300 transition-all hover:shadow-lg">
+        <div class="text-center mb-6">
+          <div class="bg-blue-100 p-3 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
+            <svg class="w-6 h-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-800 mb-2">CoR Intel Weekly</h3>
+          <p class="text-gray-600">For compliance managers, transport executives, and industry professionals</p>
+        </div>
+        <ul class="space-y-3 mb-6">
+          <li class="flex items-start"><svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span class="text-gray-700">NHVR enforcement bulletins and policy updates</span></li>
+          <li class="flex items-start"><svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span class="text-gray-700">Court decisions and tribunal outcomes</span></li>
+          <li class="flex items-start"><svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span class="text-gray-700">WorkSafe agency compliance guidance</span></li>
+          <li class="flex items-start"><svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span class="text-gray-700">Strategic risk assessment insights</span></li>
+          <li class="flex items-start"><svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span class="text-gray-700">Industry trend analysis and benchmarking</span></li>
+        </ul>
+      </div>
+
+      <!-- Safe Freight Mate -->
+      <div class="bg-white rounded-lg border-2 border-gray-200 p-8 hover:border-blue-300 transition-all hover:shadow-lg">
+        <div class="text-center mb-6">
+          <div class="bg-blue-100 p-3 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
+            <svg class="w-6 h-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-800 mb-2">Safe Freight Mate</h3>
+          <p class="text-gray-600">For heavy vehicle drivers and owner-operators</p>
+        </div>
+        <ul class="space-y-3 mb-6">
+          <li class="flex items-start"><svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span class="text-gray-700">Plain-English regulatory updates</span></li>
+          <li class="flex items-start"><svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span class="text-gray-700">Practical safety tips and reminders</span></li>
+          <li class="flex items-start"><svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span class="text-gray-700">Driver wellness and industry news</span></li>
+          <li class="flex items-start"><svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span class="text-gray-700">Enforcement activity updates</span></li>
+          <li class="flex items-start"><svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span class="text-gray-700">Training opportunities and reminders</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="max-w-2xl mx-auto">
+      <div class="bg-white rounded-lg border p-8 shadow-lg">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Subscribe for Free</h2>
+
+        <form id="newsletter-form" class="space-y-6" novalidate>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+              <input type="email" id="email" name="email" required
+                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                     placeholder="your.email@company.com" autocomplete="email">
             </div>
-            <h1 class="text-4xl md:text-5xl font-bold text-blue-800 mb-4">Safe Freight Intel</h1>
-            <p class="text-xl text-gray-700 mb-6">Stay ahead of regulatory changes, enforcement trends, and industry developments</p>
-            <p class="text-gray-600 max-w-2xl mx-auto">Up to date analysis delivered weekly to your inbox. Choose the edition that matches your role in Australia's freight industry.</p>
-        </section>
-
-        <section class="grid md:grid-cols-2 gap-8 mb-12">
-            <div class="bg-white rounded-lg border-2 border-blue-200 p-8 hover:border-blue-300 transition-all hover:shadow-lg">
-                <div class="text-center mb-6">
-                    <div class="bg-blue-100 p-3 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-2">CoR Intel Weekly</h3>
-                    <p class="text-gray-600">For compliance managers, transport executives, and industry professionals</p>
-                </div>
-                
-                <ul class="space-y-3 mb-6">
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-gray-700">NHVR enforcement bulletins and policy updates</span>
-                    </li>
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-gray-700">Court decisions and tribunal outcomes</span>
-                    </li>
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-gray-700">WorkSafe agency compliance guidance</span>
-                    </li>
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-gray-700">Strategic risk assessment insights</span>
-                    </li>
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-gray-700">Industry trend analysis and benchmarking</span>
-                    </li>
-                </ul>
+            <div>
+              <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">Name</label>
+              <input type="text" id="name" name="name"
+                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                     placeholder="Your Name" autocomplete="name">
             </div>
+          </div>
 
-            <div class="bg-white rounded-lg border-2 border-gray-200 p-8 hover:border-blue-300 transition-all hover:shadow-lg">
-                <div class="text-center mb-6">
-                    <div class="bg-blue-100 p-3 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-2">Safe Freight Mate</h3>
-                    <p class="text-gray-600">For heavy vehicle drivers and owner-operators</p>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-3">Newsletter Edition * <span class="text-red-500">(Select at least one)</span></label>
+            <div class="space-y-3">
+              <label class="flex items-center cursor-pointer p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                <input type="checkbox" name="segments" value="pro" class="mr-3 newsletter-checkbox">
+                <div>
+                  <div class="font-semibold text-gray-800">CoR Intel Weekly</div>
+                  <div class="text-sm text-gray-600">Professional compliance intelligence</div>
                 </div>
-                
-                <ul class="space-y-3 mb-6">
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-gray-700">Plain-English regulatory updates</span>
-                    </li>
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-gray-700">Practical safety tips and reminders</span>
-                    </li>
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-gray-700">Driver wellness and industry news</span>
-                    </li>
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-gray-700">Enforcement activity updates</span>
-                    </li>
-                    <li class="flex items-start">
-                        <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-gray-700">Training opportunities and reminders</span>
-                    </li>
-                </ul>
+              </label>
+              <label class="flex items-center cursor-pointer p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                <input type="checkbox" name="segments" value="driver" class="mr-3 newsletter-checkbox">
+                <div>
+                  <div class="font-semibold text-gray-800">Safe Freight Mate</div>
+                  <div class="text-sm text-gray-600">Driver-focused updates and tips</div>
+                </div>
+              </label>
             </div>
-        </section>
+            <div id="segment-error" class="text-red-600 text-sm mt-1 hidden">Please select at least one newsletter edition.</div>
+          </div>
 
-        <section class="max-w-2xl mx-auto">
-            <div class="bg-white rounded-lg border p-8 shadow-lg">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Subscribe for Free</h2>
-                
-                <form id="newsletter-form" class="space-y-6">
-                    <div class="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
-                            <input type="email" id="email" name="email" required 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   placeholder="your.email@company.com">
-                        </div>
-                        <div>
-                            <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">Name</label>
-                            <input type="text" id="name" name="name" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   placeholder="Your Name">
-                        </div>
-                    </div>
+          <div>
+            <label for="company" class="block text-sm font-semibold text-gray-700 mb-2">Company/Organisation (optional)</label>
+            <input type="text" id="company" name="company"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                   placeholder="Your Company Name" autocomplete="organization">
+          </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-3">Newsletter Edition * <span class="text-red-500">(Select at least one)</span></label>
-                        <div class="space-y-3">
-                            <label class="flex items-center cursor-pointer p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                <input type="checkbox" name="segments" value="pro" class="mr-3 newsletter-checkbox">
-                                <div>
-                                    <div class="font-semibold text-gray-800">CoR Intel Weekly</div>
-                                    <div class="text-sm text-gray-600">Professional compliance intelligence</div>
-                                </div>
-                            </label>
-                            <label class="flex items-center cursor-pointer p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                <input type="checkbox" name="segments" value="driver" class="mr-3 newsletter-checkbox">
-                                <div>
-                                    <div class="font-semibold text-gray-800">Safe Freight Mate</div>
-                                    <div class="text-sm text-gray-600">Driver-focused updates and tips</div>
-                                </div>
-                            </label>
-                        </div>
-                        <div id="segment-error" class="text-red-600 text-sm mt-1 hidden">Please select at least one newsletter edition.</div>
-                    </div>
+          <div>
+            <label for="role" class="block text-sm font-semibold text-gray-700 mb-2">Industry Role (optional)</label>
+            <select id="role" name="role" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="">Select your role...</option>
+              <option value="compliance_manager">Compliance Manager</option>
+              <option value="transport_executive">Transport Executive</option>
+              <option value="operations_manager">Operations Manager</option>
+              <option value="safety_manager">Safety Manager</option>
+              <option value="driver">Heavy Vehicle Driver</option>
+              <option value="owner_operator">Owner-Operator</option>
+              <option value="consultant">Industry Consultant</option>
+              <option value="trainer">Training Provider</option>
+              <option value="ail_operator">Inspection Location</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
 
-                    <div>
-                        <label for="company" class="block text-sm font-semibold text-gray-700 mb-2">Company/Organisation (optional)</label>
-                        <input type="text" id="company" name="company" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                               placeholder="Your Company Name">
-                    </div>
+          <div class="flex items-start">
+            <input type="checkbox" id="consent" name="consent" required class="mt-1 mr-3">
+            <label for="consent" class="text-sm text-gray-600">
+              I consent to receiving the selected newsletter and understand I can unsubscribe at any time.
+              I have read the <a href="/privacy.html" class="text-blue-600 hover:underline" target="_blank" rel="noopener">Privacy Policy</a>.*
+            </label>
+          </div>
 
-                    <div>
-                        <label for="role" class="block text-sm font-semibold text-gray-700 mb-2">Industry Role (optional)</label>
-                        <select id="role" name="role" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Select your role...</option>
-                            <option value="compliance_manager">Compliance Manager</option>
-                            <option value="transport_executive">Transport Executive</option>
-                            <option value="operations_manager">Operations Manager</option>
-                            <option value="safety_manager">Safety Manager</option>
-                            <option value="driver">Heavy Vehicle Driver</option>
-                            <option value="owner_operator">Owner-Operator</option>
-                            <option value="consultant">Industry Consultant</option>
-                            <option value="trainer">Training Provider</option>
-                            <option value="ail_operator">Inspection Location</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
+          <button type="submit" id="submit-btn"
+                  class="w-full bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            Subscribe Now
+          </button>
+        </form>
 
-                    <div class="flex items-start">
-                        <input type="checkbox" id="consent" name="consent" required class="mt-1 mr-3">
-                        <label for="consent" class="text-sm text-gray-600">
-                            I consent to receiving the selected newsletter and understand I can unsubscribe at any time. 
-                            I have read the <a href="/privacy.html" class="text-blue-600 hover:underline" target="_blank">Privacy Policy</a>.*
-                        </label>
-                    </div>
+        <div id="form-messages" class="mt-4 hidden"></div>
+      </div>
+    </section>
 
-                    <button type="submit" id="submit-btn" 
-                            class="w-full bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                        Subscribe Now
-                    </button>
-                </form>
+    <section class="mt-12 text-center text-gray-600">
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="flex items-center justify-center">
+          <svg class="w-5 h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 01-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <span class="text-sm">Your privacy is protected</span>
+        </div>
+        <div class="flex items-center justify-center">
+          <svg class="w-5 h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <span class="text-sm">Delivered weekly to your inbox</span>
+        </div>
+        <div class="flex items-center justify-center">
+          <svg class="w-5 h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm">Unsubscribe anytime</span>
+        </div>
+      </div>
+      <p class="text-xs mt-4 text-gray-500">
+        Safe Freight Program complies with the Australian Spam Act 2003 and Privacy Act 1988
+      </p>
+    </section>
+  </main>
 
-                <div id="form-messages" class="mt-4 hidden"></div>
-            </div>
-        </section>
+  <div id="footer-placeholder"></div>
 
-        <section class="mt-12 text-center text-gray-600">
-            <div class="grid md:grid-cols-3 gap-6">
-                <div class="flex items-center justify-center">
-                    <svg class="w-5 h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <span class="text-sm">Your privacy is protected</span>
-                </div>
-                <div class="flex items-center justify-center">
-                    <svg class="w-5 h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    <span class="text-sm">Delivered weekly to your inbox</span>
-                </div>
-                <div class="flex items-center justify-center">
-                    <svg class="w-5 h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span class="text-sm">Unsubscribe anytime</span>
-                </div>
-            </div>
-            <p class="text-xs mt-4 text-gray-500">
-                Safe Freight Program complies with the Australian Spam Act 2003 and Privacy Act 1988
-            </p>
-        </section>
-    </main>
+  <!-- Load config BEFORE auth (order matters) -->
+  <script src="/js/sfp-config.js"></script>
+  <script type="module" src="/js/sfp-auth.js"></script>
 
-    <div id="footer-placeholder"></div>
+  <!-- Header/footer loader & account indicator -->
+  <script src="/js/load-header-footer.js" defer></script>
+  <script src="/js/account-indicator.js" defer></script>
 
-    <script type="module" src="/js/sfp-auth.js"></script>
-    <script src="/js/sfp-config.js"></script>
-    <script src="/js/load-header-footer.js" defer></script>
-    <script src="/js/account-indicator.js" defer></script>
-
-    <script>
+  <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('newsletter-form');
-        const submitBtn = document.getElementById('submit-btn');
-        const messages = document.getElementById('form-messages');
-        const segmentError = document.getElementById('segment-error');
+      // If header partial fails to load within 2s, reveal fallback header.
+      const headerFallbackTimer = setTimeout(() => {
+        const el = document.getElementById('site-header');
+        if (el) el.classList.remove('hidden');
+      }, 2000);
 
-        // Ensure the newsletter URL is available
-        if (!window.SFP_CONFIG || !window.SFP_CONFIG.newsletter || !window.SFP_CONFIG.newsletter.apiUrl) {
-            console.error('Newsletter configuration not found');
-            showErrorMessage('Configuration Error', 'Newsletter service is not properly configured. Please contact support.');
-            return;
-        }
+      // If your loader exposes an event when it succeeds, clear the timer to keep the partial.
+      window.addEventListener('sfp:headerLoaded', () => clearTimeout(headerFallbackTimer));
+      window.addEventListener('sfp:headerLoadFailed', () => {
+        clearTimeout(headerFallbackTimer);
+        const el = document.getElementById('site-header');
+        if (el) el.classList.remove('hidden');
+      });
 
-        console.log('Newsletter system initialized with URL:', window.SFP_CONFIG.newsletter.apiUrl);
+      const form = document.getElementById('newsletter-form');
+      const submitBtn = document.getElementById('submit-btn');
+      const messages = document.getElementById('form-messages');
+      const segmentError = document.getElementById('segment-error');
 
-        // Add real-time validation for segments
-        const checkboxes = document.querySelectorAll('.newsletter-checkbox');
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const selectedSegments = Array.from(document.querySelectorAll('input[name="segments"]:checked'));
-                if (selectedSegments.length > 0) {
-                    segmentError.classList.add('hidden');
-                    checkboxes.forEach(cb => cb.setCustomValidity(''));
-                }
-            });
+      if (!window.SFP_CONFIG || !window.SFP_CONFIG.newsletter || !window.SFP_CONFIG.newsletter.apiUrl) {
+        console.error('Newsletter configuration not found');
+        showErrorMessage('Configuration Error', 'Newsletter service is not properly configured. Please contact support.');
+        return;
+      }
+
+      // Real-time validation for segments
+      document.querySelectorAll('.newsletter-checkbox').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const selected = document.querySelectorAll('input[name="segments"]:checked').length;
+          if (selected > 0) {
+            segmentError.classList.add('hidden');
+            cb.setCustomValidity('');
+          }
         });
+      });
 
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            
-            // Collect all selected newsletter segments
-            const selectedSegments = Array.from(document.querySelectorAll('input[name="segments"]:checked'))
-                .map(el => el.value);
-            
-            // Validation
-            if (selectedSegments.length === 0) {
-                segmentError.classList.remove('hidden');
-                segmentError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            } else {
-                segmentError.classList.add('hidden');
-            }
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-            if (!formData.get('consent')) {
-                showErrorMessage('Consent Required', 'Please confirm you consent to receiving the newsletter.');
-                return;
-            }
-
-            // Show loading state
-            setLoadingState(true);
-            hideMessages();
-            
-            try {
-                console.log('Submitting subscription:', {
-                    email: formData.get('email'),
-                    segments: selectedSegments,
-                    company: formData.get('company'),
-                    role: formData.get('role')
-                });
-
-                // Call the newsletter API
-                const result = await window.SFP_CONFIG.callNewsletterAPI('newsletter_subscribe', {
-                    email: formData.get('email'),
-                    name: formData.get('name') || '',
-                    segment: selectedSegments.join(','), // Backend expects comma-separated string
-                    company: formData.get('company') || '',
-                    role: formData.get('role') || '',
-                    consent: 'true'
-                });
-                
-                console.log('Subscription result:', result);
-                
-                if (result.success) {
-                    showSuccessMessage('Check Your Email', 
-                        `We've sent a confirmation link to ${formData.get('email')}. Please check your email and click the confirmation link to complete your subscription.`);
-                    form.reset();
-                    
-                    // Track successful subscription if analytics available
-                    if (typeof gtag !== 'undefined') {
-                        gtag('event', 'newsletter_subscribe', {
-                            'event_category': 'engagement',
-                            'event_label': selectedSegments.join(','),
-                            'value': selectedSegments.length
-                        });
-                    }
-                } else {
-                    throw new Error(result.error || 'Subscription failed');
-                }
-                
-            } catch (error) {
-                console.error('Subscription error:', error);
-                
-                let errorMessage = 'An unexpected error occurred. Please try again.';
-                if (error.message) {
-                    errorMessage = error.message;
-                }
-                
-                // Handle common error types
-                if (errorMessage.includes('email') && errorMessage.includes('invalid')) {
-                    errorMessage = 'Please enter a valid email address.';
-                } else if (errorMessage.includes('rate limit')) {
-                    errorMessage = 'Too many requests. Please wait a moment and try again.';
-                } else if (errorMessage.includes('already exists')) {
-                    errorMessage = 'This email is already subscribed. Check your inbox for previous confirmation emails.';
-                }
-                
-                showErrorMessage('Subscription Failed', errorMessage);
-            } finally {
-                setLoadingState(false);
-            }
-        });
-
-        function setLoadingState(isLoading) {
-            submitBtn.disabled = isLoading;
-            submitBtn.innerHTML = isLoading ? 
-                '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Subscribing...' : 
-                'Subscribe Now';
+        const selectedSegments = Array.from(document.querySelectorAll('input[name="segments"]:checked')).map(el => el.value);
+        if (selectedSegments.length === 0) {
+          segmentError.classList.remove('hidden');
+          segmentError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        } else {
+          segmentError.classList.add('hidden');
         }
 
-        function hideMessages() {
-            messages.classList.add('hidden');
+        const data = new FormData(form);
+        if (!data.get('consent')) {
+          showErrorMessage('Consent Required', 'Please confirm you consent to receiving the newsletter.');
+          return;
         }
 
-        function showSuccessMessage(title, message) {
-            messages.innerHTML = `
-                <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
-                    <div class="flex items-start">
-                        <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <div>
-                            <h3 class="font-semibold text-green-800">${title}</h3>
-                            <p class="text-green-700 mt-1">${message}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            messages.classList.remove('hidden');
-            messages.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        setLoading(true);
+        hideMessages();
 
-        function showErrorMessage(title, message) {
-            messages.innerHTML = `
-                <div class="p-4 bg-red-100 border border-red-300 rounded-lg">
-                    <div class="flex items-start">
-                        <svg class="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div>
-                            <h3 class="font-semibold text-red-800">${title}</h3>
-                            <p class="text-red-700 mt-1">${message}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            messages.classList.remove('hidden');
-            messages.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        try {
+          const result = await window.SFP_CONFIG.callNewsletterAPI('newsletter_subscribe', {
+            email: data.get('email'),
+            name: data.get('name') || '',
+            segment: selectedSegments.join(','),
+            company: data.get('company') || '',
+            role: data.get('role') || '',
+            consent: 'true'
+          });
 
-        // Test connection on page load
-        window.SFP_CONFIG.testNewsletterConnection().then(result => {
-            if (!result.success) {
-                console.warn('Newsletter service connection test failed:', result.error);
-            } else {
-                console.log('Newsletter service connection test passed');
+          if (result && result.success) {
+            showSuccess('Check Your Email', `We've sent a confirmation link to ${data.get('email')}. Please click it to complete your subscription.`);
+            form.reset();
+            if (typeof gtag !== 'undefined') {
+              gtag('event', 'newsletter_subscribe', {
+                event_category: 'engagement',
+                event_label: selectedSegments.join(','),
+                value: selectedSegments.length
+              });
             }
-        });
+          } else {
+            throw new Error(result?.error || 'Subscription failed');
+          }
+        } catch (err) {
+          let msg = err?.message || 'An unexpected error occurred. Please try again.';
+          if (msg.match(/invalid/i) && msg.match(/email/i)) msg = 'Please enter a valid email address.';
+          if (msg.match(/rate limit/i)) msg = 'Too many requests. Please wait a moment and try again.';
+          if (msg.match(/already exists/i)) msg = 'This email is already subscribed. Check your inbox for previous confirmation emails.';
+          showErrorMessage('Subscription Failed', msg);
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      function setLoading(v) {
+        submitBtn.disabled = v;
+        submitBtn.innerHTML = v
+          ? '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Subscribing...'
+          : 'Subscribe Now';
+      }
+      function hideMessages() { messages.classList.add('hidden'); }
+      function showSuccess(title, text) {
+        messages.innerHTML = `
+          <div class="p-4 bg-green-100 border border-green-300 rounded-lg">
+            <div class="flex items-start">
+              <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <div><h3 class="font-semibold text-green-800">${title}</h3><p class="text-green-700 mt-1">${text}</p></div>
+            </div>
+          </div>`;
+        messages.classList.remove('hidden');
+        messages.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      function showErrorMessage(title, text) {
+        messages.innerHTML = `
+          <div class="p-4 bg-red-100 border border-red-300 rounded-lg">
+            <div class="flex items-start">
+              <svg class="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <div><h3 class="font-semibold text-red-800">${title}</h3><p class="text-red-700 mt-1">${text}</p></div>
+            </div>
+          </div>`;
+        messages.classList.remove('hidden');
+        messages.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     });
-    </script>
+  </script>
 </body>
 </html>
