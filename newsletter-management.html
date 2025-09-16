@@ -905,26 +905,37 @@
                     }
                 });
                 
-                window.growthChart = new Chart(growthCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Pro', 'Driver'],
-                        datasets: [{
-                            label: 'Subscribers',
-                            data: [0, 0], // Will be updated from real data
-                            backgroundColor: ['#3b82f6', '#10b981']
-                        }]
-                    },
-                    options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
+                try {
+    window.growthChart = new Chart(growthCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Pro', 'Driver'],
+            datasets: [{
+                label: 'Subscribers',
+                data: [0, 0], // Will be updated from real data
+                backgroundColor: ['#3b82f6', '#10b981']
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Verify chart was created properly
+    if (!window.growthChart.data || !window.growthChart.data.datasets) {
+        throw new Error('Chart data structure invalid after creation');
+    }
+} catch (chartCreationError) {
+    console.error('Growth chart creation failed:', chartCreationError);
+    window.growthChart = null;
+    logActivity('📊 Growth chart creation failed - will use data display only');
+}
                 
                 logActivity('✅ Charts initialized successfully');
             } catch (error) {
@@ -1431,49 +1442,94 @@
         }
 
         // ===== SUBSCRIBER MANAGEMENT =====
-        async function loadSubscriberStats() {
-            try {
-                logActivity('📊 Loading subscriber statistics...');
-                const response = await fetch(`${API_BASE_URL}/api/subscribers`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    let proCount = 0;
-                    let driverCount = 0;
-                    let totalSubs = 0;
-
-                    if (data.data) {
-                        proCount = data.data.pro?.count || 0;
-                        driverCount = data.data.driver?.count || 0;
-                        totalSubs = data.data.summary?.totalActive || (proCount + driverCount);
-                    } else if (data.pro || data.driver) {
-                        proCount = data.pro?.count || 0;
-                        driverCount = data.driver?.count || 0;
-                        totalSubs = proCount + driverCount;
-                    }
-
-                    document.getElementById('totalSubscribers').textContent = totalSubs;
-                    document.getElementById('proSubscriberCount').textContent = proCount;
-                    document.getElementById('driverSubscriberCount').textContent = driverCount;
-                    
-                    // Update charts if available
-                    if (window.growthChart) {
-                        window.growthChart.data.datasets[0].data = [proCount, driverCount];
-                        window.growthChart.update();
-                    }
-                    
-                    systemStatus.subscriberStats = data.data || data;
-                    logActivity(`✅ Loaded subscriber stats: ${totalSubs} total (${proCount} pro, ${driverCount} driver)`);
-                } else {
-                    throw new Error(data.error || 'Failed to load subscriber stats');
-                }
-            } catch (error) {
-                logActivity('❌ Failed to load subscriber statistics: ' + error.message);
-                document.getElementById('totalSubscribers').textContent = '0';
-                document.getElementById('proSubscriberCount').textContent = '0';
-                document.getElementById('driverSubscriberCount').textContent = '0';
-            }
+        // ===== SUBSCRIBER MANAGEMENT - IMPROVED WITH BETTER ERROR HANDLING =====
+async function loadSubscriberStats() {
+    try {
+        logActivity('📊 Loading subscriber statistics...');
+        const response = await fetch(`${API_BASE_URL}/api/subscribers`);
+        
+        if (!response.ok) {
+            throw new Error(`API returned ${response.status}: ${response.statusText}`);
         }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            let proCount = 0;
+            let driverCount = 0;
+            let totalSubs = 0;
+
+            // Handle multiple possible response formats
+            if (data.data) {
+                // New format: { success: true, data: { pro: {...}, driver: {...}, summary: {...} } }
+                proCount = data.data.pro?.count || 0;
+                driverCount = data.data.driver?.count || 0;
+                totalSubs = data.data.summary?.totalActive || (proCount + driverCount);
+            } else if (data.pro || data.driver) {
+                // Legacy format: { success: true, pro: {...}, driver: {...} }
+                proCount = data.pro?.count || 0;
+                driverCount = data.driver?.count || 0;
+                totalSubs = proCount + driverCount;
+            } else {
+                // Fallback: look for any subscriber arrays directly
+                proCount = Array.isArray(data.proSubscribers) ? data.proSubscribers.length : 0;
+                driverCount = Array.isArray(data.driverSubscribers) ? data.driverSubscribers.length : 0;
+                totalSubs = proCount + driverCount;
+            }
+
+            // Update UI elements - these should always work regardless of chart status
+            const totalElement = document.getElementById('totalSubscribers');
+            const proElement = document.getElementById('proSubscriberCount');
+            const driverElement = document.getElementById('driverSubscriberCount');
+            
+            if (totalElement) totalElement.textContent = totalSubs;
+            if (proElement) proElement.textContent = proCount;
+            if (driverElement) driverElement.textContent = driverCount;
+            
+            // Update charts ONLY if they exist and are properly initialized
+            if (window.growthChart && 
+                window.growthChart.data && 
+                window.growthChart.data.datasets && 
+                window.growthChart.data.datasets[0] && 
+                window.growthChart.data.datasets[0].data) {
+                try {
+                    window.growthChart.data.datasets[0].data = [proCount, driverCount];
+                    window.growthChart.update();
+                    logActivity('📈 Charts updated with subscriber data');
+                } catch (chartError) {
+                    console.warn('Chart update failed:', chartError);
+                    logActivity('📊 Chart update skipped - Chart.js update error');
+                }
+            } else {
+                logActivity('📊 Chart update skipped - Chart.js not properly initialized');
+            }
+            
+            // Store stats for other functions
+            systemStatus.subscriberStats = data.data || data;
+            
+            logActivity(`✅ Loaded subscriber stats: ${totalSubs} total (${proCount} pro, ${driverCount} driver)`);
+            
+            return { success: true, totalSubs, proCount, driverCount };
+        } else {
+            throw new Error(data.error || 'API returned success: false');
+        }
+    } catch (error) {
+        console.error('Subscriber stats loading failed:', error);
+        logActivity('❌ Failed to load subscriber statistics: ' + error.message);
+        
+        // Set safe fallback values
+        const safeValue = '0';
+        const totalElement = document.getElementById('totalSubscribers');
+        const proElement = document.getElementById('proSubscriberCount');
+        const driverElement = document.getElementById('driverSubscriberCount');
+        
+        if (totalElement) totalElement.textContent = safeValue;
+        if (proElement) proElement.textContent = safeValue;
+        if (driverElement) driverElement.textContent = safeValue;
+        
+        return { success: false, error: error.message };
+    }
+}
 
         async function loadSubscriberList() {
             const segment = document.getElementById('subscriberSegmentFilter').value;
