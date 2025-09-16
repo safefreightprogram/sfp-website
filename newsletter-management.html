@@ -17,16 +17,16 @@
 <!-- Use specific CDN versions to avoid cache issues -->
     <script src="https://cdn.tailwindcss.com?v=3.4.0"></script>
     <!-- Chart.js with fallback -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js" 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js" 
             onerror="loadChartJsFallback()" 
             crossorigin="anonymous" 
             referrerpolicy="no-referrer"></script>
     <script>
         // Fallback for Chart.js if CDN fails
         function loadChartJsFallback() {
-            console.warn('Primary Chart.js CDN failed, trying fallback...');
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js';
+    console.warn('Primary Chart.js CDN failed, trying fallback...');
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js';
             script.onerror = function() {
                 console.error('Both Chart.js CDNs failed. Charts will not work.');
                 window.Chart = null;
@@ -44,11 +44,12 @@
         if (typeof console !== 'undefined') {
             const originalWarn = console.warn;
             console.warn = function(...args) {
-                if (args[0] && args[0].includes && args[0].includes('Tailwind CSS')) {
-                    return; // Suppress Tailwind production warning
-                }
-                return originalWarn.apply(console, args);
-            };
+    if (args[0] && typeof args[0] === 'string' && 
+        (args[0].includes('Tailwind CSS') || args[0].includes('cdn.tailwindcss.com'))) {
+        return; // Suppress Tailwind production warning
+    }
+    return originalWarn.apply(console, args);
+};
         }
     </script>
     <style>
