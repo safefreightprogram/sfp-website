@@ -1643,7 +1643,7 @@
                 showToast("❌ Test email error: " + err.message, "error");
                 logActivity("❌ Test email error: " + err.message);
             }
-            toggleSpinner('testBtn', 'testSpinner', false);
+toggleSpinner('testBtn', 'testSpinner', false);
         }
 
         function rerunLastNewsletter() {
@@ -1838,31 +1838,4 @@
         // Additional initialization can be added here if needed
     </script>
 </body>
-</html>testSpinner', true);
-            const email = document.getElementById('testEmail').value;
-            if (!email) {
-                showToast("Please enter a test email address.", "error");
-                toggleSpinner('testBtn', 'testSpinner', false);
-                return;
-            }
-            
-            try {
-                logActivity(`📧 Sending test email to ${email}...`);
-                const resp = await fetch(`${API_BASE_URL}/api/newsletter/test`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ email })
-                });
-                const data = await resp.json();
-                
-                if (data.success) {
-                    showToast("✅ Test email sent.", "success");
-                    logActivity(`✅ Test email sent to ${email}`);
-                } else {
-                    showToast("❌ Failed to send test email.", "error");
-                    logActivity("❌ Test email failed: " + (data.error || "Unknown error"));
-                }
-            } catch (err) {
-                showToast("❌ Test email error: " + err.message, "error");
-                logActivity("❌ Test email error: " + err.message);
-            }
+</html>
