@@ -231,6 +231,45 @@
   <script src="/js/load-header-footer.js" defer></script>
   <script src="/js/account-indicator.js" defer></script>
 
+<script>
+document.getElementById('newsletter-form').addEventListener('submit', function(e) {
+  // Validate at least one newsletter is selected
+  const checkboxes = document.querySelectorAll('input[name="segments[]"]');
+  const checked = Array.from(checkboxes).some(cb => cb.checked);
+  
+  if (!checked) {
+    e.preventDefault();
+    document.getElementById('segment-error').classList.remove('hidden');
+    document.querySelector('input[name="segments[]"]').focus();
+    return false;
+  }
+  
+  document.getElementById('segment-error').classList.add('hidden');
+  
+  // Show loading state
+  const submitBtn = document.getElementById('submit-btn');
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = 'Subscribing...';
+  submitBtn.disabled = true;
+  
+  // Form will submit normally to Google Apps Script
+  // Reset button after delay in case of error
+  setTimeout(() => {
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
+  }, 10000);
+});
+
+// Real-time validation feedback
+document.querySelectorAll('input[name="segments[]"]').forEach(checkbox => {
+  checkbox.addEventListener('change', function() {
+    const anyChecked = document.querySelectorAll('input[name="segments[]"]:checked').length > 0;
+    if (anyChecked) {
+      document.getElementById('segment-error').classList.add('hidden');
+    }
+  });
+});
+</script>  
   
 </body>
 </html>
