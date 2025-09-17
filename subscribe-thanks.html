@@ -4,27 +4,144 @@
   <meta charset="utf-8">
   <title>Thanks – Safe Freight Program</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Updated Favicons -->
-<link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png?v=2">
-<link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png?v=2">
-<link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png?v=2">
-<link rel="manifest" href="/public/site.webmanifest?v=2">
-<link rel="mask-icon" href="/public/safari-pinned-tab.svg?v=2" color="#1e40af">
-<meta name="msapplication-TileColor" content="#1e40af">
-<meta name="theme-color" content="#ffffff">
-
+  <!-- Updated Favicons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png?v=2">
+  <link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png?v=2">
+  <link rel="manifest" href="/public/site.webmanifest?v=2">
+  <link rel="mask-icon" href="/public/safari-pinned-tab.svg?v=2" color="#1e40af">
+  <meta name="msapplication-TileColor" content="#1e40af">
+  <meta name="theme-color" content="#ffffff">
 
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    @keyframes fadeInUp { 
+      0% { opacity: 0; transform: translateY(20px); } 
+      100% { opacity: 1; transform: translateY(0); } 
+    }
+    .animate-fadeInUp { animation: fadeInUp 0.6s ease-out both; }
+    
+    @keyframes pulse { 
+      0%, 100% { opacity: 1; } 
+      50% { opacity: .7; } 
+    }
+    .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+  </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
-  <main class="max-w-xl mx-auto px-4 py-16 text-center">
-    <h1 class="text-3xl font-bold text-blue-800 mb-4">Check your email</h1>
-    <p class="text-gray-700 mb-6">
-      We’ve sent a confirmation link to complete your subscription.
-    </p>
-    <a href="/" class="inline-block bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800">
-      Back to Home
-    </a>
+  <main class="max-w-2xl mx-auto px-4 py-16">
+    <div class="bg-white rounded-lg shadow-lg p-8 text-center animate-fadeInUp">
+      <!-- Success Icon -->
+      <div class="bg-green-100 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+        <svg class="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      </div>
+
+      <h1 class="text-3xl font-bold text-blue-800 mb-4">Almost there!</h1>
+      
+      <p class="text-lg text-gray-700 mb-6">
+        We've sent a confirmation email to complete your subscription to Safe Freight Intel.
+      </p>
+      
+      <!-- Email Check Reminder -->
+      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+        <div class="flex items-center justify-center mb-3">
+          <svg class="w-6 h-6 text-yellow-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <h3 class="text-lg font-semibold text-yellow-800">Check Your Email</h3>
+        </div>
+        <p class="text-yellow-700 text-sm">
+          <strong>Don't see our email?</strong> Please check your <strong>Junk</strong>, <strong>Spam</strong>, or <strong>Promotions</strong> folder. 
+          Sometimes our emails end up there by mistake.
+        </p>
+      </div>
+
+      <!-- Next Steps -->
+      <div class="text-left bg-blue-50 rounded-lg p-6 mb-6">
+        <h3 class="text-lg font-semibold text-blue-800 mb-3">What happens next:</h3>
+        <ol class="space-y-2 text-gray-700">
+          <li class="flex items-center">
+            <span class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold mr-3">1</span>
+            Check your email and click the confirmation link
+          </li>
+          <li class="flex items-center">
+            <span class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold mr-3">2</span>
+            You'll automatically receive the latest newsletter editions
+          </li>
+          <li class="flex items-center">
+            <span class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold mr-3">3</span>
+            Stay informed with weekly compliance intelligence
+          </li>
+        </ol>
+      </div>
+
+      <!-- Resend Link -->
+      <div class="text-sm text-gray-600 mb-6">
+        <p>Didn't receive the email? <a href="#" id="resend-link" class="text-blue-600 hover:underline">Click here to resend</a></p>
+        <div id="resend-message" class="hidden text-green-600 mt-2">Confirmation email sent!</div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="space-y-3">
+        <a href="/" class="inline-block bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-800 transition-colors">
+          Back to Home
+        </a>
+        <div>
+          <a href="/subscribe.html" class="text-blue-600 hover:underline text-sm">
+            Subscribe a different email address
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Help -->
+    <div class="mt-8 text-center text-gray-600">
+      <p class="text-sm">
+        Need help? Contact us at 
+        <a href="mailto:support@safefreightprogram.com" class="text-blue-600 hover:underline">support@safefreightprogram.com</a>
+      </p>
+    </div>
   </main>
+
+  <script>
+    // Handle resend confirmation email
+    document.getElementById('resend-link').addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      // Get email from URL parameter if available, or prompt user
+      const urlParams = new URLSearchParams(window.location.search);
+      const email = urlParams.get('email') || prompt('Enter your email address to resend confirmation:');
+      
+      if (email) {
+        // Make request to resend confirmation
+        fetch('YOUR_GAS_WEB_APP_URL', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `action=resend_confirmation&email=${encodeURIComponent(email)}`
+        })
+        .then(response => response.text())
+        .then(result => {
+          document.getElementById('resend-message').classList.remove('hidden');
+          setTimeout(() => {
+            document.getElementById('resend-message').classList.add('hidden');
+          }, 5000);
+        })
+        .catch(error => {
+          alert('Failed to resend email. Please try again or contact support.');
+        });
+      }
+    });
+
+    // Auto-hide any success/error messages after delay
+    setTimeout(function() {
+      const message = document.getElementById('resend-message');
+      if (message && !message.classList.contains('hidden')) {
+        message.classList.add('hidden');
+      }
+    }, 10000);
+  </script>
 </body>
 </html>
