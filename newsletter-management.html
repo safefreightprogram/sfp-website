@@ -998,72 +998,234 @@
             }
         }
 
+
+        
         // ===== RAILWAY SCHEDULE MANAGEMENT - CRITICAL INTEGRATION =====
+        // Helper function to get next weekday
+function getNextWeekday(date, targetDay) {
+    const result = new Date(date);
+    const currentDay = result.getDay();
+    let daysUntilTarget = targetDay - currentDay;
+    
+    if (daysUntilTarget <= 0) {
+        daysUntilTarget += 7;
+    }
+    
+    result.setDate(result.getDate() + daysUntilTarget);
+    return result;
+}
+
+// Helper function to format Australian date/time
+function formatAustralianDateTime(date) {
+    const options = {
+        timeZone: 'Australia/Sydney',
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    };
+    return date.toLocaleDateString('en-AU', options);
+}
+
+// Helper to get current form values for a job type
+function getCurrentScheduleConfig(jobType) {
+    // If we're looking at the current job type in the form, get live values
+    if (jobType === currentJobType) {
+        return {
+            frequency: document.getElementById('scheduleFrequency')?.value || 'weekly',
+            dayOfWeek: parseInt(document.getElementById('scheduleDayOfWeek')?.value || '3', 10), // Default Wednesday
+            hour: parseInt(document.getElementById('scheduleHour')?.value || '8', 10),
+            minute: parseInt(document.getElementById('scheduleMinute')?.value || '45', 10),
+            weekOfMonth: document.getElementById('scheduleWeekOfMonth')?.value ? 
+                parseInt(document.getElementById('scheduleWeekOfMonth').value, 10) : null,
+            delayAfterDependency: jobType === 'newsletter' ? 
+                parseInt(document.getElementById('dependencyDelay')?.value || '75', 10) : 0
+        };
+    }
+    
+    // Otherwise use stored config or sensible defaults
+    const stored = railwayScheduleConfig[jobType];
+    if (stored) {
+        return {
+            frequency: stored.frequency || 'weekly',
+            dayOfWeek: stored.dayOfWeek !== undefined ? stored.dayOfWeek : 3,
+            hour: stored.hour !== undefined ? stored.hour : (jobType === 'scraping' ? 8 : 10),
+            minute: stored.minute !== undefined ? stored.minute : (jobType === 'scraping' ? 45 : 0),
+            weekOfMonth: stored.weekOfMonth || null,
+            delayAfterDependency: stored.delayAfterDependency || (jobType === 'newsletter' ? 75 : 0)
+        };
+    }
+    
+    // Final fallback defaults
+    return {
+        frequency: 'weekly',
+        dayOfWeek: 3, // Wednesday
+        hour: jobType === 'scraping' ? 8 : 10,
+        minute: jobType === 'scraping' ? 45 : 0,
+        weekOfMonth: null,
+        delayAfterDependency: jobType === 'newsletter' ? 75 : 0
+    };
+}
+
+// Helper function to get next occurrence of a scheduled time
+function getNextScheduledRun(frequency, dayOfWeek, hour, minute, weekOfMonth = null) {
+    const now = new Date();
+    const sydneyTime = new Date(now.toLocaleString("en-US", {timeZone: "Australia/Sydney"}));
+    
+    let nextRun = new Date(sydneyTime);
+    
+    switch (frequency) {
+        case 'weekly':
+            nextRun = getNextWeekday(sydneyTime, dayOfWeek);
+            nextRun.setHours(hour, minute, 0, 0);
+            
+            // If it's the same day but time has passed, go to next week
+            if (nextRun <= sydneyTime) {
+                nextRun.setDate(nextRun.getDate() + 7);
+            }
+            break;
+            
+        case 'fortnightly':
+            nextRun = getNextWeekday(sydneyTime, dayOfWeek);
+            nextRun.setHours(hour, minute, 0, 0);
+            
+            if (nextRun <= sydneyTime) {
+                nextRun.setDate(nextRun.getDate() + 14);
+            }
+            break;
+            
+        case 'monthly':
+            // For monthly, use first occurrence of the day in next month if current has passed
+            nextRun = getNextWeekday(sydneyTime, dayOfWeek);
+            nextRun.setHours(hour, minute, 0, 0);
+            
+            if (nextRun <= sydneyTime) {
+                // Move to next month and find the same day
+                nextRun.setMonth(nextRun.getMonth() + 1);
+                nextRun = getNextWeekday(nextRun, dayOfWeek);
+                nextRun.setHours(hour, minute, 0, 0);
+            }
+            break;
+    }
+    
+    return nextRun;
+}
+        
         async function loadAdvancedSchedule() {
     try {
         logActivity('📅 Loading Railway automation schedule...');
-        const response = await fetch(`${API_BASE_URL}/api/schedule/status`);
         
-        if (!response.ok) {
-            throw new Error(`Schedule API returned ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.success && data.data) {
-            railwayScheduleConfig = data.data;
-            updateScheduleUI();
-            logActivity('✅ Railway schedule loaded successfully');
-        } else {
-            // Handle case where API doesn't have schedule data yet
-            logActivity('ℹ️ No schedule data available - using defaults');
-            railwayScheduleConfig = {
-                scraping: {
-                    enabled: true,
-                    frequency: 'weekly',
-                    schedule: 'Every Wednesday at 08:45 AEST',
-                    nextRun: 'Wednesday 17 September at 06:45 pm',
-                    lastRun: '17 Sept, 08:45 am'
-                },
-                newsletter: {
-                    enabled: true,
-                    frequency: 'weekly',
-                    schedule: 'Every Wednesday at 10:00 AEST',
-                    dependsOn: 'scraping',
-                    delayAfterDependency: 45,
-                    nextRun: 'Wednesday 17 September at 08:00 pm',
-                    lastRun: 'Loading...'
+        // Try to get actual schedule from API first
+        let apiScheduleData = null;
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/schedule/status`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data) {
+                    apiScheduleData = data.data;
+                    logActivity('✅ Railway schedule loaded from API');
                 }
-            };
-            updateScheduleUI();
+            }
+        } catch (endpointError) {
+            console.log('Schedule endpoint not available, calculating from current settings');
         }
+        
+        // Get current configuration for both jobs
+        const scrapingConfig = getCurrentScheduleConfig('scraping');
+        const newsletterConfig = getCurrentScheduleConfig('newsletter');
+        
+        // Calculate next runs based on current settings
+        const scrapingNextRun = getNextScheduledRun(
+            scrapingConfig.frequency,
+            scrapingConfig.dayOfWeek,
+            scrapingConfig.hour,
+            scrapingConfig.minute,
+            scrapingConfig.weekOfMonth
+        );
+        
+        // Newsletter runs after scraping with delay
+        const newsletterNextRun = getNextScheduledRun(
+            newsletterConfig.frequency,
+            newsletterConfig.dayOfWeek,
+            newsletterConfig.hour,
+            newsletterConfig.minute,
+            newsletterConfig.weekOfMonth
+        );
+        
+        // Build dynamic schedule data
+        const scheduleData = {
+            scraping: {
+                enabled: apiScheduleData?.scraping?.enabled !== undefined ? 
+                    apiScheduleData.scraping.enabled : true,
+                frequency: scrapingConfig.frequency,
+                dayOfWeek: scrapingConfig.dayOfWeek,
+                hour: scrapingConfig.hour,
+                minute: scrapingConfig.minute,
+                schedule: `Every ${scrapingConfig.frequency === 'weekly' ? 'Wednesday' : 
+                    scrapingConfig.frequency === 'fortnightly' ? '2 weeks on Wednesday' :
+                    'month on 1st Wednesday'} at ${scrapingConfig.hour.toString().padStart(2,'0')}:${scrapingConfig.minute.toString().padStart(2,'0')} AEST`,
+                nextRun: formatAustralianDateTime(scrapingNextRun),
+                lastRun: apiScheduleData?.scraping?.lastRun || '17 Sept, 08:45 am',
+                status: 'active'
+            },
+            newsletter: {
+                enabled: apiScheduleData?.newsletter?.enabled !== undefined ? 
+                    apiScheduleData.newsletter.enabled : true,
+                frequency: newsletterConfig.frequency,
+                dayOfWeek: newsletterConfig.dayOfWeek,
+                hour: newsletterConfig.hour,
+                minute: newsletterConfig.minute,
+                schedule: `Every ${newsletterConfig.frequency === 'weekly' ? 'Wednesday' : 
+                    newsletterConfig.frequency === 'fortnightly' ? '2 weeks on Wednesday' :
+                    'month on 1st Wednesday'} at ${newsletterConfig.hour.toString().padStart(2,'0')}:${newsletterConfig.minute.toString().padStart(2,'0')} AEST`,
+                dependsOn: 'scraping',
+                delayAfterDependency: newsletterConfig.delayAfterDependency,
+                nextRun: formatAustralianDateTime(newsletterNextRun),
+                lastRun: apiScheduleData?.newsletter?.lastRun || '17 Sept, 10:00 am',
+                status: 'active'
+            }
+        };
+        
+        railwayScheduleConfig = scheduleData;
+        updateScheduleUI();
+        
+        if (!apiScheduleData) {
+            logActivity('✅ Using calculated schedule based on current form settings');
+        }
+        
     } catch (error) {
         logActivity('❌ Failed to load Railway schedule: ' + error.message);
         console.error('Schedule loading failed:', error);
         
-        // Use fallback data based on your actual Railway logs
+        // Even in error case, use current form values
+        const scrapingConfig = getCurrentScheduleConfig('scraping');
+        const newsletterConfig = getCurrentScheduleConfig('newsletter');
+        
         railwayScheduleConfig = {
             scraping: {
                 enabled: true,
-                frequency: 'weekly',
-                schedule: 'Every Wednesday at 08:45 AEST',
-                nextRun: 'Next Wednesday at 08:45 am',
-                lastRun: '17 Sept, 08:45 am'
+                frequency: scrapingConfig.frequency,
+                schedule: `Every Wednesday at ${scrapingConfig.hour.toString().padStart(2,'0')}:${scrapingConfig.minute.toString().padStart(2,'0')} AEST`,
+                nextRun: formatAustralianDateTime(getNextScheduledRun(scrapingConfig.frequency, scrapingConfig.dayOfWeek, scrapingConfig.hour, scrapingConfig.minute)),
+                lastRun: '17 Sept, 08:45 am',
+                status: 'active'
             },
             newsletter: {
                 enabled: true,
-                frequency: 'weekly', 
-                schedule: 'Every Wednesday at 10:00 AEST',
+                frequency: newsletterConfig.frequency,
+                schedule: `Every Wednesday at ${newsletterConfig.hour.toString().padStart(2,'0')}:${newsletterConfig.minute.toString().padStart(2,'0')} AEST`,
                 dependsOn: 'scraping',
-                delayAfterDependency: 45,
-                nextRun: 'Next Wednesday at 09:30 am',
-                lastRun: 'Loading...'
+                delayAfterDependency: newsletterConfig.delayAfterDependency,
+                nextRun: formatAustralianDateTime(getNextScheduledRun(newsletterConfig.frequency, newsletterConfig.dayOfWeek, newsletterConfig.hour, newsletterConfig.minute)),
+                lastRun: '17 Sept, 10:00 am',
+                status: 'active'
             }
         };
         updateScheduleUI();
     }
 }
-
         function updateScheduleUI() {
     if (!railwayScheduleConfig || Object.keys(railwayScheduleConfig).length === 0) {
         // Use data from actual Railway logs
@@ -1212,10 +1374,10 @@
                     showToast(`✅ ${currentJobType} schedule saved to Railway successfully!`, "success");
                     logActivity(`✅ Railway ${currentJobType} automation updated: ${data.data.description}`);
                     
-                    // Reload the schedule to show updated info
-                    setTimeout(() => {
-                        loadAdvancedSchedule();
-                    }, 1000);
+                    // IMPORTANT: Refresh the schedule display with new settings
+setTimeout(() => {
+    loadAdvancedSchedule(); // This will now use the new form values
+}, 1000);
                 } else {
                     throw new Error(data.error || 'Save failed');
                 }
