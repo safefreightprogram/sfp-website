@@ -110,7 +110,7 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Subscribe for Free</h2>
 
         <form id="newsletter-form" class="space-y-6"
-      action="https://script.google.com/macros/s/AKfycbzPQzFJ14COiU6t8ELcYBE9F3MNpFugjXu5uGxaPPijxfeHj-r-5hibf6F9hQgWjg57wg/exec"
+      action="https://script.google.com/macros/s/AKfycbysg-v_6VeMG1-PPxuvO7QV4hOntWRLpNkUy11TzPQg-8imTI0zaAxc_830NB5tJRqnyA/exec"
       method="POST">
   <!-- required for server-side routing -->
   <input type="hidden" name="action" value="newsletter_subscribe">
@@ -233,12 +233,13 @@
 
 <script>
 document.getElementById('newsletter-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
   // Validate at least one newsletter is selected
   const checkboxes = document.querySelectorAll('input[name="segments[]"]');
   const checked = Array.from(checkboxes).some(cb => cb.checked);
   
   if (!checked) {
-    e.preventDefault();
     document.getElementById('segment-error').classList.remove('hidden');
     document.querySelector('input[name="segments[]"]').focus();
     return false;
@@ -248,18 +249,54 @@ document.getElementById('newsletter-form').addEventListener('submit', function(e
   
   // Show loading state
   const submitBtn = document.getElementById('submit-btn');
-  const originalText = submitBtn.textContent;
   submitBtn.textContent = 'Subscribing...';
   submitBtn.disabled = true;
   
-  // Form will submit normally to Google Apps Script
-  // Reset button after delay in case of error
-  setTimeout(() => {
-    submitBtn.textContent = originalText;
-    submitBtn.disabled = false;
-  }, 10000);
+  // Submit via fetch to avoid showing GAS page
+  const formData = new FormData(this);
+  const urlParams = new URLSearchParams();
+  
+  for (let [key, value] of formData.entries()) {
+    urlParams.append(key, value);
+  }
+  
+  fetch(this.action, {
+    method: 'POST',
+    body: urlParams,
+    mode: 'no-cors'
+  })
+  .then(() => {
+    // Redirect to thanks page
+    const email = formData.get('email');
+    window.location.href = '/subscribe-thanks.html?email=' + encodeURIComponent(email);
+  })
+  .catch(() => {
+    // Still redirect on error - GAS will have processed it
+    const email = formData.get('email');
+    window.location.href = '/subscribe-thanks.html?email=' + encodeURIComponent(email);
+  });
 });
-
+// Handle error messages from URL parameters
+window.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const error = urlParams.get('error');
+  
+  if (error) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-4 mb-6';
+    errorDiv.innerHTML = `
+      <div class="flex">
+        <svg class="w-5 h-5 text-red-600 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-red-700">${decodeURIComponent(error)}</p>
+      </div>
+    `;
+    
+    const form = document.getElementById('newsletter-form');
+    form.parentNode.insertBefore(errorDiv, form);
+  }
+});
 // Real-time validation feedback
 document.querySelectorAll('input[name="segments[]"]').forEach(checkbox => {
   checkbox.addEventListener('change', function() {
