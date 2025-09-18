@@ -107,41 +107,130 @@
   </main>
 
   <script>
-    // Handle resend confirmation email
-    document.getElementById('resend-link').addEventListener('click', function(e) {
-      e.preventDefault();
-      
-      // Get email from URL parameter if available, or prompt user
-      const urlParams = new URLSearchParams(window.location.search);
-      const email = urlParams.get('email') || prompt('Enter your email address to resend confirmation:');
-      
-      if (email) {
-        // Make request to resend confirmation
-        fetch('YOUR_GAS_WEB_APP_URL', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `action=resend_confirmation&email=${encodeURIComponent(email)}`
-        })
-        .then(response => response.text())
-        .then(result => {
-          document.getElementById('resend-message').classList.remove('hidden');
-          setTimeout(() => {
-            document.getElementById('resend-message').classList.add('hidden');
-          }, 5000);
-        })
-        .catch(error => {
-          alert('Failed to resend email. Please try again or contact support.');
-        });
-      }
-    });
+// Get URL parameters
+const urlParams = new URLSearchParams(window.location.search);
+const email = urlParams.get('email');
+const segments = urlParams.get('segments') ? urlParams.get('segments').split(',') : [];
 
-    // Auto-hide any success/error messages after delay
-    setTimeout(function() {
-      const message = document.getElementById('resend-message');
-      if (message && !message.classList.contains('hidden')) {
-        message.classList.add('hidden');
-      }
-    }, 10000);
-  </script>
+// Update the page content based on subscribed segments
+document.addEventListener('DOMContentLoaded', function() {
+  updateThankYouContent();
+  
+  // Handle resend confirmation email
+  document.getElementById('resend-link').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    const emailToResend = email || prompt('Enter your email address to resend confirmation:');
+    
+    if (emailToResend) {
+      // Make request to resend confirmation
+      fetch('https://script.google.com/macros/s/AKfycbwuI_gg8khC-eDyKScnz7D1osGnFDn6uGk2plwuVhzP3JIWtzE_C14vgCdDM83Ij2sg1Q/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `action=resend_confirmation&email=${encodeURIComponent(emailToResend)}`
+      })
+      .then(response => response.text())
+      .then(result => {
+        document.getElementById('resend-message').classList.remove('hidden');
+        document.getElementById('resend-message').textContent = 'Confirmation emails sent!';
+        setTimeout(() => {
+          document.getElementById('resend-message').classList.add('hidden');
+        }, 5000);
+      })
+      .catch(error => {
+        alert('Failed to resend emails. Please try again or contact support.');
+      });
+    }
+  });
+});
+
+function updateThankYouContent() {
+  if (segments.length === 0) {
+    // No specific segments, keep default content
+    return;
+  }
+  
+  // Update the main message based on subscribed newsletters
+  const mainMessage = document.querySelector('p.text-lg.text-gray-700.mb-6');
+  const newsletterInfo = document.querySelector('.bg-blue-50.rounded-lg.p-6.mb-6');
+  
+  let newsletterNames = [];
+  let stepDetails = [];
+  
+  // Build content based on segments
+  segments.forEach(segment => {
+    if (segment === 'pro') {
+      newsletterNames.push('CoR Intelligence Weekly');
+      stepDetails.push('Professional compliance intelligence for transport stakeholders');
+    } else if (segment === 'driver') {
+      newsletterNames.push('Safe Freight Mate');  
+      stepDetails.push('Driver-focused safety communications and regulatory updates');
+    }
+  });
+  
+  if (newsletterNames.length > 0) {
+    // Update main message
+    const newsletterList = newsletterNames.length === 1 
+      ? newsletterNames[0]
+      : newsletterNames.slice(0, -1).join(', ') + ' and ' + newsletterNames.slice(-1);
+      
+    mainMessage.textContent = `We've sent ${newsletterNames.length === 1 ? 'a confirmation email' : 'confirmation emails'} to complete your subscription to ${newsletterList}.`;
+    
+    // Update the "What happens next" section
+    const stepsList = newsletterInfo.querySelector('ol');
+    if (stepsList) {
+      stepsList.innerHTML = `
+        <li class="flex items-center">
+          <span class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold mr-3">1</span>
+          Check your email and confirm ${newsletterNames.length === 1 ? 'your subscription' : 'each subscription'}
+        </li>
+        <li class="flex items-center">
+          <span class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold mr-3">2</span>
+          You'll receive ${newsletterList} every Friday
+        </li>
+        <li class="flex items-center">
+          <span class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold mr-3">3</span>
+          Stay informed with weekly compliance intelligence
+        </li>
+      `;
+    }
+    
+    // Add newsletter details section
+    const contentDiv = document.querySelector('.bg-white.rounded-lg.shadow-lg.p-8');
+    const existingNewsletterInfo = document.querySelector('.newsletter-subscriptions');
+    
+    if (!existingNewsletterInfo && segments.length > 0) {
+      const newsletterDetailsDiv = document.createElement('div');
+      newsletterDetailsDiv.className = 'newsletter-subscriptions bg-gray-50 rounded-lg p-6 mb-6';
+      
+      let newsletterDetailsHTML = '<h3 class="text-lg font-semibold text-gray-800 mb-4">Your Newsletter Subscriptions:</h3>';
+      
+      segments.forEach(segment => {
+        if (segment === 'pro') {
+          newsletterDetailsHTML += `
+            <div class="mb-4 p-4 bg-white rounded-lg border">
+              <h4 class="font-semibold text-blue-800">📊 CoR Intelligence Weekly</h4>
+              <p class="text-sm text-gray-600">Professional compliance intelligence for transport stakeholders</p>
+            </div>
+          `;
+        } else if (segment === 'driver') {
+          newsletterDetailsHTML += `
+            <div class="mb-4 p-4 bg-white rounded-lg border">
+              <h4 class="font-semibold text-blue-800">🚛 Safe Freight Mate</h4>
+              <p class="text-sm text-gray-600">Driver-focused safety communications and regulatory updates</p>
+            </div>
+          `;
+        }
+      });
+      
+      newsletterDetailsDiv.innerHTML = newsletterDetailsHTML;
+      
+      // Insert after the email check reminder
+      const emailCheckDiv = document.querySelector('.bg-yellow-50.border.border-yellow-200');
+      emailCheckDiv.parentNode.insertBefore(newsletterDetailsDiv, emailCheckDiv.nextSibling);
+    }
+  }
+}
+</script>
 </body>
 </html>
