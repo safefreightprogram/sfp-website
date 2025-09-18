@@ -232,4 +232,483 @@
     }
     
     .btn-primary:hover {
-      background: linear-gradient(
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      box-shadow: 0 6px 16px rgba(30, 64, 175, 0.4);
+      transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+      background: white;
+      color: #374151;
+      border: 2px solid #d1d5db;
+    }
+    
+    .btn-secondary:hover {
+      background: #f9fafb;
+      border-color: #9ca3af;
+      transform: translateY(-1px);
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    
+    /* Success Message */
+    .success-message {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 20px 0;
+      display: none;
+    }
+    
+    .success-message.show {
+      display: block;
+    }
+    
+    .success-message p {
+      color: #15803d;
+      font-size: 14px;
+      margin: 0;
+    }
+    
+    /* Loading Spinner */
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #ffffff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Footer */
+    .footer {
+      background: #f8fafc;
+      padding: 24px 30px;
+      text-align: center;
+      border-top: 1px solid #e5e7eb;
+    }
+    
+    .footer p {
+      color: #6b7280;
+      font-size: 14px;
+      margin: 0 0 8px 0;
+    }
+    
+    .footer a {
+      color: #1e40af;
+      text-decoration: none;
+    }
+    
+    .footer a:hover {
+      text-decoration: underline;
+    }
+    
+    /* Error Message */
+    .error-message {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 20px 0;
+      display: none;
+    }
+    
+    .error-message.show {
+      display: block;
+    }
+    
+    .error-message p {
+      color: #dc2626;
+      font-size: 14px;
+      margin: 0;
+    }
+    
+    /* Mobile Responsiveness */
+    @media (max-width: 640px) {
+      .container {
+        margin: 10px;
+        border-radius: 12px;
+      }
+      
+      .header {
+        padding: 30px 20px;
+      }
+      
+      .header h1 {
+        font-size: 24px;
+      }
+      
+      .content {
+        padding: 30px 20px;
+      }
+      
+      .newsletter-details {
+        padding: 20px;
+      }
+      
+      .btn {
+        font-size: 14px;
+        padding: 12px 24px;
+      }
+      
+      .footer {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">
+        <div class="logo-text">SFP</div>
+      </div>
+      <h1>Safe Freight Program</h1>
+      <p>Heavy Vehicle Compliance Intelligence</p>
+    </div>
+    
+    <div class="content">
+      <!-- Loading State -->
+      <div id="loading-state">
+        <div class="status-icon loading">🔄</div>
+        <h2>Confirming Your Subscription...</h2>
+        <p>Please wait while we process your confirmation.</p>
+      </div>
+      
+      <!-- Success State -->
+      <div id="success-state" style="display: none;">
+        <div class="status-icon success">🎉</div>
+        <h2>Subscription Confirmed!</h2>
+        <p id="success-greeting">Thank you for confirming your subscription.</p>
+        <p>You'll start receiving newsletters every Friday morning.</p>
+        
+        <div class="newsletter-details" id="newsletter-details">
+          <h3>Your Newsletter(s):</h3>
+          <div id="newsletter-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+        
+        <div class="success-message" id="next-steps">
+          <p>
+            <strong>✅ What happens next:</strong> You'll receive your first newsletter this Friday morning. 
+            Check your inbox (and spam folder) for our weekly updates!
+          </p>
+        </div>
+        
+        <div class="action-buttons" id="success-actions">
+          <button class="btn btn-primary" id="send-latest-btn">
+            📧 Send Me the Latest Newsletter
+          </button>
+          <a href="https://www.safefreightprogram.com" class="btn btn-secondary">
+            🏠 Back to Website
+          </a>
+        </div>
+      </div>
+      
+      <!-- Already Confirmed State -->
+      <div id="already-confirmed-state" style="display: none;">
+        <div class="status-icon info">✅</div>
+        <h2>Already Confirmed!</h2>
+        <p id="already-greeting">Your subscription is already active.</p>
+        <p>You'll continue receiving your newsletters every Friday.</p>
+        
+        <div class="newsletter-details" id="already-newsletter-details">
+          <h3>Your Newsletter(s):</h3>
+          <div id="already-newsletter-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+        
+        <div class="action-buttons show">
+          <a href="https://www.safefreightprogram.com" class="btn btn-primary">
+            🏠 Back to Website
+          </a>
+        </div>
+      </div>
+      
+      <!-- Newsletter Sent State -->
+      <div id="newsletter-sent-state" style="display: none;">
+        <div class="status-icon success">📧</div>
+        <h2>Newsletter Sent!</h2>
+        <p id="newsletter-sent-message">We've sent you the latest newsletter edition.</p>
+        <p>Check your inbox in the next few minutes!</p>
+        
+        <div class="action-buttons show">
+          <a href="https://www.safefreightprogram.com" class="btn btn-primary">
+            🏠 Back to Website
+          </a>
+        </div>
+      </div>
+      
+      <!-- Error State -->
+      <div id="error-state" style="display: none;">
+        <div class="status-icon error">❌</div>
+        <h2 id="error-title">Confirmation Error</h2>
+        <p id="error-message">There was a problem confirming your subscription.</p>
+        
+        <div class="error-message" id="error-details">
+          <p id="error-details-text">Please try again or contact support if the problem persists.</p>
+        </div>
+        
+        <div class="action-buttons show">
+          <a href="https://www.safefreightprogram.com" class="btn btn-primary">
+            🏠 Back to Website
+          </a>
+          <a href="https://www.safefreightprogram.com/subscribe.html" class="btn btn-secondary">
+            📝 Subscribe Again
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p><strong>Safe Freight Program</strong></p>
+      <p>
+        <a href="https://www.safefreightprogram.com">Website</a> | 
+        <a href="mailto:support@safefreightprogram.com">Support</a> | 
+        <a href="https://www.safefreightprogram.com/privacy.html">Privacy</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbysg-v_6VeMG1-PPxuvO7QV4hOntWRLpNkUy11TzPQg-8imTI0zaAxc_830NB5tJRqnyA/exec';
+    
+    // Newsletter configurations
+    const NEWSLETTER_CONFIG = {
+      'pro': {
+        name: 'CoR Intelligence Weekly',
+        description: 'Professional compliance intelligence',
+        icon: '📊'
+      },
+      'driver': {
+        name: 'Safe Freight Mate', 
+        description: 'Driver-focused safety communications',
+        icon: '🚛'
+      }
+    };
+
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+    const token = urlParams.get('token');
+    const segment = urlParams.get('segment');
+
+    // DOM elements
+    const loadingState = document.getElementById('loading-state');
+    const successState = document.getElementById('success-state');
+    const alreadyConfirmedState = document.getElementById('already-confirmed-state');
+    const newsletterSentState = document.getElementById('newsletter-sent-state');
+    const errorState = document.getElementById('error-state');
+    const sendLatestBtn = document.getElementById('send-latest-btn');
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!email || !token) {
+        showError('Invalid Confirmation Link', 'The confirmation link is missing required information. Please try subscribing again.');
+        return;
+      }
+      
+      // Process confirmation
+      confirmSubscription();
+    });
+
+    // Confirm subscription
+    async function confirmSubscription() {
+      try {
+        const response = await fetch(`${GAS_WEB_APP_URL}?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}&segment=${encodeURIComponent(segment || '')}`, {
+          method: 'GET',
+          mode: 'cors'
+        });
+
+        const result = await response.text();
+        
+        // Parse response (assuming JSON response from GAS)
+        try {
+          const data = JSON.parse(result);
+          handleConfirmationResult(data);
+        } catch (e) {
+          // Handle HTML response or other formats
+          if (result.includes('success')) {
+            handleConfirmationResult({ status: 'success' });
+          } else if (result.includes('already_confirmed')) {
+            handleConfirmationResult({ status: 'already_confirmed' });
+          } else {
+            showError('Processing Error', 'Unexpected response from server. Please contact support.');
+          }
+        }
+      } catch (error) {
+        console.error('Confirmation error:', error);
+        showError('Connection Error', 'Unable to connect to the server. Please check your internet connection and try again.');
+      }
+    }
+
+    // Handle confirmation result
+    function handleConfirmationResult(data) {
+      const status = data.status || 'error';
+      
+      switch (status) {
+        case 'success':
+          showSuccess(data);
+          break;
+        case 'already_confirmed':
+          showAlreadyConfirmed(data);
+          break;
+        case 'error':
+          showError(data.title || 'Confirmation Error', data.message || 'An error occurred during confirmation.');
+          break;
+        default:
+          showError('Unknown Status', 'Received unexpected status from server.');
+      }
+    }
+
+    // Show success state
+    function showSuccess(data) {
+      hideAllStates();
+      successState.style.display = 'block';
+      
+      // Update greeting if name provided
+      if (data.name) {
+        document.getElementById('success-greeting').innerHTML = `Hello ${data.name}! Thank you for confirming your subscription.`;
+      }
+      
+      // Show newsletter details
+      if (data.segments) {
+        showNewsletterDetails('newsletter-details', 'newsletter-list', data.segments);
+      }
+      
+      // Show success message
+      document.getElementById('next-steps').classList.add('show');
+      document.getElementById('success-actions').classList.add('show');
+      
+      // Setup send latest newsletter button
+      setupSendLatestButton();
+    }
+
+    // Show already confirmed state
+    function showAlreadyConfirmed(data) {
+      hideAllStates();
+      alreadyConfirmedState.style.display = 'block';
+      
+      if (data.name) {
+        document.getElementById('already-greeting').innerHTML = `Hello ${data.name}! Your subscription is already active.`;
+      }
+      
+      if (data.segments) {
+        showNewsletterDetails('already-newsletter-details', 'already-newsletter-list', data.segments);
+      }
+    }
+
+    // Show newsletter sent state
+    function showNewsletterSent(newsletters) {
+      hideAllStates();
+      newsletterSentState.style.display = 'block';
+      
+      const message = newsletters.length > 1 
+        ? `We've sent you the latest editions of ${newsletters.join(' and ')}.`
+        : `We've sent you the latest edition of ${newsletters[0]}.`;
+      
+      document.getElementById('newsletter-sent-message').textContent = message;
+    }
+
+    // Show error state
+    function showError(title, message) {
+      hideAllStates();
+      errorState.style.display = 'block';
+      
+      document.getElementById('error-title').textContent = title;
+      document.getElementById('error-message').textContent = message;
+      document.getElementById('error-details').classList.add('show');
+      document.getElementById('error-details-text').textContent = 'Please try again or contact support if the problem persists.';
+    }
+
+    // Hide all states
+    function hideAllStates() {
+      loadingState.style.display = 'none';
+      successState.style.display = 'none';
+      alreadyConfirmedState.style.display = 'none';
+      newsletterSentState.style.display = 'none';
+      errorState.style.display = 'none';
+    }
+
+    // Show newsletter details
+    function showNewsletterDetails(containerId, listId, segments) {
+      const container = document.getElementById(containerId);
+      const list = document.getElementById(listId);
+      
+      if (!segments || segments.length === 0) return;
+      
+      let html = '';
+      segments.forEach(segment => {
+        const config = NEWSLETTER_CONFIG[segment.trim()];
+        if (config) {
+          html += `
+            <div class="newsletter-item">
+              <span class="newsletter-icon">${config.icon}</span>
+              <div class="newsletter-info">
+                <strong>${config.name}</strong>
+                <span class="newsletter-desc">${config.description}</span>
+              </div>
+            </div>
+          `;
+        }
+      });
+      
+      if (html) {
+        list.innerHTML = html;
+        container.classList.add('show');
+      }
+    }
+
+    // Setup send latest newsletter button
+    function setupSendLatestButton() {
+      if (sendLatestBtn) {
+        sendLatestBtn.addEventListener('click', async function() {
+          sendLatestBtn.disabled = true;
+          sendLatestBtn.innerHTML = '<span class="loading-spinner"></span>Sending...';
+          
+          try {
+            const response = await fetch(`${GAS_WEB_APP_URL}?action=send_latest&email=${encodeURIComponent(email)}`, {
+              method: 'GET',
+              mode: 'cors'
+            });
+
+            const result = await response.text();
+            
+            // Simulate newsletter names based on segments
+            const newsletters = [];
+            if (segment === 'pro' || !segment) newsletters.push('CoR Intelligence Weekly');
+            if (segment === 'driver' || !segment) newsletters.push('Safe Freight Mate');
+            
+            showNewsletterSent(newsletters);
+            
+          } catch (error) {
+            console.error('Send latest error:', error);
+            sendLatestBtn.disabled = false;
+            sendLatestBtn.innerHTML = '📧 Send Me the Latest Newsletter';
+            alert('Failed to send newsletter. Please try again or contact support.');
+          }
+        });
+      }
+    }
+
+    // Handle back button in browser
+    window.addEventListener('popstate', function() {
+      window.location.href = 'https://www.safefreightprogram.com';
+    });
+  </script>
+</body>
+</html>
