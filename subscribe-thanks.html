@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (emailToResend) {
       // Make request to resend confirmation
-      fetch('https://script.google.com/macros/s/AKfycbyo-4nQDCdiNuC3lkcxqHD-UeCYuAVRcVx-4qGWt9RtvCjEFFh0gnPbIeEXF4eTwS3_wg/exec', {
+      fetch('https://script.google.com/macros/s/AKfycbzExifO6SUj57RYskRj3ARDVF_1u4WBdTkmaY9PqcwsdV8veldI1kESeEQG0ir-3OEdLQ/exec', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `action=resend_confirmation&email=${encodeURIComponent(emailToResend)}`
