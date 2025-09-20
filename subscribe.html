@@ -110,7 +110,7 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Subscribe for Free</h2>
 
         <form id="newsletter-form" class="space-y-6"
-      action="https://script.google.com/macros/s/AKfycbxMchVhWkv5VDKTVHMC99XZsjsbgi58zdUQxCapcb-IQLxpMriDwmHpHvRP89Nmod2rAA/exec"
+      action="https://script.google.com/macros/s/AKfycbw7oycXAbVAF6G4jWN3U3Mwd-yL-aTgDIpZEg4gPCjdxb3keowi_acnxX9nAXkQouszZw/exec"
       method="POST">
   <!-- required for server-side routing -->
   <input type="hidden" name="action" value="newsletter_subscribe">
@@ -181,18 +181,14 @@
           </div>
 
           <div class="flex items-start">
-            <input type="checkbox" id="consent" name="consent" required class="mt-1 mr-3">
-            <label for="consent" class="text-sm text-gray-600">
-              I consent to receiving the selected newsletter and understand I can unsubscribe at any time.
-              I have read the <a href="/privacy.html" class="text-blue-600 hover:underline" target="_blank" rel="noopener">Privacy Policy</a>.*
-            </label>
-          </div>
+  <input type="checkbox" id="consent" name="consent" value="true" required class="mt-1 mr-3">
+  <label for="consent" class="text-sm text-gray-600">
+    I consent to receiving the selected newsletter and understand I can unsubscribe at any time.
+    I have read the <a href="/privacy.html" class="text-blue-600 hover:underline" target="_blank" rel="noopener">Privacy Policy</a>.*
+  </label>
+</div>
 
-          <label class="flex items-start gap-2 text-sm text-gray-700">
-  <input type="checkbox" name="consent" value="true" required class="mt-1">
-  I agree to receive emails from Safe Freight Program.
-</label>
-
+          
           <button type="submit" id="submit-btn"
                   class="w-full bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             Subscribe Now
