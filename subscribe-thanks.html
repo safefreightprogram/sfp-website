@@ -124,22 +124,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (emailToResend) {
       // Make request to resend confirmation
-      fetch('https://script.google.com/macros/s/AKfycbxxmPJ1TgWnqepd7AebV1rxE828uDCGIK8XqBMu5qr4742qHISvGsuMaceFwdFHDebNlg/exec', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `action=resend_confirmation&email=${encodeURIComponent(emailToResend)}`
-      })
-      .then(response => response.text())
-      .then(result => {
-        document.getElementById('resend-message').classList.remove('hidden');
-        document.getElementById('resend-message').textContent = 'Confirmation emails sent!';
-        setTimeout(() => {
-          document.getElementById('resend-message').classList.add('hidden');
-        }, 5000);
-      })
-      .catch(error => {
-        alert('Failed to resend emails. Please try again or contact support.');
-      });
+      window.location.href = `https://script.google.com/macros/s/AKfycbxMchVhWkv5VDKTVHMC99XZsjsbgi58zdUQxCapcb-IQLxpMriDwmHpHvRP89Nmod2rAA/exec?action=resend_confirmation&email=${encodeURIComponent(emailToResend)}`;
+
     }
   });
 });
