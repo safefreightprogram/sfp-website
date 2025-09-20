@@ -241,14 +241,12 @@
 /* Allow normal form POST to the Apps Script Web App.
    The server will respond with a seamless redirect to /subscribe-thanks.html
    including ?email=...&segments=... */
-</script>
-
-});
+<script>
 // Handle error messages from URL parameters
 window.addEventListener('DOMContentLoaded', function() {
   const urlParams = new URLSearchParams(window.location.search);
   const error = urlParams.get('error');
-  
+
   if (error) {
     const errorDiv = document.createElement('div');
     errorDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-4 mb-6';
@@ -260,21 +258,24 @@ window.addEventListener('DOMContentLoaded', function() {
         <p class="text-red-700">${decodeURIComponent(error)}</p>
       </div>
     `;
-    
     const form = document.getElementById('newsletter-form');
-    form.parentNode.insertBefore(errorDiv, form);
-  }
-});
-// Real-time validation feedback
-document.querySelectorAll('input[name="segments[]"]').forEach(checkbox => {
-  checkbox.addEventListener('change', function() {
-    const anyChecked = document.querySelectorAll('input[name="segments[]"]:checked').length > 0;
-    if (anyChecked) {
-      document.getElementById('segment-error').classList.add('hidden');
+    if (form && form.parentNode) {
+      form.parentNode.insertBefore(errorDiv, form);
     }
+  }
+
+  // Real-time validation feedback (hide segment error when any box is checked)
+  document.querySelectorAll('input[name="segments[]"]').forEach(function(checkbox) {
+    checkbox.addEventListener('change', function() {
+      const anyChecked = document.querySelectorAll('input[name="segments[]"]:checked').length > 0;
+      if (anyChecked) {
+        document.getElementById('segment-error').classList.add('hidden');
+      }
+    });
   });
 });
-</script>  
+</script>
+  
   
 </body>
 </html>
