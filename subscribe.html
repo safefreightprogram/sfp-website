@@ -110,7 +110,7 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Subscribe for Free</h2>
 
         <form id="newsletter-form" class="space-y-6"
-      action="https://script.google.com/macros/s/AKfycbxxmPJ1TgWnqepd7AebV1rxE828uDCGIK8XqBMu5qr4742qHISvGsuMaceFwdFHDebNlg/exec"
+      action="https://script.google.com/macros/s/AKfycbxMchVhWkv5VDKTVHMC99XZsjsbgi58zdUQxCapcb-IQLxpMriDwmHpHvRP89Nmod2rAA/exec"
       method="POST">
   <!-- required for server-side routing -->
   <input type="hidden" name="action" value="newsletter_subscribe">
@@ -188,6 +188,11 @@
             </label>
           </div>
 
+          <label class="flex items-start gap-2 text-sm text-gray-700">
+  <input type="checkbox" name="consent" value="true" required class="mt-1">
+  I agree to receive emails from Safe Freight Program.
+</label>
+
           <button type="submit" id="submit-btn"
                   class="w-full bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             Subscribe Now
@@ -232,49 +237,12 @@
   <script src="/js/account-indicator.js" defer></script>
 
 <script>
-document.getElementById('newsletter-form').addEventListener('submit', function(e) {
-  e.preventDefault();
-  
-  // Validate at least one newsletter is selected
-  const checkboxes = document.querySelectorAll('input[name="segments[]"]');
-  const checked = Array.from(checkboxes).some(cb => cb.checked);
-  
-  if (!checked) {
-    document.getElementById('segment-error').classList.remove('hidden');
-    document.querySelector('input[name="segments[]"]').focus();
-    return false;
-  }
-  
-  document.getElementById('segment-error').classList.add('hidden');
-  
-  // Show loading state
-  const submitBtn = document.getElementById('submit-btn');
-  submitBtn.textContent = 'Subscribing...';
-  submitBtn.disabled = true;
-  
-  // Submit via fetch to avoid showing GAS page
-  const formData = new FormData(this);
-  const urlParams = new URLSearchParams();
-  
-  for (let [key, value] of formData.entries()) {
-    urlParams.append(key, value);
-  }
-  
-  fetch(this.action, {
-  method: 'POST',
-  body: urlParams
-})
-.then(response => response.text())
-.then(result => {
-  console.log('Server response:', result);
-  // Redirect to thanks page
-  const email = formData.get('email');
-  window.location.href = '/subscribe-thanks.html?email=' + encodeURIComponent(email);
-})
-.catch(error => {
-  console.error('Error:', error);
-  alert('Subscription failed. Please try again.');
-});
+<script>
+/* Allow normal form POST to the Apps Script Web App.
+   The server will respond with a seamless redirect to /subscribe-thanks.html
+   including ?email=...&segments=... */
+</script>
+
 });
 // Handle error messages from URL parameters
 window.addEventListener('DOMContentLoaded', function() {
