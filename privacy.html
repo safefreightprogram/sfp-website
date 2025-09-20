@@ -2,40 +2,195 @@
 <html lang="en-AU">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Privacy Policy – Safe Freight Program</title>
-  <!-- Include your standard header -->
+<!-- Updated Favicons -->
+<link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png?v=2">
+<link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png?v=2">
+<link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png?v=2">
+<link rel="manifest" href="/public/site.webmanifest?v=2">
+<link rel="mask-icon" href="/public/safari-pinned-tab.svg?v=2" color="#1e40af">
+<meta name="msapplication-TileColor" content="#1e40af">
+<meta name="theme-color" content="#ffffff">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <meta name="description" content="Privacy Policy for Safe Freight Program newsletter subscriptions - how we collect, use, and protect your information." />
+  <meta property="og:title" content="Privacy Policy - Safe Freight Program" />
+  <meta property="og:description" content="Simple, clear privacy policy for Safe Freight Program newsletter subscribers" />
+
+  <style>
+    @keyframes fadeInUp { 0% { opacity: 0; transform: translateY(20px);} 100% { opacity: 1; transform: translateY(0);} }
+    .animate-fadeInUp { animation: fadeInUp 0.6s ease-out both; }
+
+    /* --- Header/logo hard caps to stop giant logos leaking in from partials --- */
+    #site-header img, #site-header svg, #header-placeholder img, #header-placeholder svg {
+      max-height: 40px; width: auto; height: auto;
+    }
+    /* Ensure any raw images in the header don't expand the layout */
+    #site-header, #header-placeholder { overflow: hidden; }
+  </style>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+  <!-- Header placeholder (for partial injection) -->
   <div id="header-placeholder"></div>
-  
-  <main class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold text-blue-800 mb-6">Privacy Policy</h1>
-    
-    <div class="prose max-w-none">
-      <h2>Information We Collect</h2>
-      <p>When you subscribe to our newsletter, we collect:</p>
-      <ul>
-        <li>Email address (required)</li>
-        <li>Name (optional)</li>
-        <li>Company/organization (optional)</li>
-        <li>Industry role (optional)</li>
-      </ul>
-      
-      <h2>How We Use Your Information</h2>
-      <p>We use your information to:</p>
-      <ul>
-        <li>Send you the requested newsletter content</li>
-        <li>Improve our content based on subscriber preferences</li>
-        <li>Comply with Australian privacy laws</li>
-      </ul>
-      
-      <h2>Your Rights</h2>
-      <p>You can unsubscribe at any time using the link in any email. 
-         For other privacy requests, contact info@safefreightprogram.com</p>
+
+  <!-- Minimal header fallback (shown only if partial load fails) -->
+  <header id="site-header" class="hidden bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3">
+        <img src="/assets/sfp-logo-small.png" alt="Safe Freight Program" class="h-8 w-auto">
+        <span class="sr-only">Safe Freight Program</span>
+      </a>
+      <nav class="text-sm">
+        <a href="/subscribe.html" class="text-blue-700 font-semibold">Subscribe</a>
+      </nav>
     </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <section class="text-center mb-12 animate-fadeInUp">
+      <div class="bg-blue-100 p-4 rounded-full w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+        <svg class="w-8 h-8 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 01-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold text-blue-800 mb-4">Privacy Policy</h1>
+      <p class="text-xl text-gray-700 mb-6">Simple, clear information about how we handle your data</p>
+      <p class="text-gray-600 max-w-2xl mx-auto">We keep things simple - here's exactly what we collect and how we use it.</p>
+    </section>
+
+    <section class="max-w-2xl mx-auto">
+      <div class="bg-white rounded-lg border p-8 shadow-lg">
+        <div class="mb-6 text-center">
+          <p class="text-sm text-blue-800"><strong>Last Updated:</strong> December 2024</p>
+          <p class="text-sm text-blue-700 mt-1">Complies with Privacy Act 1988 (Cth)</p>
+        </div>
+
+        <div class="space-y-6">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-3">Information We Collect</h2>
+            <p class="text-gray-700 mb-3">When you subscribe to our newsletter, we collect:</p>
+            <ul class="space-y-2 text-gray-700">
+              <li class="flex items-start">
+                <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span><strong>Email address</strong> (required) - to send you the newsletter</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span><strong>Name</strong> (optional) - to personalise emails</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span><strong>Company/organisation and role</strong> (optional) - to understand our audience</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span><strong>Website usage data</strong> - basic analytics to improve our service</span>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-3">How We Use Your Information</h2>
+            <p class="text-gray-700 mb-3">We use your information to:</p>
+            <ul class="space-y-2 text-gray-700">
+              <li>• Send you the newsletter content you've subscribed to</li>
+              <li>• Improve our content based on what our audience finds useful</li>
+              <li>• Understand who our readers are (in general, not individually)</li>
+              <li>• Comply with Australian privacy laws and keep proper records</li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-3">Who We Share Information With</h2>
+            <p class="text-gray-700 mb-3">We keep your information private. We only share it with:</p>
+            <ul class="space-y-2 text-gray-700">
+              <li>• <strong>Email service providers</strong> (like Gmail) to deliver newsletters</li>
+              <li>• <strong>Website analytics services</strong> to understand how our site is used</li>
+              <li>• <strong>Government agencies</strong> if required by Australian law</li>
+            </ul>
+            <p class="text-sm font-semibold text-gray-800 mt-3">We do not sell, rent, or trade your personal information.</p>
+          </div>
+
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-3">Your Rights</h2>
+            <p class="text-gray-700 mb-3">Under Australian privacy law, you have the right to:</p>
+            <ul class="space-y-2 text-gray-700">
+              <li>• <strong>Unsubscribe</strong> at any time using the link in any email</li>
+              <li>• <strong>Access</strong> the information we hold about you</li>
+              <li>• <strong>Correct</strong> any incorrect information</li>
+              <li>• <strong>Request deletion</strong> of your information</li>
+              <li>• <strong>Make a complaint</strong> about how we handle your information</li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-3">Data Security</h2>
+            <p class="text-gray-700">We protect your information using secure hosting, encrypted connections, and access controls. We keep your data only as long as needed to provide our service or as required by law.</p>
+          </div>
+
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-3">Changes to This Policy</h2>
+            <p class="text-gray-700">If we make significant changes to this policy, we'll let you know by email or by posting a notice on our website.</p>
+          </div>
+
+          <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">Questions or Concerns?</h3>
+            <p class="text-gray-700 mb-2">
+              <strong>Safe Freight Program</strong><br>
+              Email: <a href="mailto:privacy@safefreightprogram.com" class="text-blue-600 hover:underline">privacy@safefreightprogram.com</a><br>
+              General enquiries: <a href="mailto:info@safefreightprogram.com" class="text-blue-600 hover:underline">info@safefreightprogram.com</a>
+            </p>
+            <p class="text-sm text-gray-600 mt-3">
+              You can also make a privacy complaint to the Office of the Australian Information Commissioner at <a href="https://www.oaic.gov.au" class="text-blue-600 hover:underline" target="_blank" rel="noopener">www.oaic.gov.au</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-12 text-center text-gray-600">
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="flex items-center justify-center">
+          <svg class="w-5 h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 01-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <span class="text-sm">Simple and transparent</span>
+        </div>
+        <div class="flex items-center justify-center">
+          <svg class="w-5 h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm">Australian law compliant</span>
+        </div>
+        <div class="flex items-center justify-center">
+          <svg class="w-5 h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <span class="text-sm">Unsubscribe anytime</span>
+        </div>
+      </div>
+      <p class="text-xs mt-4 text-gray-500">
+        This policy covers our newsletter service only. Future services may have additional privacy terms.
+      </p>
+    </section>
   </main>
-  
+
   <div id="footer-placeholder"></div>
+
+  <!-- Header/footer loader & account indicator -->
   <script src="/js/load-header-footer.js" defer></script>
+  <script src="/js/account-indicator.js" defer></script>
+
 </body>
 </html>
