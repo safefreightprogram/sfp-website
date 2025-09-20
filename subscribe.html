@@ -237,11 +237,6 @@
   <script src="/js/account-indicator.js" defer></script>
 
 <script>
-<script>
-/* Allow normal form POST to the Apps Script Web App.
-   The server will respond with a seamless redirect to /subscribe-thanks.html
-   including ?email=...&segments=... */
-<script>
 // Handle error messages from URL parameters
 window.addEventListener('DOMContentLoaded', function() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -259,22 +254,20 @@ window.addEventListener('DOMContentLoaded', function() {
       </div>
     `;
     const form = document.getElementById('newsletter-form');
-    if (form && form.parentNode) {
-      form.parentNode.insertBefore(errorDiv, form);
-    }
+    if (form && form.parentNode) form.parentNode.insertBefore(errorDiv, form);
   }
 
-  // Real-time validation feedback (hide segment error when any box is checked)
-  document.querySelectorAll('input[name="segments[]"]').forEach(function(checkbox) {
-    checkbox.addEventListener('change', function() {
-      const anyChecked = document.querySelectorAll('input[name="segments[]"]:checked').length > 0;
-      if (anyChecked) {
+  // Real-time validation: hide segment error once any box is checked
+  document.querySelectorAll('input[name="segments[]"]').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      if (document.querySelectorAll('input[name="segments[]"]:checked').length > 0) {
         document.getElementById('segment-error').classList.add('hidden');
       }
     });
   });
 });
 </script>
+
   
   
 </body>
