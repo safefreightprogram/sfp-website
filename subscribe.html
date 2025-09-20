@@ -261,20 +261,20 @@ document.getElementById('newsletter-form').addEventListener('submit', function(e
   }
   
   fetch(this.action, {
-    method: 'POST',
-    body: urlParams,
-    mode: 'no-cors'
-  })
-  .then(() => {
-    // Redirect to thanks page
-    const email = formData.get('email');
-    window.location.href = '/subscribe-thanks.html?email=' + encodeURIComponent(email);
-  })
-  .catch(() => {
-    // Still redirect on error - GAS will have processed it
-    const email = formData.get('email');
-    window.location.href = '/subscribe-thanks.html?email=' + encodeURIComponent(email);
-  });
+  method: 'POST',
+  body: urlParams
+})
+.then(response => response.text())
+.then(result => {
+  console.log('Server response:', result);
+  // Redirect to thanks page
+  const email = formData.get('email');
+  window.location.href = '/subscribe-thanks.html?email=' + encodeURIComponent(email);
+})
+.catch(error => {
+  console.error('Error:', error);
+  alert('Subscription failed. Please try again.');
+});
 });
 // Handle error messages from URL parameters
 window.addEventListener('DOMContentLoaded', function() {
