@@ -189,7 +189,7 @@
 </div>
 
           
-          <button type="submit" id="submit-btn"
+          <button type="submit" id="submit-btn" data-original-text="Subscribe Now"
                   class="w-full bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             Subscribe Now
           </button>
@@ -269,39 +269,75 @@ document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('newsletter-form');
   if (!form) return;
 
+  const btn = document.getElementById('submit-btn');
+
+  function lockBtn() {
+    if (!btn) return;
+    if (!btn.dataset.originalText) btn.dataset.originalText = btn.textContent || 'Submitting…';
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+    btn.classList.add('opacity-70','cursor-not-allowed','animate-pulse');
+    btn.setAttribute('aria-busy','true');
+  }
+  function unlockBtn() {
+    if (!btn) return;
+    btn.disabled = false;
+    btn.textContent = btn.dataset.originalText || 'Subscribe';
+    btn.classList.remove('opacity-70','cursor-not-allowed','animate-pulse');
+    btn.removeAttribute('aria-busy');
+  }
+
   form.addEventListener('submit', function (e) {
     e.preventDefault();
 
     // require at least one segment
-    if (document.querySelectorAll('input[name="segments[]"]:checked').length === 0) {
+    const checked = document.querySelectorAll('input[name="segments[]"]:checked');
+    if (checked.length === 0) {
       const el = document.getElementById('segment-error');
       if (el) el.classList.remove('hidden');
+      unlockBtn();
       return;
     }
+
+    // ignore re-clicks
+    if (btn && btn.getAttribute('aria-busy') === 'true') return;
+    lockBtn();
 
     const data = new URLSearchParams(new FormData(form)); // x-www-form-urlencoded
     const thanks = new URL(form.querySelector('input[name="redirect"]').value);
     const email = form.querySelector('input[name="email"]')?.value || '';
-    const segs = Array.from(document.querySelectorAll('input[name="segments[]"]:checked'))
-      .map(cb => cb.value).join(',');
+    const segs = Array.from(checked).map(cb => cb.value).join(',');
 
-    // Fire-and-forget; we don't read response, so no CORS headaches
-  fetch(form.action, {
-  method: 'POST',
-  mode: 'no-cors',
-  headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-  body: data,
-  keepalive: true // <— critical: ensures the POST isn’t dropped on navigation
-}).catch(() => {});
+    const endpoint = form.action;
 
-/* Give the request a tick to flush before we navigate */
-thanks.searchParams.set('email', email);
-thanks.searchParams.set('segments', segs);
-setTimeout(() => { window.location.href = thanks.toString(); }, 150);
+    // 1) Try sendBeacon (most reliable across navigation)
+    let sent = false;
+    try {
+      const beaconData = new Blob([data.toString()], { type: 'application/x-www-form-urlencoded;charset=UTF-8' });
+      if (navigator.sendBeacon) {
+        sent = navigator.sendBeacon(endpoint, beaconData);
+      }
+    } catch (_) {}
 
+    // 2) Fallback to fetch with no-cors + keepalive (body is still delivered)
+    if (!sent) {
+      fetch(endpoint, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: data,
+        keepalive: true
+      }).catch(() => {});
+    }
+
+    // continue under your domain (no GAS banner)
+    thanks.searchParams.set('email', email);
+    thanks.searchParams.set('segments', segs);
+    setTimeout(() => { window.location.href = thanks.toString(); }, 150);
   });
 });
 </script>
+
 
 
   
