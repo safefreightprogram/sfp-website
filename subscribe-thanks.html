@@ -116,18 +116,35 @@ const segments = urlParams.get('segments') ? urlParams.get('segments').split(','
 document.addEventListener('DOMContentLoaded', function() {
   updateThankYouContent();
   
-  // Handle resend confirmation email
-  document.getElementById('resend-link').addEventListener('click', function(e) {
-    e.preventDefault();
-    
-    const emailToResend = email || prompt('Enter your email address to resend confirmation:');
-    
-    if (emailToResend) {
-      // Make request to resend confirmation
-      window.location.href = `https://script.google.com/macros/s/AKfycbzEnYmiH9KPLUrggDcoVam82F6MzG1eucTF-Wnk1jDf7i_up1JqJeMrS3X9gi9xNunA2w/exec?action=resend_confirmation&email=${encodeURIComponent(emailToResend)}`;
+  // Handle resend confirmation email (seamless, no banner)
+document.getElementById('resend-link').addEventListener('click', async function(e) {
+  e.preventDefault();
+  const link = e.currentTarget;
+  const msg = document.getElementById('resend-message');
+  const emailToResend = email || prompt('Enter your email address to resend confirmation:');
+  if (!emailToResend) return;
 
-    }
-  });
+  // UI feedback
+  link.textContent = 'Sending…';
+  link.classList.add('animate-pulse');
+  link.setAttribute('aria-busy', 'true');
+
+  // Fire-and-forget GET to GAS; we don't read response body
+  const qs = new URLSearchParams({ action: 'resend_confirmation', email: emailToResend });
+  fetch('https://script.google.com/macros/s/AKfycbzEnYmiH9KPLUrggDcoVam82F6MzG1eucTF-Wnk1jDf7i_up1JqJeMrS3X9gi9xNunA2w/exec?' + qs.toString(), {
+    method: 'GET',
+    mode: 'no-cors'
+  }).catch(() => {});
+
+  // Local success UX
+  if (msg) msg.classList.remove('hidden');
+  link.textContent = 'Sent ✔';
+  link.classList.remove('animate-pulse');
+  link.classList.add('pointer-events-none', 'text-gray-400');
+  link.removeAttribute('href');
+  link.setAttribute('aria-busy', 'false');
+});
+
 });
 
 function updateThankYouContent() {
