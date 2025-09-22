@@ -286,17 +286,19 @@ document.addEventListener('DOMContentLoaded', function () {
       .map(cb => cb.value).join(',');
 
     // Fire-and-forget; we don't read response, so no CORS headaches
-    fetch(form.action, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: data
-    }).catch(() => {});
+  fetch(form.action, {
+  method: 'POST',
+  mode: 'no-cors',
+  headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+  body: data,
+  keepalive: true // <— critical: ensures the POST isn’t dropped on navigation
+}).catch(() => {});
 
-    // Move user under your domain (no Apps Script banner)
-    thanks.searchParams.set('email', email);
-    thanks.searchParams.set('segments', segs);
-    window.location.href = thanks.toString();
+/* Give the request a tick to flush before we navigate */
+thanks.searchParams.set('email', email);
+thanks.searchParams.set('segments', segs);
+setTimeout(() => { window.location.href = thanks.toString(); }, 150);
+
   });
 });
 </script>
