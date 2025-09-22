@@ -303,44 +303,28 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btn && btn.getAttribute('aria-busy') === 'true') return;
     lockBtn();
 
-    const data = new URLSearchParams(new FormData(form)); // x-www-form-urlencoded
+    // set target to hidden iframe so the Apps Script page loads off-screen (no banner)
+    form.setAttribute('target', 'gas_post_sink');
+
+    // Submit natively (content-type application/x-www-form-urlencoded; GAS sees e.parameters)
+    form.submit();
+
+    // Build user-facing thanks URL (stays on your domain)
     const thanks = new URL(form.querySelector('input[name="redirect"]').value);
     const email = form.querySelector('input[name="email"]')?.value || '';
     const segs = Array.from(checked).map(cb => cb.value).join(',');
 
-    const endpoint = form.action;
-
-    // 1) Try sendBeacon (most reliable across navigation)
-    let sent = false;
-    try {
-      const beaconData = new Blob([data.toString()], { type: 'application/x-www-form-urlencoded;charset=UTF-8' });
-      if (navigator.sendBeacon) {
-        sent = navigator.sendBeacon(endpoint, beaconData);
-      }
-    } catch (_) {}
-
-    // 2) Fallback to fetch with no-cors + keepalive (body is still delivered)
-    if (!sent) {
-      fetch(endpoint, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: data,
-        keepalive: true
-      }).catch(() => {});
-    }
-
-    // continue under your domain (no GAS banner)
     thanks.searchParams.set('email', email);
     thanks.searchParams.set('segments', segs);
-    setTimeout(() => { window.location.href = thanks.toString(); }, 150);
+
+    // Give GAS a small head-start, then redirect the top window
+    setTimeout(() => { window.location.href = thanks.toString(); }, 250);
   });
 });
 </script>
 
 
-
-  
+<iframe name="gas_post_sink" style="display:none" aria-hidden="true"></iframe>
   
 </body>
 </html>
