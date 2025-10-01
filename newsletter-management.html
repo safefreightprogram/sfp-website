@@ -1884,21 +1884,45 @@ async function loadSubscriberStats() {
             let proCount = 0;
             let driverCount = 0;
             let totalSubs = 0;
+            let allSubscribers = [];
 
-            // Handle multiple possible response formats
+            // ENHANCED: Handle your actual Google Sheet structure with comma-separated segments
             if (data.data) {
-                proCount = data.data.pro?.count || 0;
-                driverCount = data.data.driver?.count || 0;
-                totalSubs = data.data.summary?.totalActive || (proCount + driverCount);
+                // Check if data.data has subscribers array directly
+                if (Array.isArray(data.data)) {
+                    allSubscribers = data.data;
+                } else if (data.data.pro?.subscribers || data.data.driver?.subscribers) {
+                    allSubscribers = [
+                        ...(data.data.pro?.subscribers || []),
+                        ...(data.data.driver?.subscribers || [])
+                    ];
+                } else if (data.data.subscribers) {
+                    allSubscribers = data.data.subscribers;
+                }
+            } else if (Array.isArray(data.subscribers)) {
+                allSubscribers = data.subscribers;
             } else if (data.pro || data.driver) {
-                proCount = data.pro?.count || 0;
-                driverCount = data.driver?.count || 0;
-                totalSubs = proCount + driverCount;
-            } else {
-                proCount = Array.isArray(data.proSubscribers) ? data.proSubscribers.length : 0;
-                driverCount = Array.isArray(data.driverSubscribers) ? data.driverSubscribers.length : 0;
-                totalSubs = proCount + driverCount;
+                allSubscribers = [
+                    ...(data.pro?.subscribers || []),
+                    ...(data.driver?.subscribers || [])
+                ];
             }
+
+            // Count subscribers by segment, handling comma-separated segments like "pro,driver"
+            allSubscribers.forEach(sub => {
+                if (!sub.segment) return;
+                
+                const segments = sub.segment.includes(',') 
+                    ? sub.segment.split(',').map(s => s.trim()) 
+                    : [sub.segment];
+                
+                segments.forEach(seg => {
+                    if (seg === 'pro') proCount++;
+                    if (seg === 'driver') driverCount++;
+                });
+            });
+            
+            totalSubs = allSubscribers.length;
 
             // Update UI elements
             const totalElement = document.getElementById('totalSubscribers');
@@ -1965,26 +1989,59 @@ async function loadSubscriberStats() {
                 
                 if (data.success) {
                     let subscribers = [];
-                    if (segment) {
-                        subscribers = data.data.subscribers || [];
-                    } else {
+                    
+                    // ENHANCED: Extract subscribers from various response formats
+                    if (Array.isArray(data.data)) {
+                        subscribers = data.data;
+                    } else if (data.data?.subscribers) {
+                        subscribers = data.data.subscribers;
+                    } else if (data.data?.pro || data.data?.driver) {
                         subscribers = [
-                            ...(data.data?.pro?.subscribers || data.pro?.subscribers || []).map(s => ({...s, segment: 'pro'})),
-                            ...(data.data?.driver?.subscribers || data.driver?.subscribers || []).map(s => ({...s, segment: 'driver'}))
+                            ...(data.data.pro?.subscribers || []),
+                            ...(data.data.driver?.subscribers || [])
                         ];
+                    } else if (Array.isArray(data.subscribers)) {
+                        subscribers = data.subscribers;
+                    } else if (data.pro || data.driver) {
+                        subscribers = [
+                            ...(data.pro?.subscribers || []),
+                            ...(data.driver?.subscribers || [])
+                        ];
+                    }
+                    
+                    // Filter by segment if specified
+                    if (segment) {
+                        subscribers = subscribers.filter(sub => {
+                            if (!sub.segment) return false;
+                            const segments = sub.segment.includes(',') 
+                                ? sub.segment.split(',').map(s => s.trim()) 
+                                : [sub.segment];
+                            return segments.includes(segment);
+                        });
                     }
                     
                     if (subscribers.length === 0) {
                         tableBody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No subscribers found</td></tr>';
                     } else {
-                        tableBody.innerHTML = subscribers.map(subscriber => `
+                        tableBody.innerHTML = subscribers.map(subscriber => {
+                            // Handle comma-separated segments display
+                            const segments = subscriber.segment?.includes(',') 
+                                ? subscriber.segment.split(',').map(s => s.trim()) 
+                                : [subscriber.segment];
+                            
+                            const segmentBadges = segments.map(seg => {
+                                const isDriver = seg === 'driver';
+                                const label = isDriver ? 'Safe Freight Mate' : 'COR Intel Weekly';
+                                const colorClass = isDriver ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800';
+                                return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass} mr-1">${label}</span>`;
+                            }).join('');
+                            
+                            return `
                             <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 text-sm text-gray-900">${subscriber.email}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">${subscriber.email || '-'}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900">${subscriber.name || '-'}</td>
                                 <td class="px-6 py-4 text-sm">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                        subscriber.segment === 'driver' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                                    }">${subscriber.segment === 'driver' ? 'Safe Freight Mate' : 'COR Intel Weekly'}</span>
+                                    ${segmentBadges}
                                 </td>
                                 <td class="px-6 py-4 text-sm">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
