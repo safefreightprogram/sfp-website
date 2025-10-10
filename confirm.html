@@ -387,35 +387,35 @@
       </div>
       
       <!-- Success State -->
-      <div class="sfp-card">
-  <div class="sfp-logo">
-    <img src="/public/sfp-truck-logo.png" alt="Safe Freight Program" style="height:32px">
-    <div>
-      <h1 class="sfp-h1">You’re in — thank you!</h1>
-      <div class="sfp-sub">Help lift safety across the industry. Invite a colleague (pro) or a mate (driver).</div>
-    </div>
-  </div>
-  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-    <a class="sfp-btn sfp-btn-primary" id="referBtn">Refer a Colleague or a Mate</a>
-    <a class="sfp-btn sfp-btn-ghost" id="copyLinkBtn">Copy Subscribe Link</a>
-  </div>
-</div>
-<script>
-  const subscribeUrl = 'https://safefreightprogram.com/subscribe';
-  const subject = encodeURIComponent('Worth a look: Safe Freight Program');
-  const body = encodeURIComponent(
-    `I just subscribed to the Safe Freight Program newsletter and thought you’d find it useful.\n\n` +
-    `• CoR Intel Weekly (for compliance & ops)\n` +
-    `• Safe Freight Mate (for drivers)\n\n` +
-    `Join here: ${subscribeUrl}\n\n— Sent via SFP referral`
-  );
-  document.getElementById('referBtn').setAttribute('href', `mailto:?subject=${subject}&body=${body}`);
-  document.getElementById('copyLinkBtn').addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(subscribeUrl); alert('Subscribe link copied'); }
-    catch(e){ alert('Unable to copy link'); }
-  });
-</script>
-
+      <div id="success-state" style="display: none;">
+        <div class="status-icon success">🎉</div>
+        <h2>Subscription Confirmed!</h2>
+        <p id="success-greeting">Thank you for confirming your subscription.</p>
+        <p>You'll start receiving newsletters every Friday morning.</p>
+        
+        <div class="newsletter-details" id="newsletter-details">
+          <h3>Your Newsletter(s):</h3>
+          <div id="newsletter-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+        
+        <div class="success-message" id="next-steps">
+          <p>
+            <strong>✅ What happens next:</strong> You'll receive your first newsletter this Friday morning. 
+            Check your inbox (and spam folder) for our weekly updates!
+          </p>
+        </div>
+        
+        <div class="action-buttons" id="success-actions">
+          <button class="btn btn-primary" id="send-latest-btn">
+            📧 Send Me the Latest Newsletter
+          </button>
+          <a href="https://www.safefreightprogram.com" class="btn btn-secondary">
+            🏠 Back to Website
+          </a>
+        </div>
+      </div>
       
       <!-- Already Confirmed State -->
       <div id="already-confirmed-state" style="display: none;">
@@ -485,7 +485,7 @@
 
   <script>
     // Configuration
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwyd6db6joLZAW3qBwh4rCaR_froTbyJkmd67-ShypL9PhSr8w1txPUCt1KurmxK-bhFQ/exec';
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxGg2bTGjGi0u1au84DDOTGUTrlinInexaKjaHIdB1Edd2Ax_OeD1xTh7iqoexbDEoC4A/exec';
     
     // Newsletter configurations
     const NEWSLETTER_CONFIG = {
