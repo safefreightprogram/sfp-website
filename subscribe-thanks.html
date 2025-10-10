@@ -131,7 +131,7 @@ document.getElementById('resend-link').addEventListener('click', async function(
 
   // Fire-and-forget GET to GAS; we don't read response body
   const qs = new URLSearchParams({ action: 'resend_confirmation', email: emailToResend });
-fetch('https://script.google.com/macros/s/AKfycbxGg2bTGjGi0u1au84DDOTGUTrlinInexaKjaHIdB1Edd2Ax_OeD1xTh7iqoexbDEoC4A/exec?' + qs.toString(), {
+fetch('https://script.google.com/macros/s/AKfycbwyd6db6joLZAW3qBwh4rCaR_froTbyJkmd67-ShypL9PhSr8w1txPUCt1KurmxK-bhFQ/exec?' + qs.toString(), {
   method: 'GET',
   mode: 'no-cors',
   keepalive: true
