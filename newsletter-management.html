@@ -1112,6 +1112,31 @@ function getNextScheduledRun(frequency, dayOfWeek, hour, minute, weekOfMonth = n
     
     return nextRun;
 }
+
+<script>
+// === START: Normalization helpers (DROP-IN) ===
+function parseSegmentsCsvToArray(csv) {
+  if (!csv) return [];
+  return String(csv).split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+}
+function normalizeSubscriberRow(row) {
+  const segments = Array.isArray(row.segments) ? row.segments : parseSegmentsCsvToArray(row.segment || row.segmentCsv || row.Segment);
+  const iso = v => (v || '').toString();
+  return {
+    subscriberId: row.subscriberId || row.Subscriber_ID || '',
+    email: (row.email || row.Email || '').toLowerCase(),
+    name: row.name || row.Name || '',
+    segments,
+    segmentCsv: segments.join(', '),
+    status: (row.status || row.Status || '').toLowerCase(),
+    subscribedAt: iso(row.subscribedAt || row.Subscribed_At),
+    confirmedAt:  iso(row.confirmedAt  || row.Confirmed_At),
+    updatedAt:    iso(row.updatedAt    || row.Updated_At)
+  };
+}
+// === END: Normalization helpers ===
+</script>
+
         
         async function loadAdvancedSchedule() {
     try {
@@ -1952,60 +1977,31 @@ async function loadSubscriberStats() {
     }
 }
 
-        async function loadSubscriberList() {
-            const segment = document.getElementById('subscriberSegmentFilter').value;
-            const tableBody = document.getElementById('subscriberTableBody');
-            
-            try {
-                tableBody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Loading subscribers...</td></tr>';
-                
-                const url = segment ? `${API_BASE_URL}/api/subscribers/${segment}` : `${API_BASE_URL}/api/subscribers`;
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (data.success) {
-                    let subscribers = [];
-                    if (segment) {
-                        subscribers = data.data.subscribers || [];
-                    } else {
-                        subscribers = [
-                            ...(data.data?.pro?.subscribers || data.pro?.subscribers || []).map(s => ({...s, segment: 'pro'})),
-                            ...(data.data?.driver?.subscribers || data.driver?.subscribers || []).map(s => ({...s, segment: 'driver'}))
-                        ];
-                    }
-                    
-                    if (subscribers.length === 0) {
-                        tableBody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No subscribers found</td></tr>';
-                    } else {
-                        tableBody.innerHTML = subscribers.map(subscriber => `
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 text-sm text-gray-900">${subscriber.email}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900">${subscriber.name || '-'}</td>
-                                <td class="px-6 py-4 text-sm">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                        subscriber.segment === 'driver' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                                    }">${subscriber.segment === 'driver' ? 'Safe Freight Mate' : 'COR Intel Weekly'}</span>
-                                </td>
-                                <td class="px-6 py-4 text-sm">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                        subscriber.status === 'active' ? 'bg-green-100 text-green-800' : 
-                                        subscriber.status === 'paused' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                                    }">${subscriber.status.charAt(0).toUpperCase() + subscriber.status.slice(1)}</span>
-                                </td>
-                                <td class="px-6 py-4 text-sm">
-                                    <button onclick="showEditSubscriberModal('${subscriber._id ?? subscriber.id ?? subscriber.email}')" class="text-blue-600 hover:text-blue-900 mr-2">Edit</button>
-                                    <button onclick="showDeleteModal('${subscriber._id ?? subscriber.id ?? subscriber.email}')" class="text-red-600 hover:text-red-900">Delete</button>
-                                </td>
-                            </tr>
-                        `).join('');
-                    }
-                } else {
-                    tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-red-500">Error: ${data.error}</td></tr>`;
-                }
-            } catch (error) {
-                tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-red-500">Error: ${error.message}</td></tr>`;
-            }
-        }
+        <script>
+async function loadSubscriberList() {
+  try {
+    const res = await fetch(API_BASE_URL + '/api/subscribers', { credentials: 'omit' });
+    const json = await res.json();
+
+    const pro = (json?.data?.pro?.subscribers || []).map(normalizeSubscriberRow);
+    const driver = (json?.data?.driver?.subscribers || []).map(normalizeSubscriberRow);
+    const all = [...pro, ...driver];
+
+    // Update summary tiles
+    const totalActive = json?.data?.summary?.totalActive ?? all.length;
+    document.getElementById('tileTotalActive').textContent = totalActive;
+    document.getElementById('tileProActive').textContent = pro.length;
+    document.getElementById('tileDriverActive').textContent = driver.length;
+
+    // Render table (use your existing render function; below is illustrative)
+    renderSubscribersTable(all);
+  } catch (e) {
+    console.error('loadSubscriberList error:', e);
+    toast('Failed to load subscribers', 'error');
+  }
+}
+</script>
+
 
         // ===== MANUAL OPERATIONS =====
         function toggleSpinner(btnId, spinnerId, show) {
