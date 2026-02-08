@@ -2047,17 +2047,23 @@ async function loadSubscriberList() {
     const driver = (json?.data?.driver?.subscribers || []).map(normalizeSubscriberRow);
     const all = [...pro, ...driver];
 
-    // Update summary tiles
-    const totalActive = json?.data?.summary?.totalActive ?? all.length;
-    document.getElementById('tileTotalActive').textContent = totalActive;
-    document.getElementById('tileProActive').textContent = pro.length;
-    document.getElementById('tileDriverActive').textContent = driver.length;
+   // Update summary tiles (guarded)
+const totalActive = json?.data?.summary?.totalActive ?? all.length;
+
+const elTotal = document.getElementById('tileTotalActive');
+const elPro   = document.getElementById('tileProActive');
+const elDrv   = document.getElementById('tileDriverActive');
+
+if (elTotal) elTotal.textContent = totalActive;
+if (elPro)   elPro.textContent   = pro.length;
+if (elDrv)   elDrv.textContent   = driver.length;
+
 
     // Render table (use your existing render function; below is illustrative)
     renderSubscribersTable(all);
   } catch (e) {
     console.error('loadSubscriberList error:', e);
-    toast('Failed to load subscribers', 'error');
+showToast('Failed to load subscribers', 'error');
   }
 }
 
