@@ -1907,12 +1907,19 @@ async function loadSubscriberStats() {
             let driverCount = 0;
             let totalSubs = 0;
 
-            // Handle multiple possible response formats
-            if (data.data) {
-                proCount = data.data.pro?.count || 0;
-                driverCount = data.data.driver?.count || 0;
-                totalSubs = data.data.summary?.totalActive || (proCount + driverCount);
-            } else if (data.pro || data.driver) {
+            // Check for nested data structure
+if (data.data) {
+  const proSubs = data.data.pro?.subscribers || [];
+  const driverSubs = data.data.driver?.subscribers || [];
+
+  proCount = (data.data.pro?.count != null) ? data.data.pro.count : (Array.isArray(proSubs) ? proSubs.length : 0);
+  driverCount = (data.data.driver?.count != null) ? data.data.driver.count : (Array.isArray(driverSubs) ? driverSubs.length : 0);
+
+  totalSubs = (data.data.summary?.totalActive != null)
+    ? data.data.summary.totalActive
+    : (proCount + driverCount);
+}
+ else if (data.pro || data.driver) {
                 proCount = data.pro?.count || 0;
                 driverCount = data.driver?.count || 0;
                 totalSubs = proCount + driverCount;
