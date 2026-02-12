@@ -269,7 +269,9 @@ document.addEventListener('DOMContentLoaded', function () {
   const btn = document.getElementById('submit-btn');
   const msgBox = document.getElementById('form-messages');
 
-  const API_BASE_URL = 'https://sfp-newsletter-automation-production.up.railway.app';
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000'
+  : 'https://sfp-newsletter-automation-production.up.railway.app';
 
   function showMessage(type, text) {
     if (!msgBox) return;
