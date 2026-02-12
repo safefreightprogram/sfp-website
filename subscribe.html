@@ -109,7 +109,9 @@
       <div class="bg-white rounded-lg border p-8 shadow-lg">
         <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Subscribe for Free</h2>
 
-<form id="newsletter-form" class="space-y-6">
+<form id="newsletter-form" class="space-y-6"
+      action="https://sfp-newsletter-automation-production.up.railway.app/api/subscribers"
+      method="POST">
 
 <!-- honeypot field -->
   <input type="text" name="hp" autocomplete="off" tabindex="-1"
