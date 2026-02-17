@@ -1,317 +1,123 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en-AU">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Confirm your subscription | Safe Freight Program</title>
 
   <meta name="robots" content="noindex" />
 
-  <style>
-    :root{
-      --bg: #f5f7fb;
-      --card: #ffffff;
-      --text: #0f172a;
-      --muted: #475569;
-      --border: #e2e8f0;
-      --shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
-      --blue: #1e3a8a;     /* SFP-style deep blue */
-      --blue2: #2563eb;    /* action blue */
-      --warnBg: #fff7ed;
-      --warnBorder: #fed7aa;
-      --warnText: #9a3412;
-      --okBg: #eff6ff;
-      --okBorder: #bfdbfe;
-      --okText: #1e40af;
-    }
+  <!-- Match site favicons (copied from index.html) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png?v=2">
+  <link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png?v=2">
+  <link rel="manifest" href="/public/site.webmanifest?v=2">
+  <link rel="mask-icon" href="/public/safari-pinned-tab.svg?v=2" color="#1e40af">
+  <meta name="msapplication-TileColor" content="#1e40af">
+  <meta name="theme-color" content="#ffffff">
 
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      color: var(--text);
-      background: var(--bg);
-    }
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    /* Top bar (simple, consistent across flows) */
-    .topbar{
-      background: var(--blue);
-      color:#fff;
-      border-bottom: 1px solid rgba(255,255,255,0.12);
-    }
-    .topbar-inner{
-      max-width: 1040px;
-      margin: 0 auto;
-      padding: 14px 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 12px;
-    }
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width: 0;
-    }
-    .logo{
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.14);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight: 700;
-      letter-spacing: .5px;
-      flex: 0 0 auto;
-    }
-    .brand-name{
-      font-size: 14px;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow:hidden;
-      text-overflow: ellipsis;
-    }
-    .top-links a{
-      color: rgba(255,255,255,0.9);
-      text-decoration:none;
-      font-size: 13px;
-      padding: 8px 10px;
-      border-radius: 8px;
-    }
-    .top-links a:hover{ background: rgba(255,255,255,0.10); }
-
-    /* Page */
-    .wrap{
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 28px 18px 42px;
-    }
-    .card{
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-      padding: 26px;
-    }
-
-    .hero{
-      display:flex;
-      gap: 14px;
-      align-items:flex-start;
-    }
-    .icon{
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      background: rgba(37,99,235,0.10);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex: 0 0 auto;
-    }
-    .icon svg{ width: 22px; height: 22px; fill: var(--blue2); }
-
-    h1{
-      margin: 0 0 6px 0;
-      font-size: 22px;
-      line-height: 1.25;
-      letter-spacing: -0.2px;
-    }
-    .sub{
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.55;
-      font-size: 14.5px;
-    }
-
-    .pillrow{
-      margin-top: 14px;
-      display:flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .pill{
-      display:inline-flex;
-      gap: 8px;
-      align-items:center;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 13px;
-      color: var(--text);
-      background: #fff;
-    }
-    .pill strong{
-      font-weight: 600;
-    }
-
-    .panel{
-      margin-top: 16px;
-      border-radius: 14px;
-      padding: 14px 14px;
-      border: 1px solid var(--okBorder);
-      background: var(--okBg);
-      color: var(--okText);
-      font-size: 13.5px;
-      line-height: 1.5;
-    }
-    .panel.warn{
-      border-color: var(--warnBorder);
-      background: var(--warnBg);
-      color: var(--warnText);
-    }
-
-    .steps{
-      margin-top: 16px;
-      border-top: 1px solid var(--border);
-      padding-top: 16px;
-      display:grid;
-      gap: 10px;
-    }
-    .step{
-      display:flex;
-      gap: 10px;
-      align-items:flex-start;
-    }
-    .num{
-      width: 26px;
-      height: 26px;
-      border-radius: 999px;
-      background: rgba(30,58,138,0.10);
-      color: var(--blue);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight: 700;
-      font-size: 13px;
-      flex: 0 0 auto;
-      margin-top: 1px;
-    }
-    .step p{
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.55;
-      font-size: 14px;
-    }
-
-    .actions{
-      margin-top: 18px;
-      display:flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items:center;
-    }
-    .btn{
-      border: 1px solid transparent;
-      border-radius: 12px;
-      padding: 11px 14px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap: 8px;
-      min-height: 44px;
-    }
-    .btn.primary{
-      background: var(--blue2);
-      color: #fff;
-    }
-    .btn.primary:hover{ filter: brightness(0.97); }
-    .btn.ghost{
-      background: #fff;
-      border-color: var(--border);
-      color: var(--text);
-    }
-    .btn.ghost:hover{ background: #f8fafc; }
-
-    .footer{
-      margin-top: 14px;
-      color: #64748b;
-      font-size: 12.5px;
-      line-height: 1.5;
-      padding: 0 4px;
-    }
-    .footer a{ color: #334155; text-decoration:none; }
-    .footer a:hover{ text-decoration: underline; }
-  </style>
+  <!-- Meta -->
+  <meta name="description" content="Confirm your Safe Freight Program newsletter subscription." />
 </head>
 
-<body>
-  <header class="topbar" role="banner">
-    <div class="topbar-inner">
-      <div class="brand">
-        <div class="logo" aria-hidden="true">SFP</div>
-        <div class="brand-name">Safe Freight Program</div>
-      </div>
-      <nav class="top-links" aria-label="Top links">
-        <a href="/">Home</a>
-        <a href="/subscribe.html">Subscribe</a>
-        <a href="/contact.html">Contact</a>
-      </nav>
-    </div>
-  </header>
+<body class="bg-gray-50 text-gray-800 font-sans">
+  <!-- Injected Header -->
+  <div id="header-placeholder"></div>
 
-  <main class="wrap" role="main">
-    <section class="card" aria-live="polite">
-      <div class="hero">
-        <div class="icon" aria-hidden="true">
-          <!-- envelope -->
-          <svg viewBox="0 0 24 24">
+  <main class="max-w-3xl mx-auto px-4 py-10">
+    <section class="bg-white rounded-xl border shadow-sm p-6 md:p-8">
+      <div class="flex items-start gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 border border-blue-100">
+          <!-- envelope icon -->
+          <svg class="h-6 w-6 text-blue-700" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4.2-7.4 4.6a2 2 0 0 1-2.1 0L4 8.2V6l8 5 8-5v2.2z"/>
           </svg>
         </div>
-        <div>
-          <h1>Confirm your subscription</h1>
-          <p class="sub">
+
+        <div class="flex-1">
+          <h1 class="text-xl md:text-2xl font-bold text-gray-900">Confirm your subscription</h1>
+          <p class="mt-1 text-sm md:text-base text-gray-600">
             We’ve sent a confirmation email. Your subscription will be activated once you click the confirmation link.
           </p>
 
-          <div class="pillrow" id="details" style="display:none;">
-            <div class="pill"><span>Email:</span> <strong id="emailText"></strong></div>
-            <div class="pill"><span>List:</span> <strong id="segmentText"></strong></div>
+          <!-- Details chips -->
+          <div id="details" class="mt-4 flex flex-wrap gap-2" style="display:none;">
+            <div class="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-sm">
+              <span class="text-gray-500">Email:</span>
+              <span id="emailText" class="font-semibold text-gray-900"></span>
+            </div>
+            <div class="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-sm">
+              <span class="text-gray-500">List:</span>
+              <span id="segmentText" class="font-semibold text-gray-900"></span>
+            </div>
           </div>
 
-          <div class="panel">
+          <!-- Guidance panels -->
+          <div class="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
             If you confirm from a work device, check your inbox and click the link. This prevents unauthorised signups.
           </div>
 
-          <div class="panel warn">
+          <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             Can’t see the email? Check Junk/Spam and Promotions. If it’s still missing after a few minutes, try subscribing again or contact support.
           </div>
         </div>
       </div>
 
-      <div class="steps" aria-label="What happens next">
-        <div class="step">
-          <div class="num">1</div>
-          <p>Open the confirmation email and click the confirmation link.</p>
+      <hr class="my-6" />
+
+      <!-- What happens next -->
+      <div class="space-y-3">
+        <div class="flex gap-3">
+          <div class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-800 text-xs font-bold">1</div>
+          <p class="text-sm md:text-base text-gray-700">
+            Open the confirmation email and click the confirmation link.
+          </p>
         </div>
-        <div class="step">
-          <div class="num">2</div>
-          <p>Once confirmed, you’ll receive future editions based on your selected list.</p>
+        <div class="flex gap-3">
+          <div class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-800 text-xs font-bold">2</div>
+          <p class="text-sm md:text-base text-gray-700">
+            Once confirmed, you’ll receive future editions based on your selected list.
+          </p>
         </div>
-        <div class="step">
-          <div class="num">3</div>
-          <p>You can unsubscribe at any time using the link included in each email.</p>
+        <div class="flex gap-3">
+          <div class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-800 text-xs font-bold">3</div>
+          <p class="text-sm md:text-base text-gray-700">
+            You can unsubscribe at any time using the link included in each email.
+          </p>
         </div>
       </div>
 
-      <div class="actions">
-        <a class="btn primary" href="/">Back to Home</a>
-        <a class="btn ghost" href="/subscribe.html">Subscribe a different email</a>
+      <!-- Actions -->
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a href="/" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-white font-semibold hover:bg-blue-700 transition">
+          Back to Home
+        </a>
+        <a href="/subscribe.html" class="inline-flex items-center justify-center rounded-lg border px-4 py-2.5 font-semibold text-gray-800 hover:bg-gray-50 transition">
+          Subscribe a different email
+        </a>
       </div>
 
-      <div class="footer">
-        Need help? Contact <a href="mailto:support@safefreightprogram.com">support@safefreightprogram.com</a><br/>
+      <div class="mt-6 text-xs text-gray-500">
+        Need help? Contact <a class="underline hover:text-gray-700" href="mailto:support@safefreightprogram.com">support@safefreightprogram.com</a><br/>
         Safe Freight Program – subscription confirmation required.
       </div>
     </section>
   </main>
+
+  <!-- Injected Footer -->
+  <div id="footer-placeholder"></div>
+
+  <!-- Keep consistent with your site pattern (copied from index.html) -->
+  <script type="module" src="/js/sfp-auth.js"></script>
+  <script type="module" src="/js/sfp-api.js"></script>
+  <script src="/js/sfp-gas-fetch-patch.js"></script>
+  <script src="/js/sfp-config.js"></script>
+  <script src="/js/load-header-footer.js" defer></script>
+  <script src="/js/account-indicator.js" defer></script>
+  <script src="/js/role-guards.js" defer></script>
+  <script src="/js/menu-enhance.js" defer></script>
 
   <script>
     // Reads ?email=...&segments=pro,driver and displays them.
