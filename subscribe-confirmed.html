@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subscription confirmed | Safe Freight Program</title>
+  <meta name="robots" content="noindex" />
+
+  <!-- Favicons (match site) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png?v=2">
+  <link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png?v=2">
+  <link rel="manifest" href="/public/site.webmanifest?v=2">
+  <link rel="mask-icon" href="/public/safari-pinned-tab.svg?v=2" color="#1e40af">
+  <meta name="theme-color" content="#ffffff">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 text-gray-900 font-sans">
+  <!-- Header -->
+  <div id="header-placeholder"></div>
+
+  <main class="max-w-3xl mx-auto px-6 py-14 md:py-20">
+    <section class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+      <div class="grid md:grid-cols-[10px_1fr]">
+        <div class="bg-blue-900/90 hidden md:block"></div>
+
+        <div class="p-8 md:p-10">
+          <div class="flex items-start justify-between gap-6">
+            <div class="min-w-0">
+              <div class="text-xs tracking-widest uppercase text-gray-500">
+                Subscription
+              </div>
+              <h1 class="mt-2 text-2xl md:text-3xl font-semibold tracking-tight">
+                Subscription confirmed
+              </h1>
+              <p class="mt-3 text-gray-600 leading-relaxed max-w-prose">
+                Your subscription is active. You will receive future editions based on your selected list.
+              </p>
+            </div>
+
+            <div class="shrink-0">
+              <div class="h-12 w-12 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
+                <!-- check icon -->
+                <svg class="h-6 w-6 text-blue-900" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress indicator -->
+          <div class="mt-8">
+            <div class="flex items-center justify-between text-xs text-gray-500">
+              <span>Step 2 of 2</span>
+              <span>Complete</span>
+            </div>
+            <div class="mt-2 h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+              <div class="h-full w-full bg-blue-900"></div>
+            </div>
+          </div>
+
+          <!-- Details -->
+          <div id="details" class="mt-8 hidden">
+            <div class="rounded-xl border border-gray-200 bg-white">
+              <div class="px-5 py-4 border-b border-gray-200">
+                <div class="text-xs tracking-widest uppercase text-gray-500">Subscription details</div>
+              </div>
+              <div class="px-5 py-5 grid gap-3">
+                <div class="text-sm text-gray-700">
+                  <span class="text-gray-500">Email</span>
+                  <span class="mx-2 text-gray-300">—</span>
+                  <span id="emailText" class="font-medium text-gray-900"></span>
+                </div>
+                <div class="text-sm text-gray-700">
+                  <span class="text-gray-500">List</span>
+                  <span class="mx-2 text-gray-300">—</span>
+                  <span id="segmentText" class="font-medium text-gray-900"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Guidance -->
+          <div class="mt-8 grid gap-4">
+            <div class="rounded-xl border border-gray-200 bg-gray-50 px-5 py-4">
+              <div class="text-sm font-medium text-gray-900">What happens next</div>
+              <ul class="mt-2 space-y-2 text-sm text-gray-700 leading-relaxed">
+                <li class="flex gap-2">
+                  <span class="text-gray-400">•</span>
+                  <span>You’ll receive future editions according to the selected list.</span>
+                </li>
+                <li class="flex gap-2">
+                  <span class="text-gray-400">•</span>
+                  <span>Every email includes an unsubscribe link.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="mt-10 flex flex-wrap gap-3">
+            <a href="/index.html"
+               class="inline-flex items-center justify-center rounded-lg bg-blue-900 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-800 transition">
+              Back to Home
+            </a>
+
+            <a href="/subscribe.html"
+               class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition">
+              Manage subscription
+            </a>
+          </div>
+
+          <div class="mt-10 pt-6 border-t border-gray-200 text-xs text-gray-500 leading-relaxed">
+            Safe Freight Program — subscription active.<br/>
+            Support: <a href="mailto:support@safefreightprogram.com" class="underline hover:text-gray-700">support@safefreightprogram.com</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-placeholder"></div>
+
+  <script src="/js/load-header-footer.js" defer></script>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const email = (params.get('email') || '').trim();
+      const segments = (params.get('segments') || '').trim();
+
+      const details = document.getElementById('details');
+      const emailText = document.getElementById('emailText');
+      const segmentText = document.getElementById('segmentText');
+
+      function labelSegments(value) {
+        if (!value) return '';
+        const list = value.split(',').map(s => s.trim()).filter(Boolean);
+        const labels = list.map(s => {
+          if (s === 'pro') return 'CoR Intel Weekly';
+          if (s === 'driver') return 'Safe Freight Mate';
+          return s;
+        });
+        return labels.join(', ');
+      }
+
+      if (email || segments) {
+        details.classList.remove('hidden');
+        emailText.textContent = email || '—';
+        segmentText.textContent = labelSegments(segments) || '—';
+      }
+    })();
+  </script>
+</body>
+</html>
