@@ -6,7 +6,7 @@
   <title>Confirm your subscription | Safe Freight Program</title>
   <meta name="robots" content="noindex" />
 
-  <!-- Favicons (match homepage) -->
+  <!-- Favicons (match site) -->
   <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png?v=2">
   <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png?v=2">
   <link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png?v=2">
@@ -17,75 +17,127 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-50 text-gray-800 font-sans">
-
+<body class="bg-gray-50 text-gray-900 font-sans">
   <!-- Header -->
   <div id="header-placeholder"></div>
 
-  <main class="max-w-2xl mx-auto px-6 py-20">
+  <main class="max-w-3xl mx-auto px-6 py-14 md:py-20">
+    <!-- Outer card with subtle shadow -->
+    <section class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+      <!-- Accent rail + content -->
+      <div class="grid md:grid-cols-[10px_1fr]">
+        <!-- Accent rail (subtle, intentional) -->
+        <div class="bg-blue-900/90 hidden md:block"></div>
 
-    <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-10">
+        <div class="p-8 md:p-10">
+          <!-- Top meta row -->
+          <div class="flex items-start justify-between gap-6">
+            <div class="min-w-0">
+              <div class="text-xs tracking-widest uppercase text-gray-500">
+                Subscription
+              </div>
+              <h1 class="mt-2 text-2xl md:text-3xl font-semibold tracking-tight">
+                Confirm your subscription
+              </h1>
+              <p class="mt-3 text-gray-600 leading-relaxed max-w-prose">
+                We’ve sent a confirmation email. Your subscription will activate once the confirmation link is selected.
+              </p>
+            </div>
 
-      <h1 class="text-2xl font-semibold text-gray-900">
-        Confirm your subscription
-      </h1>
+            <!-- Small icon tile (visual interest, not noisy) -->
+            <div class="shrink-0">
+              <div class="h-12 w-12 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
+                <!-- envelope icon -->
+                <svg class="h-6 w-6 text-blue-900" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4.2-7.4 4.6a2 2 0 0 1-2.1 0L4 8.2V6l8 5 8-5v2.2z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
 
-      <p class="mt-3 text-gray-600 leading-relaxed">
-        A confirmation email has been sent. Your subscription will be activated once the confirmation link is selected.
-      </p>
+          <!-- Progress indicator -->
+          <div class="mt-8">
+            <div class="flex items-center justify-between text-xs text-gray-500">
+              <span>Step 1 of 2</span>
+              <span>Email confirmation required</span>
+            </div>
+            <div class="mt-2 h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+              <div class="h-full w-1/2 bg-blue-900"></div>
+            </div>
+          </div>
 
-      <!-- Subscriber Details -->
-      <div id="details" class="mt-8 space-y-2 hidden">
-        <div class="text-sm text-gray-500 uppercase tracking-wide">
-          Subscription Details
+          <!-- Details -->
+          <div id="details" class="mt-8 hidden">
+            <div class="rounded-xl border border-gray-200 bg-white">
+              <div class="px-5 py-4 border-b border-gray-200">
+                <div class="text-xs tracking-widest uppercase text-gray-500">Subscription details</div>
+              </div>
+              <div class="px-5 py-5 grid gap-3">
+                <div class="text-sm text-gray-700">
+                  <span class="text-gray-500">Email</span>
+                  <span class="mx-2 text-gray-300">—</span>
+                  <span id="emailText" class="font-medium text-gray-900"></span>
+                </div>
+                <div class="text-sm text-gray-700">
+                  <span class="text-gray-500">List</span>
+                  <span class="mx-2 text-gray-300">—</span>
+                  <span id="segmentText" class="font-medium text-gray-900"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Guidance: clean, structured, low-noise -->
+          <div class="mt-8 grid gap-4">
+            <div class="rounded-xl border border-gray-200 bg-gray-50 px-5 py-4">
+              <div class="text-sm font-medium text-gray-900">What to do now</div>
+              <ul class="mt-2 space-y-2 text-sm text-gray-700 leading-relaxed">
+                <li class="flex gap-2">
+                  <span class="text-gray-400">•</span>
+                  <span>Open the confirmation email and select the confirmation link.</span>
+                </li>
+                <li class="flex gap-2">
+                  <span class="text-gray-400">•</span>
+                  <span>If you can’t see the email, check Junk/Spam and Promotions.</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="rounded-xl border border-gray-200 bg-white px-5 py-4">
+              <div class="text-sm font-medium text-gray-900">If it hasn’t arrived</div>
+              <p class="mt-2 text-sm text-gray-700 leading-relaxed">
+                Wait several minutes, then try subscribing again. If the issue persists, contact support.
+              </p>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="mt-10 flex flex-wrap gap-3">
+            <a href="/index.html"
+               class="inline-flex items-center justify-center rounded-lg bg-blue-900 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-800 transition">
+              Back to Home
+            </a>
+
+            <a href="/subscribe.html"
+               class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition">
+              Subscribe a different email
+            </a>
+          </div>
+
+          <!-- Footer note -->
+          <div class="mt-10 pt-6 border-t border-gray-200 text-xs text-gray-500 leading-relaxed">
+            Safe Freight Program — subscription confirmation required.<br/>
+            Support: <a href="mailto:support@safefreightprogram.com" class="underline hover:text-gray-700">support@safefreightprogram.com</a>
+          </div>
         </div>
-
-        <div class="text-sm">
-          <span class="text-gray-500">Email:</span>
-          <span id="emailText" class="font-medium text-gray-900 ml-1"></span>
-        </div>
-
-        <div class="text-sm">
-          <span class="text-gray-500">List:</span>
-          <span id="segmentText" class="font-medium text-gray-900 ml-1"></span>
-        </div>
       </div>
-
-      <hr class="my-10 border-gray-200">
-
-      <div class="space-y-4 text-sm text-gray-700 leading-relaxed">
-        <p>
-          If the email is not visible, check Junk, Spam or Promotions folders.
-        </p>
-        <p>
-          If it has not arrived after several minutes, you may subscribe again or contact support.
-        </p>
-      </div>
-
-      <div class="mt-10 flex gap-4 flex-wrap">
-        <a href="/index.html"
-           class="px-5 py-2.5 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 transition">
-          Back to Home
-        </a>
-
-        <a href="/subscribe.html"
-           class="px-5 py-2.5 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition">
-          Subscribe a different email
-        </a>
-      </div>
-
-      <div class="mt-10 text-xs text-gray-500">
-        Safe Freight Program — subscription confirmation required.<br>
-        Support: <a href="mailto:support@safefreightprogram.com" class="underline">support@safefreightprogram.com</a>
-      </div>
-
     </section>
   </main>
 
   <!-- Footer -->
   <div id="footer-placeholder"></div>
 
-  <!-- Scripts (match homepage structure) -->
+  <!-- Loader (your existing fragment system) -->
   <script src="/js/load-header-footer.js" defer></script>
 
   <script>
@@ -116,6 +168,5 @@
       }
     })();
   </script>
-
 </body>
 </html>
