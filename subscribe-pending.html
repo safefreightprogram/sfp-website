@@ -4,123 +4,91 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Confirm your subscription | Safe Freight Program</title>
-
   <meta name="robots" content="noindex" />
 
-  <!-- Match site favicons (copied from index.html) -->
+  <!-- Favicons (match homepage) -->
   <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png?v=2">
   <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png?v=2">
   <link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png?v=2">
   <link rel="manifest" href="/public/site.webmanifest?v=2">
   <link rel="mask-icon" href="/public/safari-pinned-tab.svg?v=2" color="#1e40af">
-  <meta name="msapplication-TileColor" content="#1e40af">
   <meta name="theme-color" content="#ffffff">
 
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Meta -->
-  <meta name="description" content="Confirm your Safe Freight Program newsletter subscription." />
 </head>
 
 <body class="bg-gray-50 text-gray-800 font-sans">
-  <!-- Injected Header -->
+
+  <!-- Header -->
   <div id="header-placeholder"></div>
 
-  <main class="max-w-3xl mx-auto px-4 py-10">
-    <section class="bg-white rounded-xl border shadow-sm p-6 md:p-8">
-      <div class="flex items-start gap-4">
-        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 border border-blue-100">
-          <!-- envelope icon -->
-          <svg class="h-6 w-6 text-blue-700" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4.2-7.4 4.6a2 2 0 0 1-2.1 0L4 8.2V6l8 5 8-5v2.2z"/>
-          </svg>
+  <main class="max-w-2xl mx-auto px-6 py-20">
+
+    <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-10">
+
+      <h1 class="text-2xl font-semibold text-gray-900">
+        Confirm your subscription
+      </h1>
+
+      <p class="mt-3 text-gray-600 leading-relaxed">
+        A confirmation email has been sent. Your subscription will be activated once the confirmation link is selected.
+      </p>
+
+      <!-- Subscriber Details -->
+      <div id="details" class="mt-8 space-y-2 hidden">
+        <div class="text-sm text-gray-500 uppercase tracking-wide">
+          Subscription Details
         </div>
 
-        <div class="flex-1">
-          <h1 class="text-xl md:text-2xl font-bold text-gray-900">Confirm your subscription</h1>
-          <p class="mt-1 text-sm md:text-base text-gray-600">
-            We’ve sent a confirmation email. Your subscription will be activated once you click the confirmation link.
-          </p>
+        <div class="text-sm">
+          <span class="text-gray-500">Email:</span>
+          <span id="emailText" class="font-medium text-gray-900 ml-1"></span>
+        </div>
 
-          <!-- Details chips -->
-          <div id="details" class="mt-4 flex flex-wrap gap-2" style="display:none;">
-            <div class="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-sm">
-              <span class="text-gray-500">Email:</span>
-              <span id="emailText" class="font-semibold text-gray-900"></span>
-            </div>
-            <div class="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-sm">
-              <span class="text-gray-500">List:</span>
-              <span id="segmentText" class="font-semibold text-gray-900"></span>
-            </div>
-          </div>
-
-          <!-- Guidance panels -->
-          <div class="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-            If you confirm from a work device, check your inbox and click the link. This prevents unauthorised signups.
-          </div>
-
-          <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            Can’t see the email? Check Junk/Spam and Promotions. If it’s still missing after a few minutes, try subscribing again or contact support.
-          </div>
+        <div class="text-sm">
+          <span class="text-gray-500">List:</span>
+          <span id="segmentText" class="font-medium text-gray-900 ml-1"></span>
         </div>
       </div>
 
-      <hr class="my-6" />
+      <hr class="my-10 border-gray-200">
 
-      <!-- What happens next -->
-      <div class="space-y-3">
-        <div class="flex gap-3">
-          <div class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-800 text-xs font-bold">1</div>
-          <p class="text-sm md:text-base text-gray-700">
-            Open the confirmation email and click the confirmation link.
-          </p>
-        </div>
-        <div class="flex gap-3">
-          <div class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-800 text-xs font-bold">2</div>
-          <p class="text-sm md:text-base text-gray-700">
-            Once confirmed, you’ll receive future editions based on your selected list.
-          </p>
-        </div>
-        <div class="flex gap-3">
-          <div class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-800 text-xs font-bold">3</div>
-          <p class="text-sm md:text-base text-gray-700">
-            You can unsubscribe at any time using the link included in each email.
-          </p>
-        </div>
+      <div class="space-y-4 text-sm text-gray-700 leading-relaxed">
+        <p>
+          If the email is not visible, check Junk, Spam or Promotions folders.
+        </p>
+        <p>
+          If it has not arrived after several minutes, you may subscribe again or contact support.
+        </p>
       </div>
 
-      <!-- Actions -->
-      <div class="mt-6 flex flex-wrap gap-3">
-        <a href="/" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-white font-semibold hover:bg-blue-700 transition">
+      <div class="mt-10 flex gap-4 flex-wrap">
+        <a href="/index.html"
+           class="px-5 py-2.5 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 transition">
           Back to Home
         </a>
-        <a href="/subscribe.html" class="inline-flex items-center justify-center rounded-lg border px-4 py-2.5 font-semibold text-gray-800 hover:bg-gray-50 transition">
+
+        <a href="/subscribe.html"
+           class="px-5 py-2.5 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition">
           Subscribe a different email
         </a>
       </div>
 
-      <div class="mt-6 text-xs text-gray-500">
-        Need help? Contact <a class="underline hover:text-gray-700" href="mailto:support@safefreightprogram.com">support@safefreightprogram.com</a><br/>
-        Safe Freight Program – subscription confirmation required.
+      <div class="mt-10 text-xs text-gray-500">
+        Safe Freight Program — subscription confirmation required.<br>
+        Support: <a href="mailto:support@safefreightprogram.com" class="underline">support@safefreightprogram.com</a>
       </div>
+
     </section>
   </main>
 
-  <!-- Injected Footer -->
+  <!-- Footer -->
   <div id="footer-placeholder"></div>
 
-  <!-- Keep consistent with your site pattern (copied from index.html) -->
-  <script type="module" src="/js/sfp-auth.js"></script>
-  <script type="module" src="/js/sfp-api.js"></script>
-  <script src="/js/sfp-gas-fetch-patch.js"></script>
-  <script src="/js/sfp-config.js"></script>
+  <!-- Scripts (match homepage structure) -->
   <script src="/js/load-header-footer.js" defer></script>
-  <script src="/js/account-indicator.js" defer></script>
-  <script src="/js/role-guards.js" defer></script>
-  <script src="/js/menu-enhance.js" defer></script>
 
   <script>
-    // Reads ?email=...&segments=pro,driver and displays them.
     (function () {
       const params = new URLSearchParams(window.location.search);
       const email = (params.get('email') || '').trim();
@@ -133,7 +101,6 @@
       function labelSegments(value) {
         if (!value) return '';
         const list = value.split(',').map(s => s.trim()).filter(Boolean);
-        if (!list.length) return '';
         const labels = list.map(s => {
           if (s === 'pro') return 'CoR Intel Weekly';
           if (s === 'driver') return 'Safe Freight Mate';
@@ -143,11 +110,12 @@
       }
 
       if (email || segments) {
-        details.style.display = 'flex';
+        details.classList.remove('hidden');
         emailText.textContent = email || '—';
         segmentText.textContent = labelSegments(segments) || '—';
       }
     })();
   </script>
+
 </body>
 </html>
