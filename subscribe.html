@@ -345,7 +345,7 @@ const API_BASE_URL = window.location.hostname === 'localhost'
         return;
       }
 
-      window.location.href = `/subscribe-thanks.html?email=${encodeURIComponent(email)}&segments=${encodeURIComponent(segment)}`;
+      window.location.href = `/subscribe-pending.html?email=${encodeURIComponent(email)}&segments=${encodeURIComponent(segment)}`;
 
     } catch (err) {
       showMessage('error', 'Network error. Please try again.');
