@@ -305,19 +305,12 @@ const API_BASE_URL = window.location.hostname === 'localhost'
       return;
     }
 
-    // TEMP: enforce single segment until backend supports multiple
-    if (checked.length > 1) {
-      showMessage('error', 'Please select only one edition for now.');
-      return;
-    }
-
     const email = document.getElementById('email')?.value?.trim();
     const name = document.getElementById('name')?.value?.trim();
     const company = document.getElementById('company')?.value?.trim();
     const role = document.getElementById('role')?.value;
     const consent = document.getElementById('consent')?.checked;
-    const segment = checked[0].value;
-
+const segments = Array.from(checked).map(el => el.value);
     if (!email) {
       showMessage('error', 'Email is required.');
       return;
@@ -334,7 +327,7 @@ const API_BASE_URL = window.location.hostname === 'localhost'
       const response = await fetch(`${API_BASE_URL}/api/subscribers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, company, role, segment })
+        body: JSON.stringify({ email, name, company, role, segments })
       });
 
       const data = await response.json().catch(() => ({}));
@@ -345,7 +338,7 @@ const API_BASE_URL = window.location.hostname === 'localhost'
         return;
       }
 
-      window.location.href = `/subscribe-pending.html?email=${encodeURIComponent(email)}&segments=${encodeURIComponent(segment)}`;
+      window.location.href = `/subscribe-pending.html?email=${encodeURIComponent(email)}&segments=${encodeURIComponent(segments.join(','))}`;
 
     } catch (err) {
       showMessage('error', 'Network error. Please try again.');
