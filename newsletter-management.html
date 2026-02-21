@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en-AU">
 <head>
@@ -2045,92 +2046,14 @@ if (data.data) {
             }
         }
 
-<script>
 async function loadSubscriberList() {
   try {
     const res = await fetch(API_BASE_URL + '/api/subscribers', { credentials: 'omit' });
     const json = await res.json();
 
-    const proRaw = (json?.data?.pro?.subscribers || []);
-    const drvRaw = (json?.data?.driver?.subscribers || []);
-
-    const pro = proRaw.map(normalizeSubscriberRow);
-    const driver = drvRaw.map(normalizeSubscriberRow);
-
-    // ---- DEDUPE + MERGE (key by email; merge segments) ----
-    const mergedByEmail = new Map();
-
-    function upsert(row) {
-      if (!row?.email) return;
-      const key = row.email.toLowerCase();
-
-      if (!mergedByEmail.has(key)) {
-        // clone
-        mergedByEmail.set(key, {
-          ...row,
-          segments: Array.isArray(row.segments) ? [...row.segments] : []
-        });
-        return;
-      }
-
-      const existing = mergedByEmail.get(key);
-
-      // Merge segments (union)
-      const segSet = new Set([...(existing.segments || []), ...(row.segments || [])]);
-      existing.segments = Array.from(segSet);
-
-      // Keep a stable subscriberId (prefer existing, else row)
-      existing.subscriberId = existing.subscriberId || row.subscriberId;
-
-      // Prefer a non-empty name
-      if (!existing.name && row.name) existing.name = row.name;
-
-      // Prefer the "most recent" timestamps if present (string compare ok for ISO)
-      if (row.updatedAt && (!existing.updatedAt || row.updatedAt > existing.updatedAt)) existing.updatedAt = row.updatedAt;
-      if (row.confirmedAt && (!existing.confirmedAt || row.confirmedAt > existing.confirmedAt)) existing.confirmedAt = row.confirmedAt;
-
-      // Prefer active status if either is active
-      if (existing.status !== 'active' && row.status === 'active') existing.status = 'active';
-
-      mergedByEmail.set(key, existing);
-    }
-
-    [...pro, ...driver].forEach(upsert);
-
-    // Final list for table
-    const allUnique = Array.from(mergedByEmail.values()).map(s => {
-      // Rebuild CSV label for display
-      const segs = Array.isArray(s.segments) ? s.segments : [];
-      return { ...s, segmentCsv: segs.join(', ') };
-    });
-
-    // ---- FILTER SUPPORT (dropdown) ----
-    const filter = (document.getElementById('subscriberSegmentFilter')?.value || '').toLowerCase();
-    let toRender = allUnique;
-
-    if (filter === 'pro') toRender = allUnique.filter(s => (s.segments || []).includes('pro'));
-    if (filter === 'driver') toRender = allUnique.filter(s => (s.segments || []).includes('driver'));
-
-    // ---- Update summary tiles (guarded) ----
-    const totalActive = json?.data?.summary?.totalActive ?? allUnique.length;
-
-    const elTotal = document.getElementById('tileTotalActive');
-    const elPro   = document.getElementById('tileProActive');
-    const elDrv   = document.getElementById('tileDriverActive');
-
-    if (elTotal) elTotal.textContent = totalActive;
-    if (elPro)   elPro.textContent   = allUnique.filter(s => (s.segments || []).includes('pro')).length;
-    if (elDrv)   elDrv.textContent   = allUnique.filter(s => (s.segments || []).includes('driver')).length;
-
-    // Render table (unique rows)
-    renderSubscribersTable(toRender);
-
-  } catch (e) {
-    console.error('loadSubscriberList error:', e);
-    showToast('Failed to load subscribers', 'error');
-  }
-}
-</script>
+    const pro = (json?.data?.pro?.subscribers || []).map(normalizeSubscriberRow);
+    const driver = (json?.data?.driver?.subscribers || []).map(normalizeSubscriberRow);
+    const all = [...pro, ...driver];
 
    // Update summary tiles (guarded)
 const totalActive = json?.data?.summary?.totalActive ?? all.length;
