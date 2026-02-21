@@ -149,7 +149,7 @@
 
     <div class="max-w-7xl mx-auto px-4 py-6">
         <!-- Enhanced System Status Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center justify-between">
                     <div>
@@ -218,6 +218,20 @@
                     </div>
                 </div>
             </div>
+            <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <p class="text-sm font-medium text-gray-600">Active Subscriptions</p>
+            <p id="activeSubscriptions" class="text-2xl font-bold text-gray-900">0</p>
+            <p class="text-xs text-gray-500">Pro + Driver (double-counts dual opt-in)</p>
+        </div>
+        <div class="p-3 bg-slate-100 rounded-full">
+            <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h2M9 7h6m-6 4h6m-6 8h6"></path>
+            </svg>
+        </div>
+    </div>
+</div>
         </div>
         <!-- Tab Navigation -->
         <div class="bg-white rounded-lg shadow mb-8">
@@ -1931,13 +1945,21 @@ if (data.data) {
             }
 
             // Update UI elements
-            const totalElement = document.getElementById('totalSubscribers');
-            const proElement = document.getElementById('proSubscriberCount');
-            const driverElement = document.getElementById('driverSubscriberCount');
-            
-            if (totalElement) totalElement.textContent = totalSubs;
-            if (proElement) proElement.textContent = proCount;
-            if (driverElement) driverElement.textContent = driverCount;
+           const totalElement = document.getElementById('totalSubscribers');
+const proElement = document.getElementById('proSubscriberCount');
+const driverElement = document.getElementById('driverSubscriberCount');
+const activeSubscriptionsElement = document.getElementById('activeSubscriptions');
+
+// NOTE:
+// totalSubs is "unique active subscribers" if your API provides summary.totalActive.
+// Otherwise it falls back to pro+driver counts (subscriptions). We keep existing behaviour.
+// activeSubscriptions is ALWAYS proCount + driverCount.
+const activeSubscriptions = proCount + driverCount;
+
+if (totalElement) totalElement.textContent = totalSubs;
+if (proElement) proElement.textContent = proCount;
+if (driverElement) driverElement.textContent = driverCount;
+if (activeSubscriptionsElement) activeSubscriptionsElement.textContent = activeSubscriptions;
             
             // Update charts ONLY if they exist and are properly initialized
             if (window.growthChart && 
