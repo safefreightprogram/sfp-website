@@ -109,32 +109,31 @@
   <script src="/js/load-header-footer.js" defer></script>
 
   <script>
-    (function () {
-      const params = new URLSearchParams(window.location.search);
-      const email = (params.get('email') || '').trim();
-      const segments = (params.get('segments') || '').trim();
+  (function () {
+    const params = new URLSearchParams(window.location.search);
+    const email = (params.get('email') || '').trim();
 
-      const details = document.getElementById('details');
-      const emailText = document.getElementById('emailText');
-      const segmentText = document.getElementById('segmentText');
+    // NEW: the newsletter that was actually unsubscribed
+    const unsubscribedSegment = (params.get('segment') || '').trim().toLowerCase();
 
-      function labelSegments(value) {
-        if (!value) return '';
-        const list = value.split(',').map(s => s.trim()).filter(Boolean);
-        const labels = list.map(s => {
-          if (s === 'pro') return 'CoR Intel Weekly';
-          if (s === 'driver') return 'Safe Freight Mate';
-          return s;
-        });
-        return labels.join(', ');
-      }
+    const details = document.getElementById('details');
+    const emailText = document.getElementById('emailText');
+    const segmentText = document.getElementById('segmentText');
 
-      if (email || segments) {
-        details.classList.remove('hidden');
-        emailText.textContent = email || '—';
-        segmentText.textContent = labelSegments(segments) || '—';
-      }
-    })();
-  </script>
+    function labelSingleSegment(value) {
+      if (!value) return '';
+      if (value === 'pro') return 'CoR Intel Weekly';
+      if (value === 'driver') return 'Safe Freight Mate';
+      if (value === 'all') return 'All newsletters';
+      return value;
+    }
+
+    if (email || unsubscribedSegment) {
+      details.classList.remove('hidden');
+      emailText.textContent = email || '—';
+      segmentText.textContent = labelSingleSegment(unsubscribedSegment) || '—';
+    }
+  })();
+</script>
 </body>
 </html>
