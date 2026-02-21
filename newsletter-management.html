@@ -2051,27 +2051,71 @@ async function loadSubscriberList() {
     const res = await fetch(API_BASE_URL + '/api/subscribers', { credentials: 'omit' });
     const json = await res.json();
 
-    const pro = (json?.data?.pro?.subscribers || []).map(normalizeSubscriberRow);
-    const driver = (json?.data?.driver?.subscribers || []).map(normalizeSubscriberRow);
-    const all = [...pro, ...driver];
+    const proRows = (json?.data?.pro?.subscribers || []);
+    const driverRows = (json?.data?.driver?.subscribers || []);
 
-   // Update summary tiles (guarded)
-const totalActive = json?.data?.summary?.totalActive ?? all.length;
+    // Normalise everything first
+    const pro = proRows.map(normalizeSubscriberRow);
+    const driver = driverRows.map(normalizeSubscriberRow);
 
-const elTotal = document.getElementById('tileTotalActive');
-const elPro   = document.getElementById('tileProActive');
-const elDrv   = document.getElementById('tileDriverActive');
+    // De-dupe + MERGE so one person appears once, with segments combined (pro, driver)
+    // Key choice: email is safest here because subscriberId may differ across segment lists
+    const byEmail = new Map();
 
-if (elTotal) elTotal.textContent = totalActive;
-if (elPro)   elPro.textContent   = pro.length;
-if (elDrv)   elDrv.textContent   = driver.length;
+    function upsert(row) {
+      const key = (row.email || '').toLowerCase().trim();
+      if (!key) return;
 
+      const existing = byEmail.get(key);
+      if (!existing) {
+        byEmail.set(key, {
+          ...row,
+          segments: Array.from(new Set(row.segments || [])),
+          segmentCsv: (row.segments || []).join(', ')
+        });
+        return;
+      }
 
-    // Render table (use your existing render function; below is illustrative)
+      const mergedSegments = Array.from(new Set([...(existing.segments || []), ...(row.segments || [])]));
+      existing.segments = mergedSegments;
+      existing.segmentCsv = mergedSegments.join(', ');
+
+      // Keep a sensible "best" status (active beats pending beats unsubscribed)
+      const rank = (s) => (s === 'active' ? 3 : s === 'pending' ? 2 : s === 'paused' ? 1 : 0);
+      if (rank(row.status) > rank(existing.status)) existing.status = row.status;
+
+      // Keep latest timestamps if present
+      const toTime = (v) => {
+        const t = Date.parse(v || '');
+        return Number.isFinite(t) ? t : 0;
+      };
+      if (toTime(row.updatedAt) > toTime(existing.updatedAt)) existing.updatedAt = row.updatedAt;
+      if (toTime(row.confirmedAt) > toTime(existing.confirmedAt)) existing.confirmedAt = row.confirmedAt;
+
+      // Prefer a real subscriberId if one is missing
+      if (!existing.subscriberId && row.subscriberId) existing.subscriberId = row.subscriberId;
+    }
+
+    [...pro, ...driver].forEach(upsert);
+
+    // Build final list
+    let all = Array.from(byEmail.values());
+
+    // Apply Segment filter (dropdown on Subscribers tab)
+    const filter = (document.getElementById('subscriberSegmentFilter')?.value || '').trim().toLowerCase();
+    if (filter) {
+      all = all.filter(s => (s.segments || []).includes(filter));
+    }
+
+    // Optional: stable sort
+    all.sort((a, b) => (a.email || '').localeCompare(b.email || ''));
+
+    // Update the count tiles you already render elsewhere via loadSubscriberStats()
+    // (leave the table render here)
     renderSubscribersTable(all);
   } catch (e) {
     console.error('loadSubscriberList error:', e);
-showToast('Failed to load subscribers', 'error');
+    showToast('Failed to load subscribers', 'error');
   }
 }
 
