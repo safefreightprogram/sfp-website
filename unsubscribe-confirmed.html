@@ -63,7 +63,7 @@
                   <span id="emailText" class="font-medium text-gray-900"></span>
                 </div>
                 <div class="text-sm text-gray-700">
-                  <span class="text-gray-500">List</span>
+                  <span class="text-gray-500">Unsubscribed from</span>
                   <span class="mx-2 text-gray-300">—</span>
                   <span id="segmentText" class="font-medium text-gray-900"></span>
                 </div>
@@ -111,16 +111,21 @@
   <script>
   (function () {
     const params = new URLSearchParams(window.location.search);
+
+    // email always safe to show
     const email = (params.get('email') || '').trim();
 
-    // NEW: the newsletter that was actually unsubscribed
-    const unsubscribedSegment = (params.get('segment') || '').trim().toLowerCase();
+    // "segment" is what they unsubscribed from (pro|driver|all)
+    const unsub = (params.get('segment') || '').trim().toLowerCase();
+
+    // "segments" is what remains subscribed after the update (csv)
+    const remaining = (params.get('segments') || '').trim().toLowerCase();
 
     const details = document.getElementById('details');
     const emailText = document.getElementById('emailText');
     const segmentText = document.getElementById('segmentText');
 
-    function labelSingleSegment(value) {
+    function labelOne(value) {
       if (!value) return '';
       if (value === 'pro') return 'CoR Intel Weekly';
       if (value === 'driver') return 'Safe Freight Mate';
@@ -128,10 +133,21 @@
       return value;
     }
 
-    if (email || unsubscribedSegment) {
+    function labelCsv(value) {
+      if (!value) return '';
+      const list = value.split(',').map(s => s.trim()).filter(Boolean);
+      const labels = list.map(labelOne);
+      return labels.join(', ');
+    }
+
+    // Prefer showing what they unsubscribed from.
+    // If old links hit this page without ?segment=, fall back to showing remaining.
+    const display = unsub ? labelOne(unsub) : labelCsv(remaining);
+
+    if (email || display) {
       details.classList.remove('hidden');
       emailText.textContent = email || '—';
-      segmentText.textContent = labelSingleSegment(unsubscribedSegment) || '—';
+      segmentText.textContent = display || '—';
     }
   })();
 </script>
