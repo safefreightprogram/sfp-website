@@ -2054,13 +2054,13 @@ if (activeSubscriptionsElement) activeSubscriptionsElement.textContent = activeS
                     </td>
                     <td class="py-3 px-3 align-top whitespace-nowrap">
                         <button class="text-blue-600 hover:underline mr-3"
-                                onclick="showEditSubscriberModal('${escapeHtml(s.subscriberId)}')">
-                            Edit
-                        </button>
-                        <button class="text-red-600 hover:underline"
-                                onclick="showDeleteModal('${escapeHtml(s.subscriberId)}')">
-                            Delete
-                        </button>
+        onclick='showEditSubscriberModal(${JSON.stringify(s.subscriberId)})'>
+    Edit
+</button>
+<button class="text-red-600 hover:underline"
+        onclick='showDeleteModal(${JSON.stringify(s.subscriberId)})'>
+    Delete
+</button>
                     </td>
                 `;
 
@@ -2388,13 +2388,7 @@ toggleSpinner('testBtn', 'testSpinner', false);
             }
         }
 
-        // ===== ANALYTICS FUNCTIONS =====
-        function updateCharts() {
-            // Charts are updated in real-time through loadSubscriberStats()
-            // Additional analytics data could be loaded here
-        }
-
-        // ===== UTILITY FUNCTIONS =====
+                // ===== UTILITY FUNCTIONS =====
         function logActivity(msg) {
             const log = document.getElementById('activityLog');
             const div = document.createElement('div');
@@ -2443,16 +2437,6 @@ toggleSpinner('testBtn', 'testSpinner', false);
                 document.getElementById('lastDeploy').value = "Active Deployment";
                 logActivity('ℹ Version endpoint not implemented - using defaults');
             }
-        }
-
-        function refreshData() {
-            logActivity('🔄 Refreshing all data...');
-            checkSystemStatus();
-            loadSubscriberStats();
-            loadSubscriberList();
-            loadAdvancedSchedule();
-            updateCharts();
-            logActivity('✅ Data refresh completed');
         }
 
         // ===== INITIALIZATION =====
