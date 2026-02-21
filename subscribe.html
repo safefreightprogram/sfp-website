@@ -338,7 +338,23 @@ const segments = Array.from(checked).map(el => el.value);
         return;
       }
 
-      window.location.href = `/subscribe-pending.html?email=${encodeURIComponent(email)}&segments=${encodeURIComponent(segments.join(','))}`;
+      const msg = (data.message || '').toString().trim();
+const serverSegments = (data.data && data.data.segments) ? String(data.data.segments) : segments.join(',');
+
+// New signup (double opt-in) -> pending page
+if (msg === 'Subscriber created (pending) — confirmation email sent') {
+  window.location.href =
+    `/subscribe-pending.html?email=${encodeURIComponent(email)}&segments=${encodeURIComponent(segments.join(','))}`;
+} else {
+  // Existing subscriber: segment added / already subscribed / reactivated -> confirmed page
+  // mode values: updated | already | reactivated
+  let mode = 'updated';
+  if (msg === 'Subscriber already subscribed to selected list(s)') mode = 'already';
+  if (msg === 'Subscription reactivated successfully') mode = 'reactivated';
+
+  window.location.href =
+    `/subscribe-confirmed.html?email=${encodeURIComponent(email)}&segments=${encodeURIComponent(serverSegments)}&mode=${encodeURIComponent(mode)}`;
+}
 
     } catch (err) {
       showMessage('error', 'Network error. Please try again.');
