@@ -1,15 +1,11 @@
-<!-- /components/header.html — minimal: logo + search + account + hamburger (no Alpine) -->
+<!-- /components/header.html — minimal: logo + search + account + hamburger (div-based dropdowns; iOS reliable) -->
 <header class="bg-blue-900 text-white sticky top-0 z-50 shadow">
-  <style>
-    /* Hide default disclosure markers for <summary> in some browsers */
-    header summary::-webkit-details-marker { display: none; }
-  </style>
-
   <div class="relative max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-    <!-- Left: Logo (add backing plate for reliable contrast on all devices) -->
+
+    <!-- Left: Logo -->
     <a href="/index.html" class="flex items-center gap-3 transition-transform hover:scale-[1.05]">
-  <img src="/SFP-Logo.png" alt="Safe Freight Program" class="h-9 max-h-9 w-auto block">
-</a>
+      <img src="/SFP-Logo.png" alt="Safe Freight Program" class="h-9 max-h-9 w-auto block">
+    </a>
 
     <!-- Center: (optional) page title placeholder -->
     <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -18,48 +14,55 @@
 
     <!-- Right: Search • Account • Hamburger -->
     <div class="flex items-center gap-2">
+
       <!-- Search -->
-      <details class="relative">
-        <summary class="list-none inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 cursor-pointer" aria-label="Search">
+      <div class="relative" id="sfp-dd-search">
+        <button type="button"
+          class="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 cursor-pointer"
+          aria-label="Search" data-sfp-toggle="sfp-dd-search">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M21 21l-4.35-4.35M10 18a8 8 0 110-16 8 8 0 010 16z"/>
           </svg>
-        </summary>
-        <div class="absolute right-0 mt-2 w-80 max-w-[90vw] rounded-lg border border-white/10 bg-blue-900/95 backdrop-blur p-2 shadow-lg z-50">
+        </button>
+
+        <div data-sfp-panel="sfp-dd-search"
+             class="hidden absolute right-0 mt-2 w-80 max-w-[90vw] rounded-lg border border-white/10 bg-blue-900/95 backdrop-blur p-2 shadow-lg z-50">
           <input id="sfp-header-search" type="search" placeholder="Type a word and press Enter"
                  class="w-full rounded-md px-3 py-2 text-sm text-gray-900"
                  onkeydown="if(event.key==='Enter'){window.location.href='/search.html?q='+encodeURIComponent(this.value)}">
         </div>
-      </details>
+      </div>
 
-     <!-- Account (wrap in <details> so it behaves like Search/Menu on mobile) -->
-<details class="relative inline-block">
-  <summary class="list-none inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 cursor-pointer" aria-label="Account">
-    <!-- The account-indicator script can replace the contents of this mount -->
-    <span id="account-indicator" class="inline-flex items-center justify-center min-h-9 min-w-9"></span>
-  </summary>
+      <!-- Account -->
+      <div class="relative" id="sfp-dd-account">
+        <button type="button"
+          class="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 cursor-pointer"
+          aria-label="Account" data-sfp-toggle="sfp-dd-account">
+          <span id="account-indicator" class="inline-flex items-center justify-center min-h-9 min-w-9"></span>
+        </button>
 
-  <!-- Panel content will be injected by account-indicator.js into #account-indicator-mobile.
-       This panel is just a consistent container so the account popover can close siblings. -->
-  <div class="absolute right-0 mt-2 w-56 rounded-lg border border-white/10 bg-blue-900/95 shadow-lg overflow-hidden z-50">
-    <div class="py-2">
-      <span id="account-indicator-mobile" class="block px-4 py-2 opacity-90"></span>
-    </div>
-  </div>
-</details>
+        <div data-sfp-panel="sfp-dd-account"
+             class="hidden absolute right-0 mt-2 w-56 rounded-lg border border-white/10 bg-blue-900/95 shadow-lg overflow-hidden z-50">
+          <div class="py-2">
+            <span id="account-indicator-mobile" class="block px-4 py-2 opacity-90"></span>
+          </div>
+        </div>
+      </div>
 
-      <!-- Hamburger (always visible) -->
-      <details class="relative inline-block">
-        <summary class="list-none inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 cursor-pointer" aria-label="Menu">
+      <!-- Hamburger -->
+      <div class="relative" id="sfp-dd-menu">
+        <button type="button"
+          class="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 cursor-pointer"
+          aria-label="Menu" data-sfp-toggle="sfp-dd-menu">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
-        </summary>
+        </button>
 
-        <!-- Menu panel -->
-        <nav class="absolute right-0 mt-2 w-72 rounded-lg border border-white/10 bg-blue-900/95 shadow-lg overflow-hidden z-50">
+        <nav data-sfp-panel="sfp-dd-menu"
+             class="hidden absolute right-0 mt-2 w-72 rounded-lg border border-white/10 bg-blue-900/95 shadow-lg overflow-hidden z-50">
           <ul class="py-2">
             <li><a href="/about.html" class="block px-4 py-2 hover:bg-white/10">About</a></li>
             <li><a href="/lookup-driver.html" class="block px-4 py-2 hover:bg-white/10">Driver Lookup</a></li>
@@ -70,59 +73,63 @@
             <li><a href="/trainer-login.html" class="block px-4 py-2 hover:bg-white/10">Trainer Login</a></li>
             <li><a href="/contact.html" class="block px-4 py-2 hover:bg-white/10">Contact</a></li>
             <li><a href="/subscribe.html" class="block px-4 py-2 hover:bg-white/10">Subscribe</a></li>
-            <li><a href="/admin.html" data-requires-role="admin" class="hidden block px-4 py-2 hover:bg-white/10">Admin</a></li>
+            <li><a href="/admin.html" data-requires-role="admin" class="hidden px-4 py-2 hover:bg-white/10">Admin</a></li>
             <li class="border-t border-white/10 mt-2"></li>
             <li><span class="block px-4 py-2 opacity-90"></span></li>
           </ul>
         </nav>
-      </details>
+      </div>
+
     </div>
   </div>
-<script>
-  // Header menus: keep only one <details> open at a time (reliable on iOS WebKit).
-<script>
-  (function () {
-    const header = document.querySelector("header");
-    if (!header) return;
 
-    function allDetails() {
-      return Array.from(header.querySelectorAll("details"));
-    }
+  <script>
+    (function () {
+      const IDS = ['sfp-dd-search', 'sfp-dd-account', 'sfp-dd-menu'];
 
-    header.addEventListener("click", function (e) {
-      const summary = e.target.closest("summary");
-      if (!summary) return;
-
-      const parent = summary.closest("details");
-      if (!parent || !header.contains(parent)) return;
-
-      // Prevent browser from toggling — we control it manually
-      e.preventDefault();
-
-      const wasOpen = parent.open;
-
-      // Close ALL first
-      allDetails().forEach(d => { d.open = false; });
-
-      // If it was closed before click, open it now
-      if (!wasOpen) {
-        parent.open = true;
+      function panel(id) {
+        return document.querySelector('[data-sfp-panel="' + id + '"]');
       }
-    }, true); // capture phase so we get it before browser default
 
-    // Click outside closes everything
-    document.addEventListener("click", function (e) {
-      if (!header.contains(e.target)) {
-        allDetails().forEach(d => { d.open = false; });
+      function closeAll(exceptId) {
+        IDS.forEach(function (id) {
+          if (id === exceptId) return;
+          var p = panel(id);
+          if (p) p.classList.add('hidden');
+        });
       }
-    });
 
-    // Escape closes everything
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") {
-        allDetails().forEach(d => { d.open = false; });
+      function toggle(id) {
+        var p = panel(id);
+        if (!p) return;
+
+        var wasHidden = p.classList.contains('hidden');
+        closeAll(null); // close everything first
+
+        if (wasHidden) {
+          p.classList.remove('hidden');
+
+          if (id === 'sfp-dd-search') {
+            var inp = document.getElementById('sfp-header-search');
+            if (inp) setTimeout(function () { inp.focus(); }, 50);
+          }
+        }
       }
-    });
-  })();
-</script>
+
+      document.querySelectorAll('[data-sfp-toggle]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          toggle(btn.getAttribute('data-sfp-toggle'));
+        });
+      });
+
+      document.addEventListener('click', function () {
+        closeAll(null);
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeAll(null);
+      });
+    })();
+  </script>
 </header>
