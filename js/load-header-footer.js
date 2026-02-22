@@ -29,7 +29,10 @@ const res = await fetch(url + bust, { cache: "no-store" });
 
   (async function init() {
     try {
-  const headerEl = await loadFragment("header-placeholder", "/components/header.html");
+  const headerEl = await loadFragment(
+  "header-placeholder",
+  window.location.origin + "/components/header.html"
+);
   if (headerEl) maybeInjectTitle(headerEl);
 } catch (err) {
   console.error("Failed to load header:", err);
@@ -39,7 +42,10 @@ const res = await fetch(url + bust, { cache: "no-store" });
   if (fallback) fallback.classList.remove("hidden");
 }
     try {
-      await loadFragment("footer-placeholder", "/components/footer.html");
+      await loadFragment(
+  "footer-placeholder",
+  window.location.origin + "/components/footer.html"
+);
     } catch (err) {
       console.error("Failed to load footer:", err);
     }
