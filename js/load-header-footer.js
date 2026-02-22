@@ -1,13 +1,18 @@
 // /js/load-header-footer.js — simple, reliable fragment loader
 (function () {
-  async function loadFragment(targetId, url) {
-    const mount = document.getElementById(targetId);
-    if (!mount) return null;
-    const res = await fetch(url, { cache: "no-cache" });
-    const html = await res.text();
-    mount.innerHTML = html;
-    return mount;
+ async function loadFragment(targetId, url) {
+  const mount = document.getElementById(targetId);
+  if (!mount) return null;
+
+  const res = await fetch(url, { cache: "no-cache" });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch ${url}: ${res.status}`);
   }
+
+  const html = await res.text();
+  mount.innerHTML = html;
+  return mount;
+}
 
   function maybeInjectTitle(rootEl) {
     if (typeof window.injectPageTitle !== "undefined") {
