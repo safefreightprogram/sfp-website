@@ -36,9 +36,20 @@ const res = await fetch(url + bust, { cache: "no-store" });
   if (headerEl) {
   maybeInjectTitle(headerEl);
 
-  // WebKit (iOS Safari/Chrome) can render <details> open after dynamic injection.
-  // Force-close any open details elements in the injected header.
-  headerEl.querySelectorAll("details[open]").forEach(d => d.removeAttribute("open"));
+  // WebKit (iOS Safari/Chrome) can render <details> open after dynamic injection
+// or restore open state via BFCache. Force-close via the property (most reliable),
+// and do it more than once to catch first-paint / restore timing.
+const forceCloseDetails = () => {
+  headerEl.querySelectorAll("details").forEach(d => { d.open = false; });
+};
+
+// Close immediately, then again on next paint, then after a tick.
+forceCloseDetails();
+requestAnimationFrame(forceCloseDetails);
+setTimeout(forceCloseDetails, 0);
+
+// Also close on BFCache restore (common on iOS).
+window.addEventListener("pageshow", forceCloseDetails);
 }
 } catch (err) {
   console.error("Failed to load header:", err);
