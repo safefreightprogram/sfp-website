@@ -35,25 +35,40 @@
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
 
-  <!-- Tailwind CDN safelist: ensure header/footer injected fragments render on iOS WebKit -->
+  <!-- Tailwind CDN safelist: ensure injected header/footer utilities exist on iOS WebKit -->
   <div class="hidden" aria-hidden="true">
-    <!-- header shell -->
+    <!-- Header base -->
     <div class="bg-blue-900 bg-blue-800 bg-blue-700 text-white sticky top-0 z-50 shadow shadow-sm border-b border-gray-200"></div>
     <div class="relative max-w-7xl mx-auto px-4 h-14 flex items-center justify-between overflow-hidden"></div>
+
+    <!-- Logo/title -->
     <div class="flex items-center gap-3 transition-transform hover:scale-[1.05]"></div>
     <img class="h-9 max-h-9 w-auto block" alt="">
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none"></div>
+    <div class="hidden sm:block text-base sm:text-lg font-semibold opacity-95"></div>
 
-    <!-- header icons / controls -->
+    <!-- Right-side controls -->
     <div class="flex items-center gap-2"></div>
-    <button class="p-2 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30"></button>
+    <div class="inline-flex items-center justify-center min-h-9 min-w-9"></div>
+    <button class="p-2 h-9 w-9 inline-flex items-center justify-center rounded-md hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30"></button>
+    <svg class="h-5 w-5 h-6 w-6"></svg>
 
-    <!-- details dropdown menu -->
-    <details class="relative"></details>
+    <!-- Details dropdown primitives -->
+    <details class="relative inline-block"></details>
     <summary class="list-none cursor-pointer"></summary>
-    <div class="absolute right-0 mt-3 w-56 rounded-xl shadow-lg ring-1 ring-white/10 bg-blue-900"></div>
-    <a class="block px-4 py-2 text-sm text-white hover:bg-white/10"></a>
+    <summary class="list-none inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 cursor-pointer"></summary>
 
-    <!-- mobile menu panel -->
+    <!-- Search dropdown -->
+    <div class="absolute right-0 mt-2 w-80 max-w-[90vw] rounded-lg border border-white/10 bg-blue-900/95 backdrop-blur p-2 shadow-lg"></div>
+    <input class="w-full rounded-md px-3 py-2 text-sm text-gray-900" />
+
+    <!-- Hamburger/menu dropdown -->
+    <div class="absolute right-0 mt-2 w-72 rounded-lg border border-white/10 bg-blue-900/95 shadow-lg overflow-hidden"></div>
+    <div class="py-2"></div>
+    <a class="block px-4 py-2 text-sm text-white hover:bg-white/10"></a>
+    <div class="border-t border-white/10 mt-2"></div>
+
+    <!-- Mobile menu panel (if used) -->
     <div class="md:hidden"></div>
     <div class="fixed inset-0 bg-black/20"></div>
     <div class="fixed right-0 top-0 h-full w-72 bg-blue-900 text-white shadow-lg"></div>
