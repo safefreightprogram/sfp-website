@@ -1,5 +1,5 @@
 <!-- /components/header.html — minimal: logo + search + account + hamburger (no Alpine) -->
-<header class="bg-blue-700 text-white sticky top-0 z-50 shadow">
+<header class="bg-blue-900 text-white sticky top-0 z-50 shadow">
   <style>
     /* Hide default disclosure markers for <summary> in some browsers */
     header summary::-webkit-details-marker { display: none; }
@@ -26,7 +26,7 @@
                   d="M21 21l-4.35-4.35M10 18a8 8 0 110-16 8 8 0 010 16z"/>
           </svg>
         </summary>
-        <div class="absolute right-0 mt-2 w-80 max-w-[90vw] rounded-lg border border-white/10 bg-blue-900/95 backdrop-blur p-2 shadow-lg">
+        <div class="absolute right-0 mt-2 w-80 max-w-[90vw] rounded-lg border border-white/10 bg-blue-900/95 backdrop-blur p-2 shadow-lg z-50">
           <input id="sfp-header-search" type="search" placeholder="Type a word and press Enter"
                  class="w-full rounded-md px-3 py-2 text-sm text-gray-900"
                  onkeydown="if(event.key==='Enter'){window.location.href='/search.html?q='+encodeURIComponent(this.value)}">
@@ -46,7 +46,7 @@
         </summary>
 
         <!-- Menu panel -->
-        <nav class="absolute right-0 mt-2 w-72 rounded-lg border border-white/10 bg-blue-900/95 shadow-lg overflow-hidden">
+        <nav class="absolute right-0 mt-2 w-72 rounded-lg border border-white/10 bg-blue-900/95 shadow-lg overflow-hidden z-50">
           <ul class="py-2">
             <li><a href="/about.html" class="block px-4 py-2 hover:bg-white/10">About</a></li>
             <li><a href="/lookup-driver.html" class="block px-4 py-2 hover:bg-white/10">Driver Lookup</a></li>
