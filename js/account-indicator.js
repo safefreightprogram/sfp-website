@@ -134,14 +134,23 @@
   }
 
   // ---------- mount detection (header is injected asynchronously) ----------
-  function startIfReady() {
-    const mount = $("#account-indicator");
-    if (!mount) return false;
-    sync(mount);
-    // keep in sync on auth changes
-    window.addEventListener("sfp-auth-changed", () => sync(mount));
-    return true;
+ function startIfReady() {
+  const mounts = [
+    $("#account-indicator"),
+    $("#account-indicator-mobile"),
+  ].filter(Boolean);
+
+  if (mounts.length === 0) return false;
+
+  function syncAll() {
+    mounts.forEach(sync);
   }
+
+  syncAll();
+  // keep in sync on auth changes
+  window.addEventListener("sfp-auth-changed", syncAll);
+  return true;
+}
 
   if (!startIfReady()) {
     const observer = new MutationObserver(() => {
