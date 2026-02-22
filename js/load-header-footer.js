@@ -12,8 +12,19 @@ const res = await fetch(url + bust, { cache: "no-store" });
     throw new Error(`Failed to fetch ${url}: ${res.status}`);
   }
 
-  const html = await res.text();
+    const html = await res.text();
   mount.innerHTML = html;
+
+  // Tailwind CDN sometimes misses dynamically injected HTML on iOS WebKit.
+  // If available, force Tailwind to re-scan and apply utilities.
+  try {
+    if (window.tailwind && typeof window.tailwind.refresh === "function") {
+      window.tailwind.refresh();
+    }
+  } catch (e) {
+    // no-op: styling should still degrade gracefully
+  }
+
   return mount;
 }
 
