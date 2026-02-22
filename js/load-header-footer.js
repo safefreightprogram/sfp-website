@@ -26,11 +26,15 @@
 
   (async function init() {
     try {
-      const headerEl = await loadFragment("header-placeholder", "/components/header.html");
-      if (headerEl) maybeInjectTitle(headerEl);
-    } catch (err) {
-      console.error("Failed to load header:", err);
-    }
+  const headerEl = await loadFragment("header-placeholder", "/components/header.html");
+  if (headerEl) maybeInjectTitle(headerEl);
+} catch (err) {
+  console.error("Failed to load header:", err);
+
+  // Unhide built-in fallback header if present (page-level fallback)
+  const fallback = document.getElementById("site-header");
+  if (fallback) fallback.classList.remove("hidden");
+}
     try {
       await loadFragment("footer-placeholder", "/components/footer.html");
     } catch (err) {
