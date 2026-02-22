@@ -4,7 +4,10 @@
   const mount = document.getElementById(targetId);
   if (!mount) return null;
 
-  const res = await fetch(url, { cache: "no-cache" });
+  // iOS Safari can serve stale fragments even with cache:"no-cache".
+// Force a cache-busting query param + no-store.
+const bust = (url.includes("?") ? "&" : "?") + "v=" + Date.now();
+const res = await fetch(url + bust, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`Failed to fetch ${url}: ${res.status}`);
   }
