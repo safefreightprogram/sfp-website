@@ -66,31 +66,36 @@
     </div>
   </div>
 <script>
-  // Ensure only one header <details> is open at a time (mobile-friendly).
-  // Also close menus when clicking outside the header.
+  // Header menus: keep only one <details> open at a time (reliable on iOS WebKit).
   (function () {
     const header = document.querySelector("header");
     if (!header) return;
 
-    const details = Array.from(header.querySelectorAll("details"));
+    const allDetails = () => Array.from(header.querySelectorAll("details"));
 
     function closeAll(except) {
-      details.forEach(d => { if (d !== except) d.open = false; });
+      allDetails().forEach(d => { if (d !== except) d.open = false; });
     }
 
-    // When one opens, close the others.
-    details.forEach(d => {
-      d.addEventListener("toggle", () => {
-        if (d.open) closeAll(d);
-      });
-    });
+    // Close siblings as soon as a summary is tapped/clicked (capture phase).
+    header.addEventListener("click", (e) => {
+      const summary = e.target.closest("summary");
+      if (!summary) return;
 
-    // Click outside header closes all.
+      const parentDetails = summary.closest("details");
+      if (!parentDetails) return;
+
+      // If this one is currently closed and about to open, close others first.
+      // If it's open and about to close, leaving others closed is fine.
+      closeAll(parentDetails);
+    }, true);
+
+    // Click outside header closes everything.
     document.addEventListener("click", (e) => {
       if (!header.contains(e.target)) closeAll();
     }, true);
 
-    // Escape closes all.
+    // Escape closes everything.
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") closeAll();
     });
