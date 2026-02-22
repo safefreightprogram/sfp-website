@@ -35,6 +35,30 @@
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
 
+  <!-- Tailwind CDN safelist: ensure header/footer injected fragments render on iOS WebKit -->
+  <div class="hidden" aria-hidden="true">
+    <!-- header shell -->
+    <div class="bg-blue-900 bg-blue-800 bg-blue-700 text-white sticky top-0 z-50 shadow shadow-sm border-b border-gray-200"></div>
+    <div class="relative max-w-7xl mx-auto px-4 h-14 flex items-center justify-between overflow-hidden"></div>
+    <div class="flex items-center gap-3 transition-transform hover:scale-[1.05]"></div>
+    <img class="h-9 max-h-9 w-auto block" alt="">
+
+    <!-- header icons / controls -->
+    <div class="flex items-center gap-2"></div>
+    <button class="p-2 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30"></button>
+
+    <!-- details dropdown menu -->
+    <details class="relative"></details>
+    <summary class="list-none cursor-pointer"></summary>
+    <div class="absolute right-0 mt-3 w-56 rounded-xl shadow-lg ring-1 ring-white/10 bg-blue-900"></div>
+    <a class="block px-4 py-2 text-sm text-white hover:bg-white/10"></a>
+
+    <!-- mobile menu panel -->
+    <div class="md:hidden"></div>
+    <div class="fixed inset-0 bg-black/20"></div>
+    <div class="fixed right-0 top-0 h-full w-72 bg-blue-900 text-white shadow-lg"></div>
+  </div>
+
   <!-- Header placeholder (for partial injection) -->
   <div id="header-placeholder"></div>
 
