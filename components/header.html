@@ -1,4 +1,4 @@
-<!-- /components/header.html — minimal: logo + search + account + hamburger (div-based dropdowns; iOS reliable) -->
+<!-- /components/header.html — div-based dropdowns (no <details>), reliable on iOS WebKit -->
 <header class="bg-blue-900 text-white sticky top-0 z-50 shadow">
   <div class="relative max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
 
@@ -7,18 +7,18 @@
       <img src="/SFP-Logo.png" alt="Safe Freight Program" class="h-9 max-h-9 w-auto block">
     </a>
 
-    <!-- Center: (optional) page title placeholder -->
+    <!-- Center: optional page title placeholder -->
     <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
       <div id="page-title" class="hidden text-base sm:text-lg font-semibold opacity-95"></div>
     </div>
 
-    <!-- Right: Search • Account • Hamburger -->
+    <!-- Right: Search • Account • Menu -->
     <div class="flex items-center gap-2">
 
       <!-- Search -->
       <div class="relative" id="sfp-dd-search">
         <button type="button"
-          class="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 cursor-pointer"
+          class="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10"
           aria-label="Search" data-sfp-toggle="sfp-dd-search">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -30,6 +30,7 @@
              class="hidden absolute right-0 mt-2 w-80 max-w-[90vw] rounded-lg border border-white/10 bg-blue-900/95 backdrop-blur p-2 shadow-lg z-50">
           <input id="sfp-header-search" type="search" placeholder="Type a word and press Enter"
                  class="w-full rounded-md px-3 py-2 text-sm text-gray-900"
+                 autocomplete="off"
                  onkeydown="if(event.key==='Enter'){window.location.href='/search.html?q='+encodeURIComponent(this.value)}">
         </div>
       </div>
@@ -37,7 +38,7 @@
       <!-- Account -->
       <div class="relative" id="sfp-dd-account">
         <button type="button"
-          class="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 cursor-pointer"
+          class="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10"
           aria-label="Account" data-sfp-toggle="sfp-dd-account">
           <span id="account-indicator" class="inline-flex items-center justify-center min-h-9 min-w-9"></span>
         </button>
@@ -50,10 +51,10 @@
         </div>
       </div>
 
-      <!-- Hamburger -->
+      <!-- Menu -->
       <div class="relative" id="sfp-dd-menu">
         <button type="button"
-          class="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 cursor-pointer"
+          class="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10"
           aria-label="Menu" data-sfp-toggle="sfp-dd-menu">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -64,18 +65,16 @@
         <nav data-sfp-panel="sfp-dd-menu"
              class="hidden absolute right-0 mt-2 w-72 rounded-lg border border-white/10 bg-blue-900/95 shadow-lg overflow-hidden z-50">
           <ul class="py-2">
-            <li><a href="/about.html" class="block px-4 py-2 hover:bg-white/10">About</a></li>
-            <li><a href="/lookup-driver.html" class="block px-4 py-2 hover:bg-white/10">Driver Lookup</a></li>
+            <li><a href="/about.html"          class="block px-4 py-2 hover:bg-white/10">About</a></li>
+            <li><a href="/lookup-driver.html"  class="block px-4 py-2 hover:bg-white/10">Driver Lookup</a></li>
             <li><a href="/lookup-vehicle.html" class="block px-4 py-2 hover:bg-white/10">Vehicle Lookup</a></li>
-            <li><a href="/find-ail.html" class="block px-4 py-2 hover:bg-white/10">Find AIL</a></li>
-            <li><a href="/training.html" class="block px-4 py-2 hover:bg-white/10">SFP Training</a></li>
-            <li><a href="/ail-portal.html" class="block px-4 py-2 hover:bg-white/10">AIL Portal</a></li>
-            <li><a href="/trainer-login.html" class="block px-4 py-2 hover:bg-white/10">Trainer Login</a></li>
-            <li><a href="/contact.html" class="block px-4 py-2 hover:bg-white/10">Contact</a></li>
-            <li><a href="/subscribe.html" class="block px-4 py-2 hover:bg-white/10">Subscribe</a></li>
+            <li><a href="/find-ail.html"       class="block px-4 py-2 hover:bg-white/10">Find AIL</a></li>
+            <li><a href="/training.html"       class="block px-4 py-2 hover:bg-white/10">SFP Training</a></li>
+            <li><a href="/ail-portal.html"     class="block px-4 py-2 hover:bg-white/10">AIL Portal</a></li>
+            <li><a href="/trainer-login.html"  class="block px-4 py-2 hover:bg-white/10">Trainer Login</a></li>
+            <li><a href="/contact.html"        class="block px-4 py-2 hover:bg-white/10">Contact</a></li>
+            <li><a href="/subscribe.html"      class="block px-4 py-2 hover:bg-white/10">Subscribe</a></li>
             <li><a href="/admin.html" data-requires-role="admin" class="hidden px-4 py-2 hover:bg-white/10">Admin</a></li>
-            <li class="border-t border-white/10 mt-2"></li>
-            <li><span class="block px-4 py-2 opacity-90"></span></li>
           </ul>
         </nav>
       </div>
@@ -85,7 +84,7 @@
 
   <script>
     (function () {
-      const IDS = ['sfp-dd-search', 'sfp-dd-account', 'sfp-dd-menu'];
+      var IDS = ['sfp-dd-search', 'sfp-dd-account', 'sfp-dd-menu'];
 
       function panel(id) {
         return document.querySelector('[data-sfp-panel="' + id + '"]');
@@ -104,7 +103,7 @@
         if (!p) return;
 
         var wasHidden = p.classList.contains('hidden');
-        closeAll(null); // close everything first
+        closeAll(null);
 
         if (wasHidden) {
           p.classList.remove('hidden');
@@ -118,6 +117,7 @@
 
       document.querySelectorAll('[data-sfp-toggle]').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
+          e.preventDefault();
           e.stopPropagation();
           toggle(btn.getAttribute('data-sfp-toggle'));
         });
@@ -125,7 +125,7 @@
 
       document.addEventListener('click', function () {
         closeAll(null);
-      });
+      }, true);
 
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closeAll(null);
