@@ -33,7 +33,13 @@ const res = await fetch(url + bust, { cache: "no-store" });
   "header-placeholder",
   window.location.origin + "/components/header.html"
 );
-  if (headerEl) maybeInjectTitle(headerEl);
+  if (headerEl) {
+  maybeInjectTitle(headerEl);
+
+  // WebKit (iOS Safari/Chrome) can render <details> open after dynamic injection.
+  // Force-close any open details elements in the injected header.
+  headerEl.querySelectorAll("details[open]").forEach(d => d.removeAttribute("open"));
+}
 } catch (err) {
   console.error("Failed to load header:", err);
 
