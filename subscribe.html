@@ -29,8 +29,9 @@
     #site-header img, #site-header svg, #header-placeholder img, #header-placeholder svg {
       max-height: 40px; width: auto; height: auto;
     }
-    /* Ensure any raw images in the header don’t expand the layout */
-    #site-header, #header-placeholder { overflow: hidden; }
+        /* Keep fallback header contained; allow injected header dropdowns to render */
+    #site-header { overflow: hidden; }
+    #header-placeholder { overflow: visible; }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
