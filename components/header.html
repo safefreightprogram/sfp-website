@@ -33,8 +33,21 @@
         </div>
       </details>
 
-      <!-- Account indicator (now visible mount point) -->
-      <div id="account-indicator" class="inline-flex items-center justify-center min-h-9 min-w-9"></div>
+     <!-- Account (wrap in <details> so it behaves like Search/Menu on mobile) -->
+<details class="relative inline-block">
+  <summary class="list-none inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-white/10 cursor-pointer" aria-label="Account">
+    <!-- The account-indicator script can replace the contents of this mount -->
+    <span id="account-indicator" class="inline-flex items-center justify-center min-h-9 min-w-9"></span>
+  </summary>
+
+  <!-- Panel content will be injected by account-indicator.js into #account-indicator-mobile.
+       This panel is just a consistent container so the account popover can close siblings. -->
+  <div class="absolute right-0 mt-2 w-56 rounded-lg border border-white/10 bg-blue-900/95 shadow-lg overflow-hidden z-50">
+    <div class="py-2">
+      <span id="account-indicator-mobile" class="block px-4 py-2 opacity-90"></span>
+    </div>
+  </div>
+</details>
 
       <!-- Hamburger (always visible) -->
       <details class="relative inline-block">
