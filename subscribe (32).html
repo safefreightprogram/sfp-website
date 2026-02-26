@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subscribe to Safe Freight Intel – Safe Freight Program</title>
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png?v=2">
+  <link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png?v=2">
+  <link rel="manifest" href="/public/site.webmanifest?v=2">
+  <link rel="mask-icon" href="/public/safari-pinned-tab.svg?v=2" color="#1e40af">
+  <meta name="msapplication-TileColor" content="#1e40af">
+  <meta name="theme-color" content="#ffffff">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <meta name="description" content="Stay informed with CoR Intel Weekly for professionals and Safe Freight Mate for drivers." />
+  <meta property="og:title" content="Safe Freight Intel Newsletter" />
+  <meta property="og:description" content="Professional compliance intelligence for Australia's freight industry" />
+
+  <style>
+    @keyframes fadeInUp {
+      0%   { opacity: 0; transform: translateY(16px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeInUp { animation: fadeInUp 0.5s ease-out both; }
+
+    /* ── Edition card states ── */
+    .edition-card {
+      transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+      cursor: pointer;
+      user-select: none;
+    }
+    .edition-card.selected {
+      border-color: #1e40af !important;
+      background-color: #eff6ff !important;
+      box-shadow: inset 3px 0 0 #1e40af;
+    }
+
+    .card-check { transition: background-color 0.15s, border-color 0.15s; }
+    .edition-card.selected .card-check {
+      background-color: #1e40af;
+      border-color: #1e40af;
+    }
+    .card-check-tick { display: none; }
+    .edition-card.selected .card-check-tick { display: block; }
+
+    .card-icon { color: #9ca3af; transition: color 0.15s; }
+    .edition-card.selected .card-icon { color: #1e40af; }
+
+    /* Smooth expand/collapse */
+    .card-detail {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease-out;
+    }
+    .card-detail.open { max-height: 200px; }
+
+    .card-chevron { transition: transform 0.2s; }
+    .card-chevron.open { transform: rotate(180deg); }
+
+    /* ── Submit button states ── */
+    #submit-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    #submit-btn:not(:disabled) {
+      opacity: 1;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+  <div id="header-placeholder"></div>
+
+  <main class="max-w-4xl mx-auto px-4 py-8">
+
+    <!-- Page header -->
+    <section class="mb-8 animate-fadeInUp">
+      <p class="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-2">Newsletter</p>
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Safe Freight Intel</h1>
+      <p class="text-gray-500 max-w-xl text-sm leading-relaxed">
+        Weekly regulatory intelligence for professionals and drivers across Australia's freight industry.
+      </p>
+    </section>
+
+    <!-- Desktop: two-column. Mobile: stacked. -->
+    <div class="grid md:grid-cols-[1fr_380px] gap-6 items-start animate-fadeInUp" style="animation-delay:0.1s">
+
+      <!-- LEFT: Edition cards -->
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Choose your edition</h2>
+          <span class="text-xs text-gray-400">Select one or both</span>
+        </div>
+
+        <fieldset id="editions-fieldset">
+          <legend class="sr-only">Newsletter editions</legend>
+
+          <!-- ── Card: CoR Intel Weekly ── -->
+          <div id="card-pro"
+               class="edition-card bg-white border border-gray-200 rounded-xl mb-3"
+               role="checkbox" aria-checked="false" tabindex="0"
+               onclick="handleCardClick(this)"
+               onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();handleCardClick(this)}">
+
+            <input type="checkbox" name="segments[]" value="pro"
+                   class="sr-only" tabindex="-1" aria-hidden="true"
+                   onchange="handleCheckboxChange(this)">
+
+            <div class="flex items-start gap-3 px-4 py-4">
+
+              <!-- Scales of justice icon -->
+              <div class="flex-shrink-0 mt-0.5">
+                <svg class="card-icon h-5 w-5" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="12" y1="3" x2="12" y2="20"/>
+                  <line x1="6" y1="20" x2="18" y2="20"/>
+                  <line x1="4" y1="7" x2="20" y2="7"/>
+                  <path d="M4 7 L2 13 Q4 15 6 13 L4 7"/>
+                  <path d="M20 7 L18 13 Q20 15 22 13 L20 7"/>
+                </svg>
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <span class="block text-sm font-semibold text-gray-900">CoR Intel Weekly</span>
+                    <span class="block text-xs text-gray-500 mt-0.5">For operators, managers &amp; compliance professionals</span>
+                  </div>
+                  <div class="flex items-center gap-2 flex-shrink-0 mt-0.5">
+                    <div class="card-check h-5 w-5 rounded border-2 border-gray-300 flex items-center justify-center flex-shrink-0"
+                         onclick="event.stopPropagation(); toggleCheckbox(this.closest('.edition-card'))"
+                         role="presentation">
+                      <svg class="card-check-tick h-3 w-3 text-white" fill="none" viewBox="0 0 24 24"
+                           stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                      </svg>
+                    </div>
+                    <svg class="card-chevron h-4 w-4 text-gray-400 flex-shrink-0"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-detail">
+                  <ul class="mt-3 pt-3 border-t border-gray-100 space-y-1.5 text-xs text-gray-600">
+                    <li class="flex gap-2"><span class="text-blue-800 font-bold flex-shrink-0">·</span>Weekly analysis of CoR enforcement trends</li>
+                    <li class="flex gap-2"><span class="text-blue-800 font-bold flex-shrink-0">·</span>Regulatory changes affecting operators and schedulers</li>
+                    <li class="flex gap-2"><span class="text-blue-800 font-bold flex-shrink-0">·</span>NHVR notices, court outcomes, and policy updates</li>
+                    <li class="flex gap-2"><span class="text-blue-800 font-bold flex-shrink-0">·</span>Written for compliance managers and fleet operators</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Card: Safe Freight Mate ── -->
+          <div id="card-driver"
+               class="edition-card bg-white border border-gray-200 rounded-xl mb-1"
+               role="checkbox" aria-checked="false" tabindex="0"
+               onclick="handleCardClick(this)"
+               onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();handleCardClick(this)}">
+
+            <input type="checkbox" name="segments[]" value="driver"
+                   class="sr-only" tabindex="-1" aria-hidden="true"
+                   onchange="handleCheckboxChange(this)">
+
+            <div class="flex items-start gap-3 px-4 py-4">
+
+              <!-- Steering wheel icon -->
+              <div class="flex-shrink-0 mt-0.5">
+                <svg class="card-icon h-5 w-5" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9"/>
+                  <circle cx="12" cy="12" r="2"/>
+                  <line x1="12" y1="10" x2="12" y2="3"/>
+                  <line x1="13.7" y1="13.7" x2="18.4" y2="18.4"/>
+                  <line x1="10.3" y1="13.7" x2="5.6" y2="18.4"/>
+                </svg>
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <span class="block text-sm font-semibold text-gray-900">Safe Freight Mate</span>
+                    <span class="block text-xs text-gray-500 mt-0.5">Plain-language compliance updates for drivers</span>
+                  </div>
+                  <div class="flex items-center gap-2 flex-shrink-0 mt-0.5">
+                    <div class="card-check h-5 w-5 rounded border-2 border-gray-300 flex items-center justify-center flex-shrink-0"
+                         onclick="event.stopPropagation(); toggleCheckbox(this.closest('.edition-card'))"
+                         role="presentation">
+                      <svg class="card-check-tick h-3 w-3 text-white" fill="none" viewBox="0 0 24 24"
+                           stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                      </svg>
+                    </div>
+                    <svg class="card-chevron h-4 w-4 text-gray-400 flex-shrink-0"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-detail">
+                  <ul class="mt-3 pt-3 border-t border-gray-100 space-y-1.5 text-xs text-gray-600">
+                    <li class="flex gap-2"><span class="text-blue-800 font-bold flex-shrink-0">·</span>Weekly plain-language safety and compliance updates</li>
+                    <li class="flex gap-2"><span class="text-blue-800 font-bold flex-shrink-0">·</span>What's changed and what it means on the road</li>
+                    <li class="flex gap-2"><span class="text-blue-800 font-bold flex-shrink-0">·</span>Load restraint, fatigue, and roadworthiness reminders</li>
+                    <li class="flex gap-2"><span class="text-blue-800 font-bold flex-shrink-0">·</span>Written for heavy vehicle drivers</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Segment error (shown only on submit attempt with nothing selected) -->
+        <p id="segment-error" class="hidden mt-2 text-sm text-red-600 flex items-center gap-1.5">
+          <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Please select at least one edition.
+        </p>
+      </div>
+
+      <!-- RIGHT: Form -->
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+
+        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">Your details</h2>
+
+        <div id="form-messages" class="hidden mb-4 rounded-lg p-3 text-sm"></div>
+
+        <form id="newsletter-form" novalidate>
+          <div class="space-y-3">
+
+            <!-- Name (mandatory) -->
+            <div>
+              <label for="name" class="block text-xs font-medium text-gray-600 mb-1">
+                Name <span class="text-red-500">*</span>
+              </label>
+              <input type="text" id="name" name="name" autocomplete="name" required
+                class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Your name"
+                oninput="updateSubmitState()">
+            </div>
+
+            <!-- Email (mandatory) -->
+            <div>
+              <label for="email" class="block text-xs font-medium text-gray-600 mb-1">
+                Email <span class="text-red-500">*</span>
+              </label>
+              <input type="email" id="email" name="email" required autocomplete="email"
+                class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="you@example.com"
+                oninput="updateSubmitState()">
+            </div>
+
+            <!-- Company (optional) -->
+            <div>
+              <label for="company" class="block text-xs font-medium text-gray-600 mb-1">Company</label>
+              <input type="text" id="company" name="company"
+                class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Organisation (optional)">
+            </div>
+
+            <!-- Role (optional) -->
+            <div>
+              <label for="role" class="block text-xs font-medium text-gray-600 mb-1">Role</label>
+              <select id="role" name="role"
+                class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                <option value="">Select your role…</option>
+                <option value="driver">Driver</option>
+                <option value="operator">Operator / Fleet Manager</option>
+                <option value="scheduler">Scheduler / Planner</option>
+                <option value="loader">Loader / Consignor</option>
+                <option value="manager">Safety / Compliance Manager</option>
+                <option value="regulator">Regulator / Government</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <!-- Consent (mandatory) -->
+            <div class="pt-1">
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" id="consent" name="consent"
+                  class="mt-0.5 flex-shrink-0 h-4 w-4 rounded border-gray-300 text-blue-700 focus:ring-blue-500"
+                  onchange="updateSubmitState()">
+                <span class="text-xs text-gray-500 leading-relaxed">
+                  I agree to receive emails from the Safe Freight Program and can unsubscribe at any time.
+                  <span class="text-red-500">*</span>
+                </span>
+              </label>
+              <!-- Inline consent error -->
+              <p id="consent-error" class="hidden mt-1.5 ml-6 text-xs text-red-600 flex items-center gap-1">
+                <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Please tick this box to continue.
+              </p>
+            </div>
+
+          </div>
+
+          <!-- Submit — disabled until all conditions met -->
+          <button type="submit" id="submit-btn" disabled
+            class="mt-5 w-full bg-blue-900 hover:bg-blue-800 text-white text-sm font-semibold py-2.5 px-4 rounded-lg transition-colors">
+            Subscribe Now
+          </button>
+
+          <!-- Helper text shown while button is disabled -->
+          <p id="submit-hint" class="mt-2 text-center text-xs text-gray-400">
+            Select an edition, fill in your name, email and consent to continue.
+          </p>
+
+        </form>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script type="module" src="/js/sfp-auth.js"></script>
+  <script type="module" src="/js/sfp-api.js"></script>
+  <script src="/js/sfp-gas-fetch-patch.js"></script>
+  <script src="/js/sfp-config.js"></script>
+  <script src="/js/load-header-footer.js" defer></script>
+  <script src="/js/account-indicator.js" defer></script>
+  <script src="/js/role-guards.js" defer></script>
+  <script src="/js/menu-enhance.js" defer></script>
+
+  <script>
+  // ── Validation helpers ────────────────────────────────────────────
+
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function isReady() {
+    var hasEdition = !!document.querySelector('.edition-card.selected');
+    var name       = (document.getElementById('name').value || '').trim();
+    var email      = (document.getElementById('email').value || '').trim();
+    var consent    = document.getElementById('consent').checked;
+    return hasEdition && name.length > 0 && EMAIL_RE.test(email) && consent;
+  }
+
+  function updateSubmitState() {
+    var btn  = document.getElementById('submit-btn');
+    var hint = document.getElementById('submit-hint');
+    var ready = isReady();
+    btn.disabled = !ready;
+    if (hint) hint.classList.toggle('hidden', ready);
+  }
+
+  // ── Card state machine ────────────────────────────────────────────
+  //
+  //  unselected+collapsed → [card click] → selected+expanded
+  //  selected+expanded    → [card click] → selected+collapsed
+  //  selected+collapsed   → [card click] → selected+expanded
+  //  selected+*           → [checkbox click] → unselected+collapsed
+  // ─────────────────────────────────────────────────────────────────
+
+  function setExpanded(card, open) {
+    card.querySelector('.card-detail').classList.toggle('open', open);
+    card.querySelector('.card-chevron').classList.toggle('open', open);
+  }
+
+  function setSelected(card, selected) {
+    var cb = card.querySelector('input[type="checkbox"]');
+    card.classList.toggle('selected', selected);
+    card.setAttribute('aria-checked', selected ? 'true' : 'false');
+    cb.checked = selected;
+    if (!selected) setExpanded(card, false);
+    // Hide segment error once something is selected
+    if (document.querySelector('.edition-card.selected')) {
+      document.getElementById('segment-error').classList.add('hidden');
+    }
+    updateSubmitState();
+  }
+
+  function handleCardClick(card) {
+    var isSelected = card.classList.contains('selected');
+    var isExpanded = card.querySelector('.card-detail').classList.contains('open');
+    if (!isSelected) {
+      setSelected(card, true);
+      setExpanded(card, true);
+    } else {
+      setExpanded(card, !isExpanded);
+    }
+  }
+
+  function toggleCheckbox(card) {
+    var isSelected = card.classList.contains('selected');
+    if (isSelected) {
+      setSelected(card, false);
+    } else {
+      setSelected(card, true);
+      setExpanded(card, true);
+    }
+  }
+
+  function handleCheckboxChange(cb) {
+    var card = cb.closest('.edition-card');
+    if (cb.checked && !card.classList.contains('selected')) {
+      setSelected(card, true);
+      setExpanded(card, true);
+    } else if (!cb.checked && card.classList.contains('selected')) {
+      setSelected(card, false);
+    }
+  }
+
+  // ── URL error param ───────────────────────────────────────────────
+
+  window.addEventListener('DOMContentLoaded', function () {
+    var error = new URLSearchParams(window.location.search).get('error');
+    if (error) {
+      var msgBox = document.getElementById('form-messages');
+      msgBox.className = 'mb-4 rounded-lg p-3 text-sm bg-red-50 border border-red-200 text-red-800';
+      msgBox.textContent = decodeURIComponent(error);
+      msgBox.classList.remove('hidden');
+    }
+    // Set initial button state
+    updateSubmitState();
+  });
+
+  // ── Form submission ───────────────────────────────────────────────
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var form   = document.getElementById('newsletter-form');
+    var btn    = document.getElementById('submit-btn');
+    var msgBox = document.getElementById('form-messages');
+
+    var API_BASE_URL = window.location.hostname === 'localhost'
+      ? 'http://localhost:3000'
+      : 'https://sfp-newsletter-automation-production.up.railway.app';
+
+    function showMessage(type, text) {
+      if (!msgBox) return;
+      msgBox.className = 'mb-4 rounded-lg p-3 text-sm ' + (type === 'error'
+        ? 'bg-red-50 border border-red-200 text-red-800'
+        : 'bg-green-50 border border-green-200 text-green-800');
+      msgBox.textContent = text;
+      msgBox.classList.remove('hidden');
+    }
+
+    function lockBtn()   { btn.disabled = true;  btn.textContent = 'Submitting…';  }
+    function unlockBtn() { btn.disabled = false; btn.textContent = 'Subscribe Now'; }
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      // Guard: should not be reachable if button is properly disabled,
+      // but defend anyway
+      var checked = document.querySelectorAll('input[name="segments[]"]:checked');
+      if (checked.length === 0) {
+        document.getElementById('segment-error').classList.remove('hidden');
+        return;
+      }
+
+      var email   = (document.getElementById('email').value   || '').trim();
+      var name    = (document.getElementById('name').value    || '').trim();
+      var company = (document.getElementById('company').value || '').trim();
+      var role    = document.getElementById('role').value;
+      var consent = document.getElementById('consent').checked;
+      var segments = Array.from(checked).map(function (el) { return el.value; });
+
+      if (!name)    { showMessage('error', 'Name is required.');    return; }
+      if (!email)   { showMessage('error', 'Email is required.');   return; }
+      if (!consent) {
+        document.getElementById('consent-error').classList.remove('hidden');
+        return;
+      }
+
+      lockBtn();
+
+      try {
+        var response = await fetch(API_BASE_URL + '/api/subscribers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, name: name, company: company, role: role, segments: segments })
+        });
+
+        var data = await response.json().catch(function () { return {}; });
+
+        if (!response.ok) {
+          showMessage('error', data.error || 'Subscription failed. Please try again.');
+          unlockBtn();
+          return;
+        }
+
+        var msg = (data.message || '').toString().trim();
+        var serverSegments = (data.data && data.data.segments)
+          ? String(data.data.segments)
+          : segments.join(',');
+
+        if (msg === 'Subscriber created (pending) — confirmation email sent') {
+          window.location.href =
+            '/subscribe-pending.html?email=' + encodeURIComponent(email) +
+            '&segments=' + encodeURIComponent(segments.join(','));
+        } else {
+          var mode = 'updated';
+          if (msg === 'Subscriber already subscribed to selected list(s)') mode = 'already';
+          if (msg === 'Subscription reactivated successfully') mode = 'reactivated';
+          window.location.href =
+            '/subscribe-confirmed.html?email=' + encodeURIComponent(email) +
+            '&segments=' + encodeURIComponent(serverSegments) +
+            '&mode=' + encodeURIComponent(mode);
+        }
+
+      } catch (err) {
+        showMessage('error', 'Network error. Please try again.');
+        unlockBtn();
+      }
+    });
+  });
+  </script>
+
+</body>
+</html>
