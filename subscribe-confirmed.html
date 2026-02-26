@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subscription confirmed – Safe Freight Program</title>
+  <meta name="robots" content="noindex" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png?v=2">
+  <link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png?v=2">
+  <link rel="manifest" href="/public/site.webmanifest?v=2">
+  <link rel="mask-icon" href="/public/safari-pinned-tab.svg?v=2" color="#1e40af">
+  <meta name="msapplication-TileColor" content="#1e40af">
+  <meta name="theme-color" content="#ffffff">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    @keyframes fadeInUp {
+      0%   { opacity: 0; transform: translateY(16px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeInUp   { animation: fadeInUp 0.5s ease-out both; }
+    .animate-fadeInUp-2 { animation: fadeInUp 0.5s ease-out 0.12s both; }
+    .animate-fadeInUp-3 { animation: fadeInUp 0.5s ease-out 0.22s both; }
+    .animate-fadeInUp-4 { animation: fadeInUp 0.5s ease-out 0.34s both; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+  <div id="header-placeholder"></div>
+
+  <main class="max-w-4xl mx-auto px-4 py-8 md:py-14">
+
+    <!-- Rule + category label -->
+    <div class="animate-fadeInUp">
+      <div class="w-8 h-0.5 bg-blue-900 mb-4"></div>
+      <p class="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-6">
+        Safe Freight Intel — Subscription
+      </p>
+    </div>
+
+    <!-- Primary directive — mode-aware headline -->
+    <div class="animate-fadeInUp-2 max-w-2xl mb-8">
+      <h1 id="headline" class="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight leading-tight mb-6">
+        You're confirmed.
+      </h1>
+      <p id="subhead" class="text-base md:text-lg text-gray-600 leading-relaxed"></p>
+    </div>
+
+    <!-- Edition pills -->
+    <div id="editions-block" class="hidden animate-fadeInUp-2 mb-10">
+      <div id="editions-list" class="flex flex-wrap gap-2"></div>
+    </div>
+
+    <!-- Thin rule + quiet links -->
+    <div class="animate-fadeInUp-3 max-w-2xl mb-12">
+      <div class="border-t border-gray-200 pt-6">
+        <p class="text-sm text-gray-400 mb-6">
+          Every edition includes an unsubscribe link. You're in control.
+        </p>
+        <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+          <a href="/index.html"
+             class="text-blue-700 hover:text-blue-900 hover:underline transition-colors">
+            Back to home
+          </a>
+          <a href="/subscribe.html"
+             class="text-gray-400 hover:text-gray-600 hover:underline transition-colors">
+            Subscribe a different email
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Latest edition preview — loaded async, hidden until ready -->
+    <div id="latest-block" class="hidden animate-fadeInUp-4 max-w-2xl">
+      <div class="border-t border-gray-200 pt-8">
+        <div class="flex items-baseline justify-between mb-5">
+          <div>
+            <p class="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-1">Latest edition</p>
+            <p id="latest-meta" class="text-xs text-gray-400"></p>
+          </div>
+          <span id="latest-segment-pill"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-900 hidden">
+          </span>
+        </div>
+
+        <h2 id="latest-subject" class="text-lg font-bold text-gray-900 mb-5 leading-snug"></h2>
+
+        <!-- Article list -->
+        <div id="latest-articles" class="space-y-4"></div>
+
+        <p class="mt-6 text-xs text-gray-400">
+          Your first edition will arrive on the next scheduled send.
+        </p>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script type="module" src="/js/sfp-auth.js"></script>
+  <script type="module" src="/js/sfp-api.js"></script>
+  <script src="/js/sfp-gas-fetch-patch.js"></script>
+  <script src="/js/sfp-config.js"></script>
+  <script src="/js/load-header-footer.js" defer></script>
+  <script src="/js/account-indicator.js" defer></script>
+  <script src="/js/role-guards.js" defer></script>
+  <script src="/js/menu-enhance.js" defer></script>
+
+  <script>
+  (function () {
+
+    // ── URL params ────────────────────────────────────────────────────
+    var params   = new URLSearchParams(window.location.search);
+    var email    = (params.get('email')    || '').trim();
+    var segments = (params.get('segments') || '').trim();
+    var mode     = (params.get('mode')     || '').trim().toLowerCase();
+    var already  = params.get('already');
+
+    // Normalise legacy ?already=1 to mode
+    if (already === '1' && !mode) mode = 'already';
+
+    // ── Mode-aware content ────────────────────────────────────────────
+    var MODES = {
+      'updated': {
+        headline: 'Subscription updated.',
+        subhead:  'Your subscription has been updated. You\'ll receive future editions at ' + (email || 'your email address') + '.'
+      },
+      'already': {
+        headline: 'Already confirmed.',
+        subhead:  (email || 'This address') + ' is already subscribed and active. No action required.'
+      },
+      'reactivated': {
+        headline: 'Welcome back.',
+        subhead:  'Your subscription has been reactivated. Editions will resume at ' + (email || 'your email address') + '.'
+      },
+      'default': {
+        headline: 'You\'re confirmed.',
+        subhead:  'Your subscription is active. Editions will be delivered to ' + (email || 'your email address') + '.'
+      }
+    };
+
+    var content = MODES[mode] || MODES['default'];
+    document.getElementById('headline').textContent = content.headline;
+    document.getElementById('subhead').textContent  = content.subhead;
+
+    // ── Edition pills ─────────────────────────────────────────────────
+    var LABELS = {
+      'pro':    { name: 'CoR Intel Weekly',  icon: 'scales' },
+      'driver': { name: 'Safe Freight Mate', icon: 'wheel'  }
+    };
+
+    function iconSVG(type) {
+      if (type === 'scales') {
+        return '<svg class="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="3" x2="12" y2="20"/><line x1="6" y1="20" x2="18" y2="20"/><line x1="4" y1="7" x2="20" y2="7"/><path d="M4 7 L2 13 Q4 15 6 13 L4 7"/><path d="M20 7 L18 13 Q20 15 22 13 L20 7"/></svg>';
+      }
+      return '<svg class="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="10" x2="12" y2="3"/><line x1="13.7" y1="13.7" x2="18.4" y2="18.4"/><line x1="10.3" y1="13.7" x2="5.6" y2="18.4"/></svg>';
+    }
+
+    if (segments) {
+      var list = segments.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+      var editionsList  = document.getElementById('editions-list');
+      var editionsBlock = document.getElementById('editions-block');
+
+      list.forEach(function (seg) {
+        var info = LABELS[seg];
+        if (!info) return;
+        var pill = document.createElement('div');
+        pill.className = 'inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-900';
+        pill.innerHTML = iconSVG(info.icon) + '<span>' + info.name + '</span>';
+        editionsList.appendChild(pill);
+      });
+
+      if (editionsList.children.length > 0) {
+        editionsBlock.classList.remove('hidden');
+      }
+    }
+
+    // ── Category pill colours ─────────────────────────────────────────
+    var CATEGORY_STYLES = {
+      'Safety Alert':      'bg-red-50 text-red-700 border-red-200',
+      'Enforcement Action':'bg-orange-50 text-orange-700 border-orange-200',
+      'Regulatory Update': 'bg-blue-50 text-blue-700 border-blue-200',
+      'Technical Update':  'bg-purple-50 text-purple-700 border-purple-200',
+      'Driver Wellness':   'bg-green-50 text-green-700 border-green-200',
+      'Industry News':     'bg-gray-50 text-gray-600 border-gray-200'
+    };
+
+    // ── Latest edition fetch ──────────────────────────────────────────
+    var API_BASE = window.location.hostname === 'localhost'
+      ? 'http://localhost:3000'
+      : 'https://sfp-newsletter-automation-production.up.railway.app';
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      var d = new Date(iso);
+      if (isNaN(d)) return '';
+      return d.toLocaleDateString('en-AU', {
+        timeZone: 'Australia/Sydney',
+        day: 'numeric', month: 'long', year: 'numeric'
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderLatestEdition(newsletter) {
+      if (!newsletter) return;
+
+      // Parse articles from content_json if present
+      var articles = [];
+      if (newsletter.content_json) {
+        try {
+          articles = JSON.parse(newsletter.content_json);
+        } catch (e) { articles = []; }
+      }
+      if (!Array.isArray(articles) || articles.length === 0) return;
+
+      // Subject line
+      var subjectEl = document.getElementById('latest-subject');
+      subjectEl.textContent = newsletter.subject || 'Latest edition';
+
+      // Meta: date + segment
+      var metaEl = document.getElementById('latest-meta');
+      metaEl.textContent = formatDate(newsletter.published_at) || '';
+
+      // Segment pill
+      var segPill = document.getElementById('latest-segment-pill');
+      var segInfo = LABELS[newsletter.segment];
+      if (segInfo) {
+        segPill.innerHTML = iconSVG(segInfo.icon) + '<span>' + escapeHtml(segInfo.name) + '</span>';
+        segPill.classList.remove('hidden');
+      }
+
+      // Articles
+      var articlesEl = document.getElementById('latest-articles');
+      articlesEl.innerHTML = '';
+
+      articles.slice(0, 4).forEach(function (article) {
+        var catStyle = CATEGORY_STYLES[article.category] || CATEGORY_STYLES['Industry News'];
+
+        var item = document.createElement('div');
+        item.className = 'border-l-2 border-gray-200 pl-4 py-0.5';
+
+        var catPill = article.category
+          ? '<span class="inline-block mb-1.5 text-xs font-medium px-2 py-0.5 rounded border ' + catStyle + '">'
+            + escapeHtml(article.category) + '</span><br>'
+          : '';
+
+        var titleHtml = article.url
+          ? '<a href="' + escapeHtml(article.url) + '" target="_blank" rel="noopener noreferrer" '
+            + 'class="text-sm font-semibold text-gray-900 hover:text-blue-700 hover:underline leading-snug">'
+            + escapeHtml(article.title) + '</a>'
+          : '<span class="text-sm font-semibold text-gray-900 leading-snug">' + escapeHtml(article.title) + '</span>';
+
+        var summaryHtml = article.summary
+          ? '<p class="mt-1 text-xs text-gray-500 leading-relaxed">' + escapeHtml(article.summary) + '</p>'
+          : '';
+
+        item.innerHTML = catPill + titleHtml + summaryHtml;
+        articlesEl.appendChild(item);
+      });
+
+      document.getElementById('latest-block').classList.remove('hidden');
+    }
+
+    // Determine which segment to fetch — prefer the user's own segment
+    function pickSegmentToFetch() {
+      if (!segments) return 'pro'; // default
+      var list = segments.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+      if (list.includes('pro'))    return 'pro';
+      if (list.includes('driver')) return 'driver';
+      return 'pro';
+    }
+
+    async function loadLatestEdition() {
+      try {
+        var seg = pickSegmentToFetch();
+        var resp = await fetch(API_BASE + '/api/newsletters?segment=' + seg, {
+          signal: AbortSignal.timeout(5000)
+        });
+        if (!resp.ok) return;
+        var data = await resp.json();
+        if (!data.success || !Array.isArray(data.data) || data.data.length === 0) return;
+
+        // Most recent first (API returns slice of sheet rows)
+        var latest = data.data[0];
+        renderLatestEdition(latest);
+      } catch (e) {
+        // Fail silently — the section simply stays hidden
+      }
+    }
+
+    loadLatestEdition();
+
+  })();
+  </script>
+
+</body>
+</html>
