@@ -260,6 +260,7 @@
                     <!-- Manual Controls -->
                     <div>
                         <h2 class="text-xl font-semibold mb-4">Manual Operations</h2>
+                        <p class="text-sm text-gray-500 mb-4 -mt-2">Preview and confirm before sending. For fully automatic sending, configure the <button onclick="showTab('schedule')" class="text-blue-600 hover:underline">Schedule tab</button>.</p>
                         <div class="space-y-4">
                             <!-- Content Scraping -->
                             <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
@@ -415,16 +416,24 @@
                             </button>
                         </div>
                         
-                        <!-- System Info -->
-                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                            <h3 class="font-medium text-blue-800 mb-2">ℹ Railway Automation Info</h3>
-                            <ul class="text-sm text-blue-700 space-y-1">
-                                <li>• Newsletter waits for scraping completion + delay</li>
-                                <li>• All times shown in AEST (Australia/Sydney)</li>
-                                <li>• Manual triggers run immediately on Railway</li>
-                                <li>• Schedule changes update Railway cron jobs</li>
-                                <li>• Emails sent via Resend API</li>
-                            </ul>
+                        <!-- How Schedule vs Manual Operations work -->
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 space-y-3">
+                            <h3 class="font-medium text-blue-800">ℹ How Automation Works</h3>
+                            <div class="text-sm text-blue-900 space-y-2">
+                                <div class="bg-white rounded p-3 border border-blue-200">
+                                    <p class="font-semibold text-blue-800 mb-1">🤖 Scheduled (set-and-forget)</p>
+                                    <p class="text-blue-700">The cron jobs here run automatically at your configured times. Scraping gathers articles, then the newsletter job generates <em>and sends</em> both CoR Intel Weekly and Safe Freight Mate to all active subscribers — no human involvement needed.</p>
+                                </div>
+                                <div class="bg-white rounded p-3 border border-blue-200">
+                                    <p class="font-semibold text-blue-800 mb-1">👆 Manual (Operations tab)</p>
+                                    <p class="text-blue-700">The Operations tab lets you <em>preview first then decide</em>. Run Scraping → Generate Preview → review the content → click Send. Useful when you want to check what goes out before it does.</p>
+                                </div>
+                                <div class="bg-white rounded p-3 border border-blue-200">
+                                    <p class="font-semibold text-blue-800 mb-1">⚡ Trigger Now buttons</p>
+                                    <p class="text-blue-700">These run the full scheduled job immediately — scraping saves articles to the sheet, newsletter generates and sends directly. Same as the automatic run, just fired now.</p>
+                                </div>
+                                <p class="text-xs text-blue-600">All times in AEST (Australia/Sydney). Schedule saved to disk — survives restarts.</p>
+                            </div>
                         </div>
                     </div>
 
@@ -518,11 +527,12 @@
                                             </label>
                                             <select id="dependencyDelay"
                                                     class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                                <option value="0">No delay</option>
+                                                <option value="0">No additional delay</option>
                                                 <option value="15">15 minutes</option>
                                                 <option value="30">30 minutes</option>
                                                 <option value="45">45 minutes</option>
                                                 <option value="60">1 hour</option>
+                                                <option value="90">1.5 hours</option>
                                                 <option value="120">2 hours</option>
                                             </select>
                                         </div>
@@ -543,7 +553,7 @@
                                     Reset
                                 </button>
                             </div>
-                            <p class="text-xs text-amber-600 mt-2">⚠ Schedule is held in memory — it resets to defaults on Railway restart. To make it permanent, set the values as defaults in advancedScheduler.js.</p>
+                            <p class="text-xs text-green-700 mt-2">✓ Schedule changes are saved to disk and survive Railway restarts automatically.</p>
                             <!-- Quick Presets -->
                             <div class="border-t pt-6">
                                 <h4 class="font-medium text-gray-900 mb-3">Quick Presets</h4>
@@ -1586,13 +1596,13 @@ setTimeout(() => {
                     hourSel.appendChild(opt);
                 }
                 
-                // Populate minutes (0, 15, 30, 45)
-                [0, 15, 30, 45].forEach(m => {
+                // Populate all 60 minutes
+                for (let m = 0; m < 60; m++) {
                     const opt = document.createElement('option');
                     opt.value = m;
                     opt.textContent = m.toString().padStart(2, '0');
                     minSel.appendChild(opt);
-                });
+                }
             }
         }
 
