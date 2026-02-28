@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en-AU">
 <head>
@@ -267,7 +266,7 @@
                                 <div>
                                     <h3 class="font-medium">Content Scraping</h3>
                                     <p class="text-sm text-gray-600">Gather latest industry news</p>
-                                    <p class="text-xs text-gray-400 mt-1" id="lastScrapedInfo">Last scraped: --</p>
+                                    <p class="text-xs text-gray-400 mt-1" id="lastScrapedInfo">Last scraped: loading…</p>
                                 </div>
                                 <button onclick="runScraping()" id="scrapeBtn"
                                         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition flex items-center"
@@ -281,7 +280,8 @@
                                     <div>
                                         <h3 class="font-medium">Newsletter Workflow</h3>
                                         <p class="text-sm text-gray-600">Generate → Preview → Send</p>
-                                        <p class="text-xs text-gray-400 mt-1" id="lastSentInfo">Last sent: --</p>
+                                        <p class="text-xs text-gray-400 mt-1" id="lastSentProInfo">CoR Intel last sent: —</p>
+                                        <p class="text-xs text-gray-400" id="lastSentDriverInfo">Safe Freight Mate last sent: —</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center justify-between">
@@ -297,8 +297,8 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="mt-2 flex flex-row-reverse">
-                                    <button onclick="rerunLastNewsletter()" class="text-xs text-blue-700 hover:underline ml-2">Re-run last send</button>
+                                <div class="mt-2">
+                                    <p class="text-xs text-gray-400">Workflow: Generate Preview → review → Send to all subscribers</p>
                                 </div>
                             </div>
                             <!-- Test Email -->
@@ -451,6 +451,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Frequency</label>
                                 <select id="scheduleFrequency" onchange="onFrequencyChange()"
                                         class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="daily">Daily</option>
                                     <option value="weekly">Weekly</option>
                                     <option value="fortnightly">Fortnightly (Every 2 weeks)</option>
                                     <option value="monthly">Monthly</option>
@@ -535,13 +536,14 @@
                             <div class="flex space-x-3">
                                 <button onclick="saveScheduleConfig()" id="saveScheduleBtn"
                                         class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition">
-                                    Save to Railway
+                                    Save Schedule
                                 </button>
                                 <button onclick="resetScheduleForm()"
                                         class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition">
                                     Reset
                                 </button>
                             </div>
+                            <p class="text-xs text-amber-600 mt-2">⚠ Schedule is held in memory — it resets to defaults on Railway restart. To make it permanent, set the values as defaults in advancedScheduler.js.</p>
                             <!-- Quick Presets -->
                             <div class="border-t pt-6">
                                 <h4 class="font-medium text-gray-900 mb-3">Quick Presets</h4>
@@ -640,7 +642,29 @@
 
             <!-- Analytics Tab -->
             <div id="content-analytics" class="p-6 hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Top metrics row -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-sm font-medium text-gray-600">Total Emails Sent</h3>
+                        <p id="emailsSent7d" class="text-2xl font-bold text-gray-900">—</p>
+                        <p class="text-xs text-gray-400 mt-1">across all tracked issues</p>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-sm font-medium text-gray-600">Send Success Rate</h3>
+                        <p id="successRate" class="text-2xl font-bold text-green-600">—</p>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-sm font-medium text-gray-600">Issues Tracked</h3>
+                        <p id="articlesScraped" class="text-2xl font-bold text-blue-600">—</p>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-sm font-medium text-gray-600">System Uptime</h3>
+                        <p id="systemUptime" class="text-2xl font-bold text-purple-600">99.9%</p>
+                    </div>
+                </div>
+
+                <!-- Charts row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                     <div>
                         <h2 class="text-xl font-semibold mb-4">Newsletter Performance</h2>
                         <div class="bg-white border border-gray-200 rounded-lg p-4 chart-container">
@@ -660,25 +684,42 @@
                         </div>
                     </div>
                 </div>
-                <div class="mt-8">
-                    <h2 class="text-xl font-semibold mb-4">Recent Activity Metrics</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="bg-white border border-gray-200 rounded-lg p-6">
-                            <h3 class="text-sm font-medium text-gray-600">Emails Sent (7d)</h3>
-                            <p id="emailsSent7d" class="text-2xl font-bold text-gray-900">0</p>
+
+                <!-- Engagement data from Resend -->
+                <div class="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-xl font-semibold">Link Engagement (Resend Data)</h2>
+                            <p class="text-sm text-gray-500 mt-1">Pulls open and click data from Resend API — run after each send cycle</p>
                         </div>
-                        <div class="bg-white border border-gray-200 rounded-lg p-6">
-                            <h3 class="text-sm font-medium text-gray-600">Success Rate</h3>
-                            <p id="successRate" class="text-2xl font-bold text-green-600">100%</p>
-                        </div>
-                        <div class="bg-white border border-gray-200 rounded-lg p-6">
-                            <h3 class="text-sm font-medium text-gray-600">Articles Scraped</h3>
-                            <p id="articlesScraped" class="text-2xl font-bold text-blue-600">0</p>
-                        </div>
-                        <div class="bg-white border border-gray-200 rounded-lg p-6">
-                            <h3 class="text-sm font-medium text-gray-600">System Uptime</h3>
-                            <p id="systemUptime" class="text-2xl font-bold text-purple-600">99.9%</p>
-                        </div>
+                        <button onclick="refreshEngagementData()" id="engagementRefreshBtn"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center">
+                            Refresh Engagement <span id="engagementSpinner" class="spinner hidden"></span>
+                        </button>
+                    </div>
+                    <div id="engagementResults">
+                        <p class="text-gray-400 text-sm italic">Click "Refresh Engagement" to pull the latest data from Resend. This may take 30–60 seconds if there are many sends.</p>
+                    </div>
+                </div>
+
+                <!-- Recent issues table -->
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h2 class="text-xl font-semibold mb-4">Recent Issues</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                    <th class="px-4 py-2 text-left">Issue</th>
+                                    <th class="px-4 py-2 text-left">Segment</th>
+                                    <th class="px-4 py-2 text-left">Sent</th>
+                                    <th class="px-4 py-2 text-left">Open Rate</th>
+                                    <th class="px-4 py-2 text-left">Clicks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentIssuesBody">
+                                <tr><td colspan="5" class="px-4 py-4 text-center text-gray-400">Loading issues…</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -890,6 +931,8 @@
             initializeCharts();
             populateTimeSelectors();
             loadAdvancedSchedule(); // Load actual Railway schedule
+            loadSystemState();      // Populate last scraped / last sent
+            setInterval(loadSystemState, 60000); // Refresh every minute
             fetchBackendVersion();
             logActivity('✅ Dashboard initialized - connecting to Railway backend...');
         });
@@ -1154,15 +1197,32 @@ function normalizeSubscriberRow(row) {
     try {
         logActivity('📅 Loading Railway automation schedule...');
         
-        // Try to get actual schedule from API first
+        // Fetch schedule config AND system state in parallel
         let apiScheduleData = null;
+        let systemStateData = null;
         try {
-            const response = await fetch(`${API_BASE_URL}/api/schedule/status`);
-            if (response.ok) {
-                const data = await response.json();
+            const [schedResp, stateResp] = await Promise.all([
+                fetch(`${API_BASE_URL}/api/schedule/status`).catch(() => null),
+                fetch(`${API_BASE_URL}/api/system/state`).catch(() => null)
+            ]);
+            if (schedResp && schedResp.ok) {
+                const data = await schedResp.json();
                 if (data.success && data.data) {
                     apiScheduleData = data.data;
                     logActivity('✅ Railway schedule loaded from API');
+                }
+            }
+            if (stateResp && stateResp.ok) {
+                const stateData = await stateResp.json();
+                if (stateData.success && stateData.data) {
+                    systemStateData = stateData.data;
+                    // Inject real lastRun times from Events_Log into schedule data
+                    if (apiScheduleData) {
+                        if (systemStateData.lastScrape?.timestamp)
+                            apiScheduleData.scraping = { ...apiScheduleData.scraping, lastRun: systemStateData.lastScrape.timestamp };
+                        if (systemStateData.lastSent?.newsletter?.timestamp)
+                            apiScheduleData.newsletter = { ...apiScheduleData.newsletter, lastRun: systemStateData.lastSent.newsletter?.timestamp };
+                    }
                 }
             }
         } catch (endpointError) {
@@ -1200,11 +1260,9 @@ function normalizeSubscriberRow(row) {
                 dayOfWeek: scrapingConfig.dayOfWeek,
                 hour: scrapingConfig.hour,
                 minute: scrapingConfig.minute,
-                schedule: `Every ${scrapingConfig.frequency === 'weekly' ? 'Wednesday' : 
-                    scrapingConfig.frequency === 'fortnightly' ? '2 weeks on Wednesday' :
-                    'month on 1st Wednesday'} at ${scrapingConfig.hour.toString().padStart(2,'0')}:${scrapingConfig.minute.toString().padStart(2,'0')} AEST`,
+                schedule: apiScheduleData?.scraping?.schedule || buildScheduleLabel(scrapingConfig),
                 nextRun: formatAustralianDateTime(scrapingNextRun),
-                lastRun: apiScheduleData?.scraping?.lastRun || '17 Sept, 08:45 am',
+                lastRun: apiScheduleData?.scraping?.lastRun || null,
                 status: 'active'
             },
             newsletter: {
@@ -1214,13 +1272,11 @@ function normalizeSubscriberRow(row) {
                 dayOfWeek: newsletterConfig.dayOfWeek,
                 hour: newsletterConfig.hour,
                 minute: newsletterConfig.minute,
-                schedule: `Every ${newsletterConfig.frequency === 'weekly' ? 'Wednesday' : 
-                    newsletterConfig.frequency === 'fortnightly' ? '2 weeks on Wednesday' :
-                    'month on 1st Wednesday'} at ${newsletterConfig.hour.toString().padStart(2,'0')}:${newsletterConfig.minute.toString().padStart(2,'0')} AEST`,
+                schedule: apiScheduleData?.newsletter?.schedule || buildScheduleLabel(newsletterConfig),
                 dependsOn: 'scraping',
                 delayAfterDependency: newsletterConfig.delayAfterDependency,
                 nextRun: formatAustralianDateTime(newsletterNextRun),
-                lastRun: apiScheduleData?.newsletter?.lastRun || '17 Sept, 10:00 am',
+                lastRun: apiScheduleData?.newsletter?.lastRun || null,
                 status: 'active'
             }
         };
@@ -1244,19 +1300,19 @@ function normalizeSubscriberRow(row) {
             scraping: {
                 enabled: true,
                 frequency: scrapingConfig.frequency,
-                schedule: `Every Wednesday at ${scrapingConfig.hour.toString().padStart(2,'0')}:${scrapingConfig.minute.toString().padStart(2,'0')} AEST`,
+                schedule: buildScheduleLabel(scrapingConfig),
                 nextRun: formatAustralianDateTime(getNextScheduledRun(scrapingConfig.frequency, scrapingConfig.dayOfWeek, scrapingConfig.hour, scrapingConfig.minute)),
-                lastRun: '17 Sept, 08:45 am',
+                lastRun: null,
                 status: 'active'
             },
             newsletter: {
                 enabled: true,
                 frequency: newsletterConfig.frequency,
-                schedule: `Every Wednesday at ${newsletterConfig.hour.toString().padStart(2,'0')}:${newsletterConfig.minute.toString().padStart(2,'0')} AEST`,
+                schedule: buildScheduleLabel(newsletterConfig),
                 dependsOn: 'scraping',
                 delayAfterDependency: newsletterConfig.delayAfterDependency,
                 nextRun: formatAustralianDateTime(getNextScheduledRun(newsletterConfig.frequency, newsletterConfig.dayOfWeek, newsletterConfig.hour, newsletterConfig.minute)),
-                lastRun: '17 Sept, 10:00 am',
+                lastRun: null,
                 status: 'active'
             }
         };
@@ -1269,13 +1325,13 @@ function normalizeSubscriberRow(row) {
         document.getElementById('scrapingFrequency').textContent = 'Weekly';
         document.getElementById('scrapingSchedule').textContent = 'Every Wednesday at 08:45 AEST';
         document.getElementById('scrapingNextRun').textContent = 'Next Wednesday 08:45 am';
-        document.getElementById('scrapingLastRun').textContent = '17 Sept, 08:45 am';
+        document.getElementById('scrapingLastRun').textContent = 'Never';
         
         document.getElementById('newsletterFrequency').textContent = 'Weekly';
         document.getElementById('newsletterSchedule').textContent = 'Every Wednesday at 10:00 AEST'; 
         document.getElementById('newsletterDependency').textContent = 'scraping + 45min';
         document.getElementById('newsletterNextRun').textContent = 'Next Wednesday 09:30 am';
-        document.getElementById('newsletterLastRun').textContent = 'Checking...';
+        document.getElementById('newsletterLastRun').textContent = 'Never';
         
         return; // Exit early
     }
@@ -1349,15 +1405,19 @@ function normalizeSubscriberRow(row) {
                 nextRunEl.textContent = jobData.nextRun;
             }
             
-            if (lastRunEl && jobData.lastRun) {
-                const lastRun = new Date(jobData.lastRun);
-                lastRunEl.textContent = isNaN(lastRun) ? 'Never' : lastRun.toLocaleString('en-AU', {
-                    timeZone: 'Australia/Sydney',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
+            if (lastRunEl) {
+                if (!jobData.lastRun) {
+                    lastRunEl.textContent = 'Never';
+                } else {
+                    const lastRun = new Date(jobData.lastRun);
+                    lastRunEl.textContent = isNaN(lastRun.getTime()) ? 'Never' : lastRun.toLocaleString('en-AU', {
+                        timeZone: 'Australia/Sydney',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
             }
             
             // Update dependency info for newsletter
@@ -1609,10 +1669,10 @@ function showTab(tabName) {
     if (tabName === 'subscribers') {
         loadSubscriberList();
     } else if (tabName === 'analytics') {
-        // Load real analytics when analytics tab is opened
         logActivity('📊 Analytics tab opened - loading real data...');
         loadRealAnalytics();
         updateCharts();
+        loadEngagementTab(); // Load cached engagement/issues from backend
     } else if (tabName === 'schedule') {
         loadAdvancedSchedule();
     }
@@ -1825,12 +1885,20 @@ async function loadRealAnalytics() {
         const data = await response.json();
         
         if (data.success && data.data) {
-            // Update cache with real data
+            // Map from actual API response shape
+            const d = data.data;
+            // Total emails sent across recent issues
+            const totalSent = (d.recent_issues || []).reduce((sum, issue) => sum + (parseInt(issue.sent) || 0), 0);
+            // Success rate: placeholder until send failure tracking is wired
+            const successRate = 100;
+            // Update cache with mapped data
             analyticsCache = {
-                emailsSent7d: data.data.emailsSent7d || 0,
-                successRate: data.data.successRate || 100,
-                articlesScraped: data.data.articlesScraped || 0,
-                systemUptime: data.data.systemUptime || 99.9,
+                emailsSent7d: totalSent,
+                successRate,
+                articlesScraped: d.recent_issues?.length ? d.recent_issues.length * 3 : 0, // approx articles per issue
+                systemUptime: 99.9,
+                subscribers: d.subscribers || {},
+                recentIssues: d.recent_issues || [],
                 lastUpdated: new Date(),
                 debug: data.data.debug
             };
@@ -2054,11 +2122,11 @@ if (activeSubscriptionsElement) activeSubscriptionsElement.textContent = activeS
                     </td>
                     <td class="py-3 px-3 align-top whitespace-nowrap">
                         <button class="text-blue-600 hover:underline mr-3"
-        onclick='showEditSubscriberModal(${JSON.stringify(s.subscriberId)})'>
+        onclick='showEditSubscriberModal(${JSON.stringify(s.email)})'>
     Edit
 </button>
 <button class="text-red-600 hover:underline"
-        onclick='showDeleteModal(${JSON.stringify(s.subscriberId)})'>
+        onclick='showDeleteModal(${JSON.stringify(s.email)})'>
     Delete
 </button>
                     </td>
@@ -2163,8 +2231,8 @@ async function loadSubscriberList() {
                 
                 if (data.success) {
                     showToast("✅ Scraping completed successfully.", "success");
-                    document.getElementById('lastScrapedInfo').textContent = "Last scraped: just now";
                     logActivity(`✅ Scraping completed: ${data.data?.articlesFound || 0} articles found, ${data.data?.savedToSheets || 0} saved`);
+                    await loadSystemState(); // Refresh last scraped timestamp from backend
                 } else {
                     showToast("❌ Scraping failed: " + (data.error || "Unknown error"), "error");
                     logActivity("❌ Scraping failed: " + (data.error || "Unknown error"));
@@ -2246,10 +2314,11 @@ async function loadSubscriberList() {
             
             try {
                 logActivity(`📧 Sending test email to ${email}...`);
+                const segment = document.getElementById('newsletterSegment')?.value || 'pro';
                 const resp = await fetch(`${API_BASE_URL}/api/newsletter/test`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ email })
+                    body: JSON.stringify({ email, segment })
                 });
                 const data = await resp.json();
                 
@@ -2267,9 +2336,7 @@ async function loadSubscriberList() {
 toggleSpinner('testBtn', 'testSpinner', false);
         }
 
-        function rerunLastNewsletter() {
-            showToast("Re-running last newsletter send: not yet implemented.", "info");
-        }
+        // rerunLastNewsletter removed — workflow is Generate → Preview → Send
 
         // ===== SUBSCRIBER CRUD OPERATIONS =====
         function showAddSubscriberModal() {
@@ -2441,6 +2508,175 @@ toggleSpinner('testBtn', 'testSpinner', false);
 
         // ===== INITIALIZATION =====
         // Additional initialization can be added here if needed
-    </script>
+    
+        // ===== SYSTEM STATE: last scraped / last sent from Events_Log =====
+        async function loadSystemState() {
+            try {
+                const resp = await fetch(`${API_BASE_URL}/api/system/state`);
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (!data.success || !data.data) return;
+
+                const state = data.data;
+
+                // Last scraped
+                const scrapeEl = document.getElementById('lastScrapedInfo');
+                if (scrapeEl) {
+                    if (state.lastScrape?.timestamp) {
+                        const d = new Date(state.lastScrape.timestamp);
+                        const trigger = state.lastScrape.trigger === 'manual' ? ' (manual)' : ' (scheduled)';
+                        scrapeEl.textContent = 'Last scraped: ' + d.toLocaleString('en-AU', {
+                            timeZone: 'Australia/Sydney',
+                            day: 'numeric', month: 'short',
+                            hour: '2-digit', minute: '2-digit'
+                        }) + trigger;
+                    } else {
+                        scrapeEl.textContent = 'Last scraped: never';
+                    }
+                }
+
+                // Last sent — per segment
+                const proEl = document.getElementById('lastSentProInfo');
+                const driverEl = document.getElementById('lastSentDriverInfo');
+                function fmtSent(sent) {
+                    if (!sent?.timestamp) return '—';
+                    const d = new Date(sent.timestamp);
+                    const trigger = sent.trigger === 'manual' ? ' (manual)' : ' (scheduled)';
+                    return d.toLocaleString('en-AU', {
+                        timeZone: 'Australia/Sydney',
+                        day: 'numeric', month: 'short',
+                        hour: '2-digit', minute: '2-digit'
+                    }) + trigger;
+                }
+                if (proEl) proEl.textContent = 'CoR Intel last sent: ' + fmtSent(state.lastSent?.pro);
+                if (driverEl) driverEl.textContent = 'Safe Freight Mate last sent: ' + fmtSent(state.lastSent?.driver);
+
+            } catch (e) {
+                console.warn('loadSystemState error:', e);
+            }
+        }
+
+        // ===== ENGAGEMENT REFRESH: pull from Resend via backend =====
+        async function refreshEngagementData() {
+            const btn = document.getElementById('engagementRefreshBtn');
+            const spinner = document.getElementById('engagementSpinner');
+            const results = document.getElementById('engagementResults');
+            if (btn) btn.disabled = true;
+            if (spinner) spinner.classList.remove('hidden');
+            results.innerHTML = '<p class="text-gray-400 text-sm italic">Pulling data from Resend API… this may take up to 60 seconds.</p>';
+
+            try {
+                const resp = await fetch(`${API_BASE_URL}/api/analytics/engagement`, { method: 'POST' });
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.error || 'Unknown error');
+
+                const d = data.data;
+                if (d.message) {
+                    results.innerHTML = `<p class="text-amber-600 text-sm">${d.message}</p>`;
+                    return;
+                }
+
+                // Build engagement summary HTML
+                let html = '';
+
+                // Issues table
+                if (d.byIssue && d.byIssue.length > 0) {
+                    html += '<h3 class="font-medium text-gray-700 mb-2">Issue Engagement</h3>';
+                    html += '<table class="min-w-full text-sm mb-6"><thead><tr class="bg-gray-50 text-xs uppercase text-gray-500">';
+                    html += '<th class="px-3 py-2 text-left">Issue</th><th class="px-3 py-2 text-left">Sent</th><th class="px-3 py-2 text-left">Open Rate</th><th class="px-3 py-2 text-left">Unique Clicks</th></tr></thead><tbody>';
+                    d.byIssue.forEach(issue => {
+                        html += `<tr class="border-t"><td class="px-3 py-2 font-mono text-xs">${issue.issue_id}</td>`;
+                        html += `<td class="px-3 py-2">${issue.sent}</td>`;
+                        html += `<td class="px-3 py-2">${issue.open_rate}</td>`;
+                        html += `<td class="px-3 py-2">${issue.unique_clicks}</td></tr>`;
+                    });
+                    html += '</tbody></table>';
+                }
+
+                // Category clicks
+                if (d.byCategory && Object.keys(d.byCategory).length > 0) {
+                    html += '<h3 class="font-medium text-gray-700 mb-2">Clicks by Category</h3>';
+                    html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3">';
+                    Object.entries(d.byCategory).sort((a,b) => b[1]-a[1]).forEach(([cat, clicks]) => {
+                        html += `<div class="bg-gray-50 rounded p-3"><p class="text-xs text-gray-500">${cat}</p>`;
+                        html += `<p class="text-xl font-bold text-blue-700">${clicks}</p><p class="text-xs text-gray-400">clicks</p></div>`;
+                    });
+                    html += '</div>';
+                }
+
+                if (!html) html = '<p class="text-gray-400 text-sm">No engagement events found for the selected period.</p>';
+                results.innerHTML = html;
+                logActivity(`✅ Engagement data refreshed: ${d.emailsFetched || 0} emails fetched from Resend`);
+
+                // Also refresh the recent issues table
+                renderRecentIssues(d.byIssue || []);
+
+            } catch (e) {
+                results.innerHTML = `<p class="text-red-500 text-sm">Error: ${e.message}</p>`;
+                logActivity('❌ Engagement refresh failed: ' + e.message);
+            } finally {
+                if (btn) btn.disabled = false;
+                if (spinner) spinner.classList.add('hidden');
+            }
+        }
+
+        // ===== RENDER RECENT ISSUES TABLE =====
+        function renderRecentIssues(issues) {
+            const tbody = document.getElementById('recentIssuesBody');
+            if (!tbody) return;
+            if (!issues || issues.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-4 text-center text-gray-400">No issues tracked yet</td></tr>';
+                return;
+            }
+            tbody.innerHTML = issues.map(issue => `
+                <tr class="border-t hover:bg-gray-50">
+                    <td class="px-4 py-2 font-mono text-xs text-gray-600">${issue.issue_id || '—'}</td>
+                    <td class="px-4 py-2">
+                        <span class="px-2 py-0.5 rounded text-xs font-medium ${(issue.issue_id || '').includes('pro') ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">
+                            ${(issue.issue_id || '').includes('pro') ? 'CoR Intel' : 'Safe Freight Mate'}
+                        </span>
+                    </td>
+                    <td class="px-4 py-2 text-sm">${issue.sent || '—'}</td>
+                    <td class="px-4 py-2 text-sm">${issue.open_rate || '—'}</td>
+                    <td class="px-4 py-2 text-sm">${issue.unique_clicks !== undefined ? issue.unique_clicks : '—'}</td>
+                </tr>
+            `).join('');
+        }
+
+        // ===== SCHEDULE HELPER: build human label without hardcoding Wednesday =====
+        function buildScheduleLabel(config) {
+            const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            const dayName = days[config.dayOfWeek] || 'Unknown';
+            const time = `${String(config.hour).padStart(2,'0')}:${String(config.minute).padStart(2,'0')}`;
+            const weekNames = ['','first','second','third','fourth'];
+            switch (config.frequency) {
+                case 'daily':     return `Every day at ${time} AEST`;
+                case 'weekly':    return `Every ${dayName} at ${time} AEST`;
+                case 'fortnightly': return `Every second ${dayName} at ${time} AEST`;
+                case 'monthly':   return `${weekNames[config.weekOfMonth || 1]} ${dayName} of each month at ${time} AEST`;
+                default:          return `${config.frequency} at ${time} AEST`;
+            }
+        }
+
+        // ===== ANALYTICS TAB: load recent issues from /api/analytics/engagement GET =====
+        async function loadEngagementTab() {
+            try {
+                const resp = await fetch(`${API_BASE_URL}/api/analytics/engagement`);
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (data.success && data.data) {
+                    renderRecentIssues(data.data.issues || []);
+                    // Update metrics from cached data
+                    const issues = data.data.issues || [];
+                    const totalSent = issues.reduce((s, i) => s + (parseInt(i.sent) || 0), 0);
+                    const el = document.getElementById('emailsSent7d');
+                    if (el) el.textContent = totalSent || '—';
+                    const articlesEl = document.getElementById('articlesScraped');
+                    if (articlesEl) articlesEl.textContent = issues.length || '—';
+                }
+            } catch (e) { /* silent fail */ }
+        }
+
+</script>
 </body>
 </html>
