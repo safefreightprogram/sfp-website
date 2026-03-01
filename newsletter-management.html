@@ -611,7 +611,10 @@
                     <!-- Subscriber List -->
                     <div class="lg:col-span-2">
                         <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-xl font-semibold">Subscriber Management</h2>
+                            <div>
+                                <h2 class="text-xl font-semibold">Subscriber Management</h2>
+                                <p class="text-xs text-gray-400 mt-0.5">Pending = awaiting activation. Click Activate to make them active and start receiving newsletters.</p>
+                            </div>
                             <div class="flex space-x-2">
                                 <select id="subscriberSegmentFilter" onchange="loadSubscriberList()" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
                                     <option value="">All Segments</option>
@@ -2121,6 +2124,10 @@ if (activeSubscriptionsElement) activeSubscriptionsElement.textContent = activeS
                 const tr = document.createElement('tr');
                 tr.className = 'border-t';
 
+                const activateBtn = statusLabel === 'pending' ? 
+                    `<button class="text-green-600 hover:underline mr-2 text-xs font-medium"
+                        onclick='activateSubscriber(${JSON.stringify(s.email)})'>Activate</button>` : '';
+
                 tr.innerHTML = `
                     <td class="py-3 px-3 align-top">${escapeHtml(s.email)}</td>
                     <td class="py-3 px-3 align-top">${escapeHtml(s.name)}</td>
@@ -2131,14 +2138,11 @@ if (activeSubscriptionsElement) activeSubscriptionsElement.textContent = activeS
                         </span>
                     </td>
                     <td class="py-3 px-3 align-top whitespace-nowrap">
-                        <button class="text-blue-600 hover:underline mr-3"
-        onclick='showEditSubscriberModal(${JSON.stringify(s.email)})'>
-    Edit
-</button>
-<button class="text-red-600 hover:underline"
-        onclick='showDeleteModal(${JSON.stringify(s.email)})'>
-    Delete
-</button>
+                        ${activateBtn}
+                        <button class="text-blue-600 hover:underline mr-2"
+                            onclick='showEditSubscriberModal(${JSON.stringify(s.email)})'>Edit</button>
+                        <button class="text-red-600 hover:underline"
+                            onclick='showDeleteModal(${JSON.stringify(s.email)})'>Delete</button>
                     </td>
                 `;
 
@@ -2348,6 +2352,27 @@ toggleSpinner('testBtn', 'testSpinner', false);
 
         // rerunLastNewsletter removed — workflow is Generate → Preview → Send
 
+        async function activateSubscriber(email) {
+            if (!confirm(`Activate ${email}? They will start receiving newsletters immediately.`)) return;
+            try {
+                const resp = await fetch(`${API_BASE_URL}/api/admin/subscriber/activate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showToast(`✅ ${email} activated — they will now receive newsletters.`, 'success');
+                    loadSubscriberList();
+                    loadSubscriberStats();
+                } else {
+                    showToast('❌ Activation failed: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (e) {
+                showToast('❌ Error: ' + e.message, 'error');
+            }
+        }
+
         // ===== SUBSCRIBER CRUD OPERATIONS =====
         function showAddSubscriberModal() {
             document.getElementById('modalTitle').textContent = "Add Subscriber";
@@ -2397,7 +2422,8 @@ toggleSpinner('testBtn', 'testSpinner', false);
                 status: document.getElementById('subscriberStatus').value
             };
             
-            const url = editMode ? `${API_BASE_URL}/api/subscriber/${encodeURIComponent(id)}` : `${API_BASE_URL}/api/subscribers`;
+            // Admin adds go to /api/admin/subscriber (sets active immediately, no confirmation email)
+            const url = editMode ? `${API_BASE_URL}/api/subscriber/${encodeURIComponent(id)}` : `${API_BASE_URL}/api/admin/subscriber`;
             const method = editMode ? 'PUT' : 'POST';
             
             fetch(url, {
