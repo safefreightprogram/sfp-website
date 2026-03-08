@@ -674,3 +674,4 @@ Claude has no memory between sessions. To get a new session up to speed:
 | 1 Mar 2026 | Bug fixes: subscriber edit path error, schedule persistence (/tmp), minute selector, schedule vs manual explanation |
 | 1 Mar 2026 | Root cause analysis: pending subscribers invisible in table and to sends. Admin add + activate endpoints added. getAllSubscribersFromSheet() for dashboard. |
 | 1 Mar 2026 | Path fix revert: '../config/sheets' is correct (not './sheets'). /tmp for schedule config. Confirmed generator.js paths correct. |
+| 8 Mar 2026 | Full index.js rewrite: Basic Auth middleware (Issue 3), schedule config persistence moved from /tmp to Google Sheets Schedule_Config tab (Issue 1), segment editing improved to accept CSV/array with canonical normalisation (Issue 2), getSheetsClient() helper centralised across all endpoints. |
