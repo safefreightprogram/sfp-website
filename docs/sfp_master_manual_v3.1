@@ -1,0 +1,798 @@
+# Safe Freight Program — Master Manual
+**Version:** 3.1
+**Date:** 8 March 2026
+**Classification:** Commercial in Confidence
+**Document Owner:** Safe Freight Program
+**Format note:** Maintained as Markdown for ongoing updates during development sessions. Convert to Word/PDF only when printing or sharing externally.
+
+---
+
+## Version History
+
+| Version | Date | Summary |
+|---------|------|---------|
+| 1.0–1.7 | Aug 2025 | Initial manual: strategy, business model, AIL framework, legal docs, website style guide |
+| 1.8 | Sep 2025 | Newsletter system architecture v1 (Google Apps Script era — now superseded) |
+| 1.9 | Dec 2025 | Operational newsletter platform, Railway deployment, market validation |
+| 2.0 | Sep 2025 | Consolidated v1.7 + v1.9 content |
+| 3.0 | Mar 2026 | **MAJOR UPDATE:** Complete technical rewrite. Node.js/Railway/Resend/OpenAI stack fully documented. All Feb–Mar 2026 development work incorporated. Converted to Markdown for living document workflow. |
+| 3.1 | 8 Mar 2026 | Added Part 11: Outstanding Work & Priorities. Updated schedule persistence notes (now Google Sheets). Updated auth status. Updated known limitations. Session log current. |
+
+---
+
+## Table of Contents
+
+- [Part 1: Strategic Foundation](#part-1-strategic-foundation)
+- [Part 2: Newsletter Products](#part-2-newsletter-products)
+- [Part 3: Technical Infrastructure](#part-3-technical-infrastructure)
+- [Part 4: Google Sheets Database Schema](#part-4-google-sheets-database-schema)
+- [Part 5: API Reference](#part-5-api-reference)
+- [Part 6: Admin Dashboard](#part-6-admin-dashboard)
+- [Part 7: Subscription & Lifecycle Flow](#part-7-subscription--lifecycle-flow)
+- [Part 8: Known Issues, Decisions & Gotchas](#part-8-known-issues-decisions--gotchas)
+- [Part 9: Day-to-Day Operations](#part-9-day-to-day-operations)
+- [Part 10: Strategic Foundation (Full — from v2.0)](#part-10-strategic-foundation-full--from-v20)
+- [**Part 11: Outstanding Work & Priorities**](#part-11-outstanding-work--priorities)
+- [Appendix A: Quick Reference](#appendix-a-quick-reference)
+
+---
+
+## Part 1: Strategic Foundation
+
+### 1.1 Executive Summary
+
+- **Mission:** Create a unified, portable compliance credential system for heavy vehicle drivers and operators across Australia.
+- **Vision:** Eliminate duplicated training requirements while maintaining the highest safety standards across freight receiving sites.
+- **Current status (March 2026):** Operational newsletter platform (CoR Intel Weekly + Safe Freight Mate) actively building industry audience. Commercial credential platform in development.
+- **Market opportunity:** 250,000+ heavy vehicle drivers requiring compliance training; major receivers seeking efficient verification systems.
+
+### 1.2 Business Model
+
+**Current phase — Audience Building (Free)**
+- CoR Intel Weekly: professional compliance intelligence for transport stakeholders
+- Safe Freight Mate: driver-focused safety and regulatory updates
+- Purpose: establish credibility, build subscriber base, validate market demand before commercial launch
+
+**Commercial Platform (Planned)**
+- Driver Passport Subscriptions — $99/year portable compliance credential
+- Receiver Verification Services — $399–$1,299/month per site
+- AIL Partnership Revenue — accreditation fees + inspection revenue share
+- Trainer Partnership Revenue — certification fees, 65/35 revenue split
+
+### 1.3 Market Position
+
+- Only dedicated Chain of Responsibility intelligence service in Australia
+- No direct newsletter competitors in the CoR compliance space
+- First mover advantage in unified digital credential platform
+- NHVR relationship: neutral-to-positive; no regulatory barriers identified
+
+---
+
+## Part 2: Newsletter Products
+
+### 2.1 CoR Intel Weekly (Pro Segment)
+
+| Property | Value |
+|----------|-------|
+| Audience | Compliance managers, transport executives, safety professionals, legal/risk professionals |
+| Tone | Professional, analytical, strategic. Never speculative on enforcement outcomes. |
+| Category priority | Regulatory Update → Enforcement Action → Regulatory Guidance → Safety Alert → From the Industry |
+| Min score thresholds | Compliance slot: 72+. Industry slot: 65+ |
+| Article count | 2–4 articles (quality-first, not fixed 5 slots) |
+| Action tips | Specific to duty-holder obligations. No "contact your legal team" speculation. |
+
+### 2.2 Safe Freight Mate (Driver Segment)
+
+| Property | Value |
+|----------|-------|
+| Audience | Heavy vehicle drivers, owner-operators |
+| Tone | Conversational, plain English, supportive. "Servo talk" voice for industry slot. |
+| Category priority | Road Intel/Intercepts → Fatigue/Hours → Driver Wellness → Safety Alert → Servo Talk |
+| Min score thresholds | Road Intel slot: 68+. Servo Talk slot: 63+ |
+| Wellbeing content | Synthesised SFP original content acceptable when no external source passes threshold |
+| Action tips | Practical, specific. No victim-blaming. No "check with your employer" deflection. |
+
+### 2.3 Content Sources (Active — March 2026)
+
+| Source | Type | Segments |
+|--------|------|----------|
+| NHVR Latest News | Direct HTML scrape | Pro + Driver |
+| NHVR On the Road | Direct HTML scrape | Pro + Driver |
+| NHVR Safety Alerts | Direct HTML scrape | Pro + Driver |
+| NHVR Consultations | Direct HTML scrape | Pro |
+| NHVR Publications | Direct HTML scrape (PDF filtered) | Pro |
+| ATA (Australian Trucking Association) | RSS with compliance keyword filter | Pro + Driver |
+| JADE court decisions | RSS (transport cases only) | Pro |
+| ATN / Big Rigs / Owner Driver | RSS | Pro + Driver |
+| SafeWork NSW | RSS (heavy vehicle keywords only) | Pro + Driver |
+| TWU | RSS (excludes aviation and unrelated content) | Driver |
+
+### 2.4 Content Filtering Principles
+
+**Always excluded regardless of source:**
+- Pure advocacy/lobbying (fuel tax, road user charges, "calls for government action")
+- Market/sales/financial news (truck sales figures, company earnings, market share)
+- Conference registrations, awards, Australia Day honours
+- Traffic alerts, roadworks, night works (not compliance-relevant)
+- University research without direct operational implication
+- Fatal crashes in the industry/servo talk slot
+- PDF filenames accidentally scraped from publications listing pages
+- Peak body welcome statements ("welcomes funding announcement" etc.)
+
+**Diversity caps:**
+- Maximum 3 Regulatory Update articles per Pro newsletter
+- Industry/Servo Talk slot uses a separate GPT pass with conversational rewrite
+- 21-day recency filter on articles (configurable)
+
+**Geographic scoring:**
+- NHVR sources receive +5 base relevance bonus
+- Foreign content penalised
+- Australian operational focus maintained
+
+---
+
+## Part 3: Technical Infrastructure
+
+### 3.1 System Architecture
+
+```
+Content Sources (RSS + HTML scraping)
+          ↓
+Railway Node.js Server  (/app/src/index.js — Express API)
+          ↓                          ↓
+    scraper.js               generator.js  (OpenAI GPT-4o)
+          ↓                          ↓
+  Google Sheets DB          emailSender.js  (Resend API)
+    Article_Archive            Subscribers sheet
+    Schedule_Config                  ↓
+    Events_Log              Newsletter_Archive (planned)
+                                     ↓
+                    newsletter-management.html  (Admin Dashboard)
+                    advancedScheduler.js  (Cron automation)
+```
+
+### 3.2 Repository Structure
+
+```
+/
+├── src/
+│   ├── index.js                ← Express server + all API routes
+│   ├── generator.js            ← Newsletter generation (OpenAI GPT-4o)
+│   ├── emailSender.js          ← Resend API sending + subscriber fetching
+│   ├── scraper.js              ← Content scraping engine
+│   └── advancedScheduler.js   ← node-cron scheduling system
+├── config/
+│   ├── sheets.js               ← All Google Sheets read/write methods
+│   └── config.js               ← Env var wrappers + scraping source list
+├── public/
+│   └── newsletter-management.html   ← Admin dashboard (static SPA)
+├── package.json
+└── railway.toml
+```
+
+> **⚠️ CRITICAL PATH NOTE**
+> `index.js` is at `/app/src/index.js` on Railway.
+> `sheets.js` is at `/app/config/sheets.js` — **NOT** in `src/`.
+> All `require()` calls to sheets must use `'../config/sheets'` (not `'./sheets'`).
+> This applies in: `index.js`, `generator.js`, `advancedScheduler.js`.
+> `generator.js` also uses `require('../config/config')` — also correct.
+
+### 3.3 Key Files
+
+| File | Purpose | Key Notes |
+|------|---------|-----------|
+| `src/index.js` | Express server. All API endpoints. Scheduler wiring. Basic Auth middleware. | ~1,425 lines (v3.1). Contains `getAllSubscribersFromSheet()`, admin subscriber routes, analytics endpoints, system state tracking, `getSheetsClient()` centralised helper. |
+| `src/generator.js` | OpenAI newsletter generation for both segments | Calls `sheetsManager.getRecentArticles()`, builds HTML template, calls `emailSender.sendNewsletter()`. Quality-first: min score thresholds, not fixed slots. |
+| `src/emailSender.js` | Resend API email sending. Subscriber fetching for sends. | `getSubscribersFromSheet()` filters to `active`/`confirmed`/`subscribed` only. Reads `Subscribers!A:R`. Injects unsubscribe/pause tokens per email. |
+| `src/scraper.js` | Article scraping from all configured sources | Source config lives in `config/config.js`. Handles RSS + direct HTML. Writes to Article_Archive sheet. |
+| `src/advancedScheduler.js` | node-cron scheduling for scraping + newsletter jobs | Timezone: `Australia/Sydney`. `onJobComplete` callback wired for Events_Log. Config loaded from Google Sheets `Schedule_Config` tab on startup. |
+| `config/sheets.js` | All Google Sheets read/write operations | Methods: `getRecentArticles`, `saveArticles`, `markArticlesAsUsed`, `getSubscriberByEmail`, `updateSubscriberByEmail`, `getAuth`. Uses `googleapis`. |
+| `config/config.js` | Env var exports + full scraping source list | `config.openai.apiKey`, `config.sheets.spreadsheetId`, `config.sources[]`. |
+| `public/newsletter-management.html` | Admin dashboard SPA | Served at `/newsletter-management`. Tabs: Operations, Subscribers, Schedule, Analytics, Settings. Protected by Basic Auth. |
+
+### 3.4 Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `GOOGLE_CLIENT_EMAIL` | Google service account email for Sheets API |
+| `GOOGLE_PRIVATE_KEY` | Google service account private key (`\n` escaped) |
+| `GOOGLE_SHEETS_ID` | Spreadsheet ID from the Google Sheets URL |
+| `OPENAI_API_KEY` | OpenAI API key for GPT-4o newsletter generation |
+| `RESEND_API_KEY` | Resend API key for transactional email sending |
+| `EMAIL_FROM` | Sending address (`news@safefreightprogram.com`) |
+| `PUBLIC_API_BASE_URL` | Railway public URL — used in confirmation/unsubscribe links |
+| `NODE_ENV` | Set to `production` |
+| `ADMIN_USER` | Username for Basic Auth on admin dashboard and all `/api/` routes |
+| `ADMIN_PASS` | Password for Basic Auth — set a strong password, store securely |
+
+> **`SCHEDULE_CONFIG_PATH` is no longer needed.** Schedule config is now persisted to the `Schedule_Config` Google Sheet tab and survives Railway redeploys without a volume mount.
+
+### 3.5 Email System
+
+| Property | Value |
+|----------|-------|
+| Provider | Resend (resend.com) — replaced original Gmail API approach |
+| Sending address | `news@safefreightprogram.com` |
+| From display name | `Safe Freight Program` |
+| Open/click tracking | Enabled via Resend API flags |
+| Resend ID capture | Each email's Resend ID stored in Send_Log sheet for analytics |
+| Compliance | Australian Spam Act 2003 footer on every email. Unsubscribe and Pause links required. |
+
+### 3.6 Scheduling System
+
+| Property | Value |
+|----------|-------|
+| Scheduler | node-cron running inside the Railway process (`advancedScheduler.js`) |
+| Timezone | `Australia/Sydney` (AEST/AEDT auto-handled by node-cron) |
+| Jobs | `scraping` (configurable) → `newsletter` (depends on scraping + delay) |
+| Config persistence | **Google Sheets `Schedule_Config` tab** — survives Railway redeploys. Loaded on startup and applied to scheduler automatically. |
+| Manual trigger | `POST /api/schedule/trigger/:jobType` — async, returns immediately |
+| Dashboard save | `PUT /api/schedule/:jobType` — updates in-memory config. Follow with `POST /api/schedule/save-to-sheets` to persist to Sheets. |
+
+### 3.7 Admin Dashboard Authentication (as of v3.1)
+
+Basic Auth middleware is implemented in `src/index.js`. It activates only when both `ADMIN_USER` and `ADMIN_PASS` Railway env vars are set.
+
+**Protected:** All `/api/` routes, `/newsletter-management`, `/admin`, `/dashboard`.
+
+**Public (no auth required):** `/health`, `/api/confirm`, `/api/unsubscribe`, `/api/pause`, `POST /api/subscribers` (public signup form).
+
+If `ADMIN_USER`/`ADMIN_PASS` are not set, the system fails open with a console warning. **Set these env vars before any public exposure of the Railway URL.**
+
+---
+
+## Part 4: Google Sheets Database Schema
+
+### 4.1 Subscribers Sheet (`Subscribers`)
+
+| Column | Description |
+|--------|-------------|
+| `Subscriber_ID` | `SUB-{timestamp}` generated on creation |
+| `Email` | Lowercase email address |
+| `Name` | Display name |
+| `Segment` | Comma-separated: `pro`, `driver`, or `pro,driver` |
+| `Status` | `pending` / `active` / `paused` / `unsubscribed` |
+| `Subscribed_At` | UTC ISO timestamp of signup |
+| `Confirmed_At` | UTC ISO timestamp of email confirmation or admin activation |
+| `Unsubscribed_At` | UTC ISO timestamp if unsubscribed (blank = still subscribed) |
+| `Unsub_Token` | 16-char hex token for unsubscribe/pause links |
+| `Confirm_Token` | 16-char hex token for email confirmation (public signup only) |
+| `Company` | Optional |
+| `Role` | Optional |
+| `Paused_At` | Set by `/api/pause`; cleared when `Resume_At` passes |
+| `Resume_At` | UTC ISO timestamp when newsletters should resume |
+| `Updated_At` | UTC ISO timestamp of last modification |
+
+> **STATUS RULES for email sending:**
+> `emailSender.getSubscribersFromSheet()` sends ONLY to: `active`, `confirmed`, `subscribed`
+> `pending` subscribers do NOT receive newsletters.
+> Admin dashboard shows ALL statuses — use Activate button to promote pending → active.
+> Admin-added subscribers (`/api/admin/subscriber`) are set `active` immediately.
+> Public subscribe form (`/api/subscribers`) sets `pending` + sends confirmation email.
+
+### 4.2 Subscriber Segment Management
+
+The subscriber record stores segment as a single comma-separated field (e.g. `pro,driver`). As of v3.1, the `PUT /api/subscribers/:email` endpoint accepts segment as a comma-separated string, single value, or array, and normalises to canonical order (`pro` before `driver`). To remove one segment, update to just `pro` or `driver`. To add both, update to `pro,driver`.
+
+A proper per-subscription junction table model remains future work.
+
+### 4.3 Article_Archive Sheet
+
+| Column | Description |
+|--------|-------------|
+| `ID` | Unique article ID |
+| `Date_Collected` | UTC ISO timestamp of scrape (displays as Sydney time in dashboard) |
+| `Source` | Source name from config (e.g. `NHVR Latest News`) |
+| `Title` | Article title |
+| `URL` | Source URL |
+| `Published_Date` | Publication date from RSS `pubDate` or HTML `<time>` element |
+| `Summary` | RSS summary or auto-generated |
+| `Used_In_Issue` | Issue ID if article has been included in a sent newsletter |
+| `Content_Hash` | MD5 hash for deduplication |
+| `Relevance_Score` | Calculated relevance score |
+| `Segment_Tag` | `pro`, `driver`, or `both` |
+
+### 4.4 Events_Log Sheet
+
+Tracks all system events. Used to populate "last scraped/sent" display in dashboard Operations tab.
+
+| Column | Description |
+|--------|-------------|
+| `Timestamp` | UTC ISO timestamp |
+| `Event_Type` | `scrape_completed`, `newsletter_sent`, `trigger` |
+| `Issue_ID` | Issue identifier if newsletter event |
+| `Segment` | `pro`, `driver`, or `scraping` |
+| `Status` | `success` or `error` |
+| `Trigger` | `manual` or `scheduled` |
+| `Details` | JSON string with counts, errors, article IDs, etc. |
+
+### 4.5 Send_Log Sheet
+
+Per-send records including Resend IDs for engagement analytics.
+
+| Column | Description |
+|--------|-------------|
+| `Sent_At` | UTC ISO timestamp |
+| `Segment` | `pro` or `driver` |
+| `Sent_Count` | Number of emails sent |
+| `Failed_Count` | Number of send failures |
+| `Engagement_Fetched` | `true` once Resend engagement has been pulled for this issue |
+| `Notes` | JSON: `issue_id`, `subject`, `resend_ids[]`, `article_count` |
+
+### 4.6 Schedule_Config Sheet *(new in v3.1)*
+
+Stores schedule configuration so it survives Railway redeploys. Two rows, two columns.
+
+| Column A (Key) | Column B (Value) |
+|----------------|-----------------|
+| `scraping` | JSON object: `{frequency, dayOfWeek, hour, minute, enabled, ...}` |
+| `newsletter` | JSON object: `{frequency, dayOfWeek, hour, minute, enabled, delayAfterDependency, ...}` |
+
+> **Setup required:** Create this tab manually in Google Sheets before first deploy. Leave it empty — it will be populated on first Save from the dashboard.
+
+### 4.7 Subscriber_Audit Sheet
+
+Immutable audit trail for subscriber changes (deletes, status changes, admin edits).
+
+| Column | Description |
+|--------|-------------|
+| `Timestamp` | UTC ISO |
+| `Action` | `deleted`, `paused`, `unsubscribed`, `activated`, `edited` |
+| `Email` | Subscriber email |
+| `Metadata` | JSON with subscriber details at time of action |
+| `IP` | Request IP if available |
+| `User_Agent` | Browser/client UA if available |
+
+### 4.8 Newsletter_Archive Sheet *(planned — not yet implemented)*
+
+Will store full HTML of every sent newsletter for record-keeping and re-send capability. See Part 11.
+
+---
+
+## Part 5: API Reference
+
+### 5.1 Core Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/health` | Public | Health check — `{status:'healthy'}` |
+| GET | `/api/status` | Admin | Full system status (email, sheets, openai configured flags) |
+| GET | `/api/system/state` | Admin | Last scraped/sent times from Events_Log for dashboard display |
+| GET | `/newsletter-management` | Admin | Serves admin dashboard HTML |
+
+### 5.2 Subscriber Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/subscribers` | Admin | Returns ALL subscribers (all statuses) for dashboard. `data.pro.subscribers[]` + `data.driver.subscribers[]`. `data.pro.count` = active count only. |
+| GET | `/api/subscribers/csv` | Admin | Download CSV of all subscribers |
+| POST | `/api/subscribers` | Public | Public signup — creates with `status=pending`, sends confirmation email |
+| POST | `/api/admin/subscriber` | Admin | Admin add — creates with `status=active` immediately, no confirmation email |
+| POST | `/api/admin/subscriber/activate` | Admin | Activate a pending subscriber by email |
+| PUT | `/api/subscribers/:email` | Admin | Update subscriber fields. Accepts segment as CSV string, single value, or array. |
+| DELETE | `/api/subscribers/:email` | Admin | Delete with audit trail write to Subscriber_Audit sheet |
+| GET | `/api/confirm?token=` | Public | Email confirmation link — sets `status=active` |
+| GET | `/api/unsubscribe?token=&segment=` | Public | Unsubscribe link from emails (`segment=all` or `pro`/`driver`) |
+| GET | `/api/pause?token=&days=` | Public | Pause newsletters for 28 days |
+
+### 5.3 Newsletter Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/scrape` | Admin | Trigger content scraping manually |
+| POST | `/api/newsletter/generate/:segment` | Admin | Generate newsletter preview, returns `newsletterId` + HTML |
+| POST | `/api/newsletter/send/:newsletterId` | Admin | Send previously generated newsletter to all active subscribers |
+| POST | `/api/newsletter/test` | Admin | Send test email to specified address |
+
+### 5.4 Schedule Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/schedule/advanced` | Admin | Get current schedule configuration |
+| GET | `/api/schedule/status` | Admin | Get schedule status for dashboard display |
+| PUT | `/api/schedule/:jobType` | Admin | Update schedule config in memory + restart cron job |
+| POST | `/api/schedule/:jobType/:action` | Admin | Enable or disable a job (`action` = `enable`/`disable`) |
+| POST | `/api/schedule/trigger/:jobType` | Admin | Manually trigger a job (async — returns immediately) |
+| POST | `/api/schedule/save-to-sheets` | Admin | Persist current schedule config to Google Sheets |
+
+### 5.5 Analytics Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/analytics/summary` | Admin | Returns send counts, success rate, recent issues from Sheets |
+| GET | `/api/analytics/engagement` | Admin | Returns cached engagement data from Sheets |
+| POST | `/api/analytics/engagement` | Admin | Triggers fresh engagement data fetch from Resend API |
+
+---
+
+## Part 6: Admin Dashboard
+
+### 6.1 Overview
+
+Single-file SPA at `https://www.safefreightprogram.com/newsletter-management`. All state loaded via `fetch()` to the Railway API. Protected by HTTP Basic Auth (set `ADMIN_USER`/`ADMIN_PASS` Railway env vars).
+
+| Property | Value |
+|----------|-------|
+| URL | `https://www.safefreightprogram.com/newsletter-management` |
+| Railway backend | `https://sfp-newsletter-automation-production.up.railway.app` |
+| Auth | HTTP Basic Auth — browser prompts for username/password |
+
+### 6.2 Tabs
+
+**Operations Tab**
+- Run Scraping — calls `POST /api/scrape`
+- Newsletter Workflow — select segment → Generate Preview (renders HTML in right panel) → Send to all subscribers
+- Test Email — sends to specified address
+- Last scraped/sent — shows CoR Intel and Safe Freight Mate separately with `(manual)`/`(scheduled)` qualifier
+
+**Subscribers Tab**
+- Subscriber overview tiles (CoR Intel Weekly / Safe Freight Mate active counts)
+- Subscriber table — shows ALL statuses including pending
+- Pending subscribers show an **Activate** button
+- Add Subscriber — form POSTs to `/api/admin/subscriber` (active immediately, no confirmation email)
+- Edit / Delete buttons per row
+- Segment filter dropdown, Refresh, Download CSV
+
+**Schedule Tab**
+- Left panel: Content Scraping and Newsletter Generation status cards (Active/Enabled, Frequency, Schedule, Next Run, Last Run, Trigger Now button)
+- Right panel: Railway Schedule Configuration — Content Scraping / Newsletter tabs with Frequency/Day/Hour/Minute selectors
+- Dependency Configuration: Newsletter waits for scraping + configurable additional delay (0–120 min)
+- Save Schedule → updates Railway in-memory config. Must also click Save to Sheets (or call `POST /api/schedule/save-to-sheets`) to persist across deploys.
+
+**Analytics Tab**
+- Send metrics: total emails sent, success rate, issues tracked
+- Engagement section with Refresh Engagement button (calls Resend API)
+- Recent Issues table
+
+### 6.3 Important Behavioural Notes
+
+> - **Trigger Now** returns "triggered successfully" immediately — job runs async in background. Check Railway logs to confirm completion and email delivery.
+> - **Subscriber table empty despite stats showing counts** = subscriber status is `pending`. Click Activate.
+> - **Schedule not persisting across deploys** = you saved in the UI (updates `/tmp`) but didn't call `POST /api/schedule/save-to-sheets`. Do both after any schedule change.
+> - **Emails appear sent but not received** — check Resend dashboard for delivery status and check junk/spam folder (especially Hotmail which is aggressive).
+> - **Last scraped/sent times** come from Events_Log sheet, not in-memory state. They survive restarts.
+> - **Auth prompt not appearing** = `ADMIN_USER`/`ADMIN_PASS` env vars not set in Railway. Auth is disabled until they are set.
+
+---
+
+## Part 7: Subscription & Lifecycle Flow
+
+### 7.1 Public Subscribe Flow
+
+URL: `https://www.safefreightprogram.com/subscribe`
+
+1. User selects edition(s) on subscribe.html — edition cards with expand/collapse detail
+2. Submits form → `POST /api/subscribers` → `status = pending`, confirmation email sent
+3. User clicks confirm link → `GET /api/confirm?token=` → `status = active`
+4. Redirected to subscribe-confirmed.html
+5. Receives newsletters at next scheduled or triggered send
+
+### 7.2 Admin Add Subscriber Flow
+
+1. Dashboard Subscribers tab → Add Subscriber
+2. Fill name, email, segment(s)
+3. `POST /api/admin/subscriber` → `status = active` immediately
+4. Subscriber appears in table as active and will receive next send
+
+### 7.3 Pause Flow
+
+1. Subscriber clicks "Pause newsletters" link in email footer
+2. `GET /api/pause?token=` → sets `Paused_At` + `Resume_At` (28 days) in sheet
+3. `emailSender.getSubscribersFromSheet()` skips paused subscribers until `Resume_At` passes
+4. Redirected to pause confirmation page
+
+### 7.4 Unsubscribe Flow
+
+1. Subscriber clicks "Unsubscribe" or "Email unsubscribe" in email footer
+2. `GET /api/unsubscribe?token=&segment=` → sets `Unsubscribed_At` in sheet
+3. `segment=all` removes from all; `segment=pro`/`driver` removes from that segment only
+4. Subscriber record retained for audit; emails cease immediately
+
+### 7.5 Required Email Footer Links
+
+| Link Text | Endpoint |
+|-----------|----------|
+| Pause newsletters | `/api/pause?token={unsub_token}` |
+| Unsubscribe | `/api/unsubscribe?token={unsub_token}&segment=all` |
+| Email unsubscribe (segment-specific) | `/api/unsubscribe?token={unsub_token}&segment={segment}` |
+
+---
+
+## Part 8: Known Issues, Decisions & Gotchas
+
+### 8.1 Resolved Issues (as of March 2026)
+
+| Issue | Resolution |
+|-------|-----------|
+| `Cannot find module './sheets'` error on Railway | `config/sheets.js` lives at `/app/config/`, not `/app/src/`. All requires must use `'../config/sheets'`. |
+| `schedule-config.json` wiped on Railway redeploy | Resolved in v3.1 — config now persists to `Schedule_Config` Google Sheets tab. No longer depends on `/tmp`. |
+| Subscriber table empty despite stats showing counts | `getSubscribersFromSheet()` for sends only returns `active`. Admin-added subscribers were `pending`. Fixed: `/api/subscribers` GET returns all statuses for dashboard. Admin add sets `active` immediately. |
+| Trigger Now shows success but no emails arrive | Subscriber was `pending` at trigger time → sends to nobody. Resolved by activating subscriber first. |
+| Edit subscriber returns `Cannot find module` | Same `config/sheets.js` path issue — resolved. |
+| Sheet timestamps showing "wrong" timezone | Correct behaviour. Server runs UTC, stores UTC ISO strings. Dashboard displays Sydney time. Raw sheet shows UTC — expected. |
+| No auth on admin dashboard | Resolved in v3.1 — Basic Auth middleware implemented. Activate by setting `ADMIN_USER`/`ADMIN_PASS` Railway env vars. |
+| Segment editing fragile | Resolved in v3.1 — `PUT /api/subscribers/:email` now accepts CSV string, single value, or array. Canonical normalisation applied. |
+
+### 8.2 Active Known Limitations
+
+- **Newsletter archive not implemented** — sent newsletter HTML is not stored. Resend has delivery records but full content is not preserved server-side. See Part 11.
+- **No site admin portal** — website Firebase auth exists for the subscriber-facing portal, but there is no admin UI for managing drivers/vehicles/AILs. See Part 11.
+- **Website homepage mobile layout** — known responsive display issues on small screens. See Part 11.
+- **Analytics engagement data limited by Resend plan** — free tier has limited event history window.
+- **Article_Archive grows unboundedly** — no archival or purge mechanism implemented yet.
+- **NHVR Publications** — can still scrape PDF filenames if the page structure changes. Monitor output.
+- **Per-subscription metadata** — segment is still a single CSV field per subscriber record. Junction table model is future work.
+
+### 8.3 Editorial Decisions (Locked)
+
+- Quality-first over quantity — 2–4 articles with min score thresholds preferred over forced 5-slot fill
+- Action tips: specific and operational. Banned phrases include "consult your legal team", "check with your employer", "contact your supervisor" as the primary tip
+- Industry/Servo Talk slot: separate GPT pass with conversational rewrite, not compliance tone
+- Driver Wellness: SFP can synthesise original content when no external source passes threshold — acceptable but label as own content
+- Geographic scoring: NHVR sources get +5 base bonus. Foreign content penalised.
+- 21-day recency filter active — articles older than 3 weeks excluded from selection pool
+- Advocacy and lobbying content always excluded regardless of source or keyword match
+
+---
+
+## Part 9: Day-to-Day Operations
+
+### 9.1 Weekly Routine (Automated Mode)
+
+Once a subscriber is active and schedule is configured, the system runs fully automatically:
+
+1. Scheduled scraping job runs → fetches articles → saves to Article_Archive sheet
+2. Newsletter job fires after scraping + dependency delay → generates both newsletters → sends to all active subscribers
+3. Events_Log updated with timestamps and trigger type (`scheduled`)
+4. Dashboard Operations tab shows updated "last scraped/sent" with `(scheduled)` qualifier
+
+### 9.2 Manual Send Workflow
+
+1. Operations tab → Run Scraping (if fresh content needed)
+2. Select segment → Generate Preview
+3. Review HTML preview in right panel
+4. If satisfied → Send to all subscribers
+5. Confirm via toast notification; verify in inbox
+
+### 9.3 Adding a New Subscriber (Admin)
+
+1. Subscribers tab → Add Subscriber
+2. Enter email, name, select segment(s)
+3. Submit — subscriber is immediately active
+4. They receive the next scheduled or triggered send
+
+### 9.4 Deploying Code Changes
+
+1. Edit files locally or via GitHub
+2. Push to main branch → Railway auto-deploys
+3. Verify `/health` returns healthy
+4. Check Railway logs for startup errors (especially module path errors)
+5. Verify dashboard loads and auth prompt appears (if `ADMIN_USER`/`ADMIN_PASS` are set)
+6. Check Subscribers tab shows subscribers (not empty table)
+7. **Check Schedule tab** — config should load from Google Sheets automatically. If not, re-save via dashboard.
+
+### 9.5 Starting a New Claude Chat Session
+
+Claude has no memory between sessions. To get a new session up to speed:
+
+1. **Paste or attach this manual** as the primary context document
+2. State the Railway URL: `https://sfp-newsletter-automation-production.up.railway.app`
+3. State the dashboard URL: `https://www.safefreightprogram.com/newsletter-management`
+4. Attach the specific files you want to work on
+5. Describe what you want to work on and any current symptoms or errors
+6. Attach Railway logs if debugging a runtime issue
+
+**The most critical facts for a new session:**
+- `config/sheets.js` is in `config/`, NOT `src/` — all requires use `'../config/sheets'`
+- Railway `/app/src/` is read-only — writes go to Google Sheets or `/tmp` (non-persistent)
+- Subscriber status `pending` ≠ receives emails; must be `active`
+- Email provider is **Resend** (not Gmail, not SMTP, not SendGrid)
+- Dashboard is a static HTML file served as a SPA — not a separate frontend framework
+- Auth: Basic Auth middleware in `index.js` — activated by `ADMIN_USER`/`ADMIN_PASS` env vars
+- Schedule config persists in **Google Sheets `Schedule_Config` tab**, not `/tmp`
+
+---
+
+## Part 10: Strategic Foundation (Full — from v2.0)
+
+> **Note:** The complete strategic, commercial, legal, and operational content from v2.0 (Parts 1–9 of that document) is preserved in the v2.0 Word document. Key content below is summarised; refer to v2.0 for full detail on: financial projections, AIL framework, legal documentation framework, administrative forms, and website style guide.
+
+### 10.1 Value Proposition by User Segment
+
+**Drivers**
+- Problem: Multiple site-specific training requirements, duplicated paperwork, delays at receiver sites
+- Solution: Single portable credential (SFP Passport) recognised across all participating sites
+- Value: Reduced training time, faster site access, professional credibility
+
+**Carriers**
+- Problem: Administrative burden managing multiple compliance requirements per driver/vehicle
+- Solution: Centralised compliance management and transparent verification
+- Value: Reduced admin overhead, client confidence, competitive differentiation
+
+**Receivers**
+- Problem: Uncertainty about driver/vehicle compliance, liability exposure, slow entry processes
+- Solution: Instant verification system with compliance dashboards and audit trails
+- Value: Risk reduction, operational efficiency, regulatory confidence
+
+**AILs (Authorised Inspection Locations)**
+- Problem: Limited revenue streams, manual inspection reporting
+- Solution: New revenue through SFP inspection services with digital workflow
+- Value: Additional revenue, streamlined operations, industry recognition
+
+### 10.2 Commercial Platform Revenue Streams
+
+| Revenue Stream | Pricing | Notes |
+|---------------|---------|-------|
+| Driver Passport Subscription | $99/year | Free launch period (12 months) to build critical mass |
+| Receiver Basic | $399/month/site | Up to 100 verifications/month |
+| Receiver Professional | $699/month/site | Up to 500 verifications/month |
+| Receiver Enterprise | $1,299/month/site | Unlimited + analytics |
+| AIL Initial Accreditation | $3,500 one-time | |
+| AIL Annual License | $1,500/year | |
+| AIL Inspection Revenue Share | 20% of each inspection | |
+| Trainer Certification | $180/driver | 65% to trainer, 35% to SFP |
+
+### 10.3 Financial Projections (Commercial Platform)
+
+| Year | Revenue | Notes |
+|------|---------|-------|
+| Newsletter (current) | -$2,040/year net | ~$170/month infrastructure, $0 revenue |
+| Year 1 (commercial launch) | $687,000 | 3,000 drivers + early enterprise + AIL |
+| Year 2 | $2,692,500 | 7,500 drivers + mature enterprise base |
+| Year 3 | $5,135,000 | 15,000 drivers + full AIL network + advanced services |
+
+### 10.4 Website Style Guide (Summary)
+
+| Element | Specification |
+|---------|--------------|
+| Tagline | "Every Driver. Every Load. One Program." |
+| Primary colours | Blue (`text-blue-800`, `text-blue-700`) + Gray (`text-gray-800`) |
+| Headings | Bold, high-contrast; H1: `text-4xl font-bold text-blue-800` |
+| Body | `text-gray-800`, responsive base size |
+| Cards | White background, `rounded-lg`, `border`, `hover:shadow-lg hover:border-blue-300` |
+| Tone | Professional but approachable. Clarity and trustworthiness. Confidence. |
+| Accessibility | WCAG AA contrast. 44px minimum touch targets. Semantic HTML. |
+
+> For complete style guide, AIL framework, legal documentation templates, administrative forms, and full financial modelling see `SFP_Master_Manual_v2.0.docx`.
+
+---
+
+## Part 11: Outstanding Work & Priorities
+
+This part is the canonical backlog. It is updated at the end of each working session. Items are organised by workstream, then sorted within each workstream by priority.
+
+**Priority key:** 🔴 Do immediately / blocking · 🟠 High / next session · 🟡 Medium / planned · 🟢 Low / future
+
+---
+
+### Workstream 1: Newsletter Automation (Railway / Node.js)
+
+| Priority | Item | Notes |
+|----------|------|-------|
+| 🔴 | **Set `ADMIN_USER` + `ADMIN_PASS` in Railway env vars** | Auth middleware is coded and deployed but inactive until these are set. Do before exposing the Railway URL to anyone. |
+| 🔴 | **Create `Schedule_Config` tab in Google Sheet** | Two columns: Key, Value. Leave empty — first dashboard Save will populate it. Required for schedule persistence to work in v3.1. |
+| 🟠 | **Newsletter HTML archive** | Every sent newsletter's full HTML, subject, segment, timestamp, and recipient count should be written to a `Newsletter_Archive` Google Sheet tab on send. Currently only metadata is saved. One session to implement in `index.js` `writeSendLog()`. |
+| 🟡 | **`POST /api/schedule/save-to-sheets` hook in dashboard** | Dashboard Save Schedule button should automatically call this endpoint after the PUT. Currently requires a manual second step. Small JS change to `newsletter-management.html`. |
+| 🟡 | **Article_Archive purge / archival job** | Sheet grows unboundedly. Add a scheduled job that moves rows older than 90 days to an `Article_Archive_Old` tab or deletes them. |
+| 🟡 | **Analytics auto-refresh** | Schedule nightly Resend engagement pull to keep Issues_Analytics current without manual trigger. |
+| 🟢 | **Per-subscription junction table** | Current segment is a single CSV field per subscriber. A proper `Subscriptions` junction tab would allow per-segment metadata, independent subscribe/unsubscribe dates. Long-term future work. |
+
+---
+
+### Workstream 2: Website (Cloudflare Pages / sfp-website repo)
+
+| Priority | Item | Notes |
+|----------|------|-------|
+| 🟠 | **Fix homepage mobile layout** | `index.html` has responsive display issues on small screens. Likely Tailwind breakpoint or flex/grid issue. Paste `index.html` in a new session to diagnose and fix. |
+| 🟠 | **Resolve/reset site admin password** | Firebase Authentication → find the admin user in the Firebase console → send password reset email. **Clarify first:** is this the Firebase portal admin account, or a separate admin login? The answer determines where to reset it. |
+| 🟡 | **Site admin dashboard** | Scope to be defined. Options: (a) expand newsletter dashboard to cover site content, (b) separate Firebase-auth-protected admin page in sfp-website repo, (c) Firebase console is sufficient for now. Recommend decision before build starts. |
+| 🟡 | **Subscribe page audit** | Verify subscribe form still posts correctly to Railway API after v3.1 deploy. Confirm confirmation email sends and redirect to subscribe-confirmed.html works end-to-end. |
+| 🟢 | **Website content updates** | Homepage copy, About page, and FAQs are placeholder-quality. Should be updated before any commercial launch or significant media coverage. |
+
+---
+
+### Workstream 3: Security & Access Control
+
+| Priority | Item | Notes |
+|----------|------|-------|
+| 🔴 | **Set Basic Auth env vars** | See Workstream 1 — repeated here because it is a security item. |
+| 🟠 | **Restrict Railway URL or move dashboard to non-guessable path** | Basic Auth protects the data, but a non-guessable path (e.g. `/admin-sfp-[random]`) adds a second layer against automated scanning. |
+| 🟡 | **Google Service Account key rotation** | Confirm when the current key was created. Set a calendar reminder to rotate annually. |
+| 🟡 | **Resend API key scope review** | Confirm the Resend key in use is scoped appropriately (sending only, no domain management). |
+| 🟢 | **Railway environment audit** | Confirm no secrets are committed to the GitHub repo. All secrets should be Railway env vars only. |
+
+---
+
+### Workstream 4: Commercial Platform (Future Development)
+
+These items are not scheduled for immediate work but are recorded here so they don't get lost.
+
+| Priority | Item | Notes |
+|----------|------|-------|
+| 🟡 | **Driver Passport data model** | Design the database schema for driver credential records before any build starts. Firebase Firestore is the planned store. |
+| 🟡 | **Receiver verification API** | Core commercial product. Requires driver passport to be live first. |
+| 🟡 | **AIL onboarding flow** | Registration, accreditation documentation, inspection workflow. See v2.0 AIL framework. |
+| 🟢 | **Payment integration** | Stripe is the logical choice. Not started. |
+| 🟢 | **Trainer portal** | Partner-facing interface for certification management and revenue split reporting. |
+
+---
+
+### Workstream 5: Content & Editorial
+
+| Priority | Item | Notes |
+|----------|------|-------|
+| 🟡 | **Monitor NHVR Publications scraping** | HTML structure can change and cause PDF filenames to appear in newsletter article pool. Check output monthly. |
+| 🟡 | **TWU source review** | Aviation and unrelated union content is filtered but filter relies on keyword matching. Review monthly. |
+| 🟢 | **Additional content sources** | Potential additions: Transport for NSW, VicRoads, QLD TMR, WorkSafe Victoria. Evaluate when subscriber base grows. |
+| 🟢 | **Subscriber feedback loop** | No mechanism for subscribers to rate articles or flag irrelevant content. Worth adding once list exceeds ~500 active. |
+
+---
+
+## Appendix A: Quick Reference
+
+### A.1 Critical URLs
+
+| Resource | URL |
+|----------|-----|
+| Admin Dashboard | `https://www.safefreightprogram.com/newsletter-management` |
+| Railway Backend | `https://sfp-newsletter-automation-production.up.railway.app` |
+| Health Check | `https://sfp-newsletter-automation-production.up.railway.app/health` |
+| System Status | `https://sfp-newsletter-automation-production.up.railway.app/api/status` |
+| Subscribe Page | `https://www.safefreightprogram.com/subscribe` |
+| Resend Dashboard | `https://resend.com` |
+| Railway Project | `https://railway.app` |
+| Firebase Console | `https://console.firebase.google.com` |
+| Google Sheets | Via Google Drive (Spreadsheet ID in `GOOGLE_SHEETS_ID` env var) |
+
+### A.2 Which File to Edit
+
+| If you need to change... | Edit this file |
+|--------------------------|----------------|
+| API endpoints, subscriber logic, admin routes, auth middleware | `src/index.js` |
+| Newsletter content, GPT prompts, article scoring, quality thresholds | `src/generator.js` |
+| Email template HTML, unsubscribe token handling, sending logic | `src/emailSender.js` |
+| Scraping sources, RSS feeds, content filters, source keywords | `config/config.js` + `src/scraper.js` |
+| Schedule timing, cron behaviour, job execution | `src/advancedScheduler.js` |
+| Google Sheets read/write methods | `config/sheets.js` |
+| Dashboard UI, subscriber table, operations tab, analytics display | `public/newsletter-management.html` |
+| Website homepage, subscribe page, public pages | `sfp-website` repo (Cloudflare Pages) |
+
+### A.3 Troubleshooting Cheatsheet
+
+| Symptom | First Check |
+|---------|-------------|
+| Subscriber table empty despite stats showing counts | Status is `pending`. Use Activate button or `POST /api/admin/subscriber/activate`. |
+| Trigger Now shows success but no email in inbox | Check Resend dashboard for delivery. Check junk/spam. Subscriber may have been `pending` at trigger time. |
+| `Cannot find module './sheets'` | Require path is wrong. Must be `'../config/sheets'` from any file in `src/`. |
+| Schedule config lost after redeploy | Call `POST /api/schedule/save-to-sheets` after saving schedule. Confirm `Schedule_Config` tab exists in Google Sheet. |
+| Auth prompt not appearing on dashboard | `ADMIN_USER`/`ADMIN_PASS` not set in Railway env vars. Auth is disabled until both are set. |
+| Newsletter sends to 0 people | No active subscribers OR Google Sheets API credentials failing (check Railway env vars). |
+| Articles scraped but not appearing in newsletter | Check 21-day filter, relevance score thresholds, `Used_In_Issue` column (may already be used). |
+| Email footer links 404 | Check `PUBLIC_API_BASE_URL` env var is set to the Railway backend URL. |
+| Dashboard shows "Connected to Railway" but table is stale | Click Refresh in the relevant tab. Dashboard data is not live-streaming — it fetches on demand. |
+
+### A.4 Session Log
+
+| Date | Session Summary |
+|------|----------------|
+| 26 Feb 2026 | Subscribe page UX refinement — edition cards, header dropdown, segment values |
+| 26 Feb 2026 | Subscribe/unsubscribe flow completion, backend redirect fixes, Google Sheets audit |
+| 26 Feb 2026 | Unsubscribe token bug fix, end-to-end testing, editorial strategy discussion |
+| 26 Feb 2026 | Article categorisation keywords, source scoring boosts, geographic relevance scoring |
+| 27 Feb 2026 | "From the Industry" 5th slot, GPT conversational rewrite, preview/send cache fix |
+| 27 Feb 2026 | Source overhaul: NHVR direct sources added, ATA RSS, disabled noisy sources, publish date extraction |
+| 27 Feb 2026 | Content quality refinement: date formatting, industry slot filtering, diversity caps, 21-day filter |
+| 27 Feb 2026 | Driver segment build: category priorities flipped, "servo talk" voice, post-selection date fetching |
+| 27 Feb 2026 | Driver wellbeing slot, synthesised content fallback, JADE/Federal Court RSS, action tip variety |
+| 27 Feb 2026 | Regulatory Guidance category added, NHVR Consultations + Publications sources, JADE RSS fix |
+| 28 Feb 2026 | PDF filter fix, GPT fabrication prevention in thin-source slots, Federal Court firehose fix |
+| 28 Feb 2026 | TWU aviation content fix, geo scoring, GPT embellishment patterns, banned phrases |
+| 28 Feb 2026 | Quality-first redesign: min score thresholds, fixed driver crash bug, previewText added |
+| 28 Feb 2026 | Analytics system: Resend engagement tracking, Send_Log writer, three analytics endpoints |
+| 1 Mar 2026 | Dashboard/email fixes: logo fallback, Sydney timezone, footer tagline, pause flow, delete audit, CSV, Events_Log |
+| 1 Mar 2026 | Dashboard + scheduler integration: 10 issues fixed (last scraped/sent, schedule hardcoded dates, daily frequency, analytics tab, scheduler callback) |
+| 1 Mar 2026 | Bug fixes: subscriber edit path error, schedule persistence (/tmp), minute selector, schedule vs manual explanation |
+| 1 Mar 2026 | Root cause analysis: pending subscribers invisible in table and to sends. Admin add + activate endpoints added. getAllSubscribersFromSheet() for dashboard. |
+| 1 Mar 2026 | Path fix revert: '../config/sheets' is correct (not './sheets'). /tmp for schedule config. Confirmed generator.js paths correct. |
+| 8 Mar 2026 | Security + reliability hardening: Basic Auth middleware, schedule config moved from /tmp to Google Sheets Schedule_Config tab, segment editing normalised. Full index.js rewrite (v3.1). |
+| 8 Mar 2026 | Master manual updated to v3.1: Part 11 (Outstanding Work & Priorities) added across 5 workstreams. Schedule_Config sheet schema documented. Auth section added to Part 3. Known limitations updated. |
